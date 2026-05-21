@@ -32,8 +32,8 @@ When forging a worker, Worker Forge tries to express each subtask in code first.
 worker calls a local model. If a local model isn't capable enough, the worker falls back to a hosted model. Most
 workers never reach the third tier.
 
-Worker Forge interviews you about edge cases, output location, error behavior, and target OS. It writes the worker into
-your *Workshop* (a persistent folder on your machine), builds the artifact for Windows / macOS / Linux, and hands you
+Worker Forge interviews you about edge cases, output location, error behavior, and target OS. It writes the worker
+into `root/workers/<worker-name>/` on your machine, builds the artifact for Windows / macOS / Linux, and hands you
 the result.
 
 One worker does one job. The worker runs and exits — no daemons, no servers. It triggers from a double-click, a

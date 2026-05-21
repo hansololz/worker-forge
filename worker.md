@@ -1,30 +1,31 @@
 # Worker
 
+## Scope
+
+Defines "worker". Disambiguates from skill, agent, forge, plugin, MCP server.
+
+## Definition
+
 A worker is a single-purpose, locally-executed program that does one repetitive task well. The user runs it on their own
-machine — by clicking, by schedule, by cron, or by event — and the work happens without an mandatory online subscription
+machine — by clicking, by schedule, by cron, or by event — and the work happens without a mandatory online subscription
 or a developer in the loop.
 
-Read this if you're deciding what to build, reviewing a `WORKER.md`, or trying to figure out whether a request belongs
-in a worker or somewhere else.
+Properties:
 
-## TL;DR
+* One file at distribution. Simplest artifact the target desktop OS supports: .exe on Windows, .app bundle on macOS,
+  AppImage or static binary on Linux. No interpreter, no deps, no terminal on target machine.
+* Single responsibility. One task per worker. Rename files. Summarize PDFs. Fetch report. Two tasks → two workers.
+* Short-lived. Invoked by click, scheduler, filesystem event. Runs. Exits. Not daemon. Not service.
+* Local-only. No backend. No accounts. No shared state. State lives next to binary or in known local path.
+* Cascade dispatch. Each task unit: deterministic code → local LLM (Ollama) → hosted LLM. Escalate only when lower tier
+  fails check.
+* Self-describing. Task description, cascade plan, source bundled with worker.
+* Reforge. Has full context for modification.
 
-- One worker, one job.
-- Runs locally. No mandatory cloud dependency.
-- Falls back through a cascade: deterministic code, then a local LLM, then a hosted LLM as last resort.
-- Produced by the Worker Forge from a plain-language description. Stored in a Workshop. Distributed as a built artifact
-  for the target OS.
+## Related concepts
 
-If the deliverable is more than one job, isn't local-first, or needs a server to function, it isn't a worker.
-
-## Why local-first
-
-Online LLMs are getting more expensive, not less. Today's prices are propped up by VC subsidies; when that money runs
-out, the real cost lands on the user. Providers go down, change pricing, deprecate models, or shut down
-entirely. A worker that depends on a hosted model inherits all of that risk.
-
-Local hardware and small models are moving the other direction. A worker built today should bet on the local side of
-that curve. Hosted models are an escape hatch for tasks that genuinely need frontier judgment — not the default path.
+- **Worker Forge.** The agent skill that interviews the user, designs the cascade, generates the source, and packages
+  the worker.
 
 ## The execution cascade
 
@@ -59,7 +60,7 @@ A worker runs, finishes, and exits. It is not a long-running service.
 Workers live inside a Workshop. Each worker is one folder:
 
 ```
-workshop/workers/<worker-name>/
+/workers/<worker-name>/
 ├── AUTHORING.md     # original task description, interview notes, key decisions
 ├── WORKER.md        # plain-language entry point: what it does, trigger, cascade plan
 ├── resources/       # prompts, schemas, templates, sample inputs needed at run time
@@ -73,7 +74,7 @@ change has the context it needs.
 
 ## Invariants
 
-These hold for every worker. Break any one of them and the artifact isn't a worker — it's something else.
+These hold for every worker. An artifact that breaks any one of them is not a worker.
 
 1. **Single responsibility.** One worker does one job. Two jobs means two workers.
 2. **Local-first execution.** The worker runs without an internet connection unless a specific unit has escalated to the
@@ -88,7 +89,7 @@ These hold for every worker. Break any one of them and the artifact isn't a work
 
 Don't forge a worker for:
 
-- **One-off tasks.** "Summarize this one PDF for me" is a request, not a worker. Do the task and move on.
+- **One-off tasks.** "Summarize this one PDF for me" is a request, not a worker.
 - **Multi-screen applications.** UI flows, user accounts, persistent server state — that's an app.
 - **Long-running services.** Streaming, daemons, anything that doesn't terminate. A worker exits.
 - **Tasks that fundamentally require a server backend the user doesn't own.** A worker can call APIs, but it can't be a
@@ -96,13 +97,6 @@ Don't forge a worker for:
 
 If the user describes one of these, push back. Narrow the request to the piece that fits the worker shape, or tell them
 this isn't a worker-shaped problem.
-
-## Related concepts
-
-- **Worker Forge.** The agent skill that interviews the user, designs the cascade, generates the source, and packages
-  the worker.
-- **Workshop.** The directory the Forge writes into. Holds every worker the user has forged plus the resources to
-  rebuild them.
 
 ## See also
 

@@ -1,7 +1,7 @@
 # Worker Forge: design
 
-This doc explains the three pieces of the system — Worker, Worker Forge, Workshop — and how they fit together. Read it
-before touching the code or proposing a change to the model. The audience is engineers contributing to Worker Forge.
+This doc explains the two pieces of the system — Worker and Worker Forge — and how they fit together. Read it before
+touching the code or proposing a change to the model. The audience is engineers contributing to Worker Forge.
 
 ## Problem
 
@@ -9,17 +9,15 @@ A lot of useful work on a desktop is small, manual, and repetitive: rename a fol
 check a page for changes, build a weekly digest. Each task is too small to justify hiring a developer, but the user does
 it forever.
 
-The obvious fix — wire it to a hosted LLM — has three problems:
+The hosted-LLM solution has three problems:
 
-1. **Cost.** Hosted-LLM prices today are subsidized by VC money. When subsidies end, the user pays the real number.
-2. **Availability.** Providers shut down, deprecate models, and change pricing. A tool that depends on a specific hosted
-   model can break overnight.
-3. **Connectivity.** Hosted calls require an internet connection at run time. Many useful tasks should run on a laptop
-   in airplane mode.
+1. **Cost.** Hosted-LLM pricing today is subsidized by VC funding and subject to change.
+2. **Availability.** Providers shut down, deprecate models, and change pricing on their own schedule.
+3. **Connectivity.** Hosted calls require an internet connection at run time, and many useful tasks should run on a
+   laptop in airplane mode.
 
-Worker Forge bets the other way. Local hardware is getting better, small models are getting more capable, and a lot of
-subtasks don't need a model at all. The system is designed to produce programs that lean on deterministic code first,
-local inference second, and hosted inference only as a last resort.
+Worker Forge bets on three things: local hardware keeps getting more capable at running models, local models keep
+getting better, and many subtasks don't need a model at all.
 
 ## Goals
 
@@ -37,7 +35,7 @@ local inference second, and hosted inference only as a last resort.
 - Real-time streaming or interactive UIs beyond a simple console.
 - A marketplace, an updater, or a desktop UI for the Forge itself. Listed as future work, not in scope here.
 
-## The three pieces
+## The pieces
 
 ### Worker
 
@@ -49,17 +47,34 @@ invariants. For the purposes of this design doc, the relevant properties are:
 - Triggered by click, schedule, cron, or event.
 - Built as a native artifact for the target OS (e.g., `.exe` on Windows).
 
+Each worker lives in its own folder:
+
+```
+root/workers/<worker-name>/
+├── AUTHORING.md   # task description, interview notes, decisions
+├── WORKER.md      # plain-language spec; metadata + cascade plan
+├── resources/     # prompts, schemas, templates, sample inputs
+├── build/         # build scripts and runtime for the target OS
+└── dist/          # built artifact (e.g., my-worker.exe)
+```
+
+`root` is a directory the user picks the first time they forge a worker. Each worker folder is self-contained: it
+includes the runtime, prompts, and build scripts the worker needs, with no shared parent dependency.
+
+`WORKER.md` is structured like a Claude skill: it starts with a `name` and `description` metadata block and reads as the
+worker's plain-language entry point. `AUTHORING.md` is the rationale layer — the interview transcript, the decisions,
+the discarded alternatives. The two files together let a later forge reason about the worker without code archeology.
+
 ### Worker Forge
 
 Worker Forge is the agent skill that produces workers. It runs a four-phase cycle:
 
 1. **Interview.** Ask the user what the task is. Pin down edge cases, failure handling, output location, what counts as
-   success. The interview is the highest-leverage phase; rushing it produces workers that pass the user's first example
-   and break on everything else.
+   success. The interview is the highest-leverage phase. Edge cases not surfaced here will fail at run time.
 2. **Cascade design.** Decompose the task into units of work. For each unit, pick the cheapest tier that can do the
    job (CODE, LOCAL, or HOSTED). Write the plan into the worker's `WORKER.md`.
 3. **Code generation.** Fill in the worker template, instantiate the runtime, wire the units together, and lay out the
-   worker folder inside the Workshop.
+   worker folder under `root/workers/`.
 4. **Packaging.** Produce a build script for the target OS. The Forge always tries to run the build itself first — but
    only after asking the user for permission. If the host OS doesn't match the target, or the build fails, the Forge
    hands the script to the user with instructions for running it on a matching machine. Either way the output is the
@@ -69,33 +84,9 @@ The Forge is also responsible for **reforging**: when the user comes back with a
 `AUTHORING.md` and `WORKER.md`, modifies the affected unit, and rebuilds. Full regeneration is reserved for changes
 large enough that a patch is messier than a redo.
 
-### Workshop
-
-The Workshop is the persistent directory the Forge owns on the user's machine. It holds every worker the user has forged
-plus the resources needed to rebuild them.
-
-```
-workshop/
-├── workers/
-│   ├── <worker-name>/
-│   │   ├── AUTHORING.md   # task description, interview notes, decisions
-│   │   ├── WORKER.md      # plain-language spec; metadata + cascade plan
-│   │   ├── resources/     # prompts, schemas, templates, sample inputs
-│   │   ├── build/         # build scripts for the target OS
-│   │   └── dist/          # built artifact (e.g., my-worker.exe)
-│   └── ...
-└── forge/                 # shared runtime, templates, prompts
-```
-
-One worker per subfolder. One Workshop per user.
-
-`WORKER.md` is structured like a Claude skill: it starts with a `name` and `description` metadata block and reads as the
-worker's plain-language entry point. `AUTHORING.md` is the rationale layer — the interview transcript, the decisions,
-the discarded alternatives. The two files together let a later forge reason about the worker without code archeology.
-
 ## How they come together
 
-Three lifecycles run on top of the Workshop:
+Three lifecycles run on top of the worker folders:
 
 ### Initial forge
 
@@ -105,7 +96,7 @@ user (plain-language task)
         ▼
 Worker Forge ── interview ──▶ cascade plan ──▶ code gen ──▶ build script
         │                                                       │
-        └──────────────── writes into Workshop ◀────────────────┘
+        └─────── writes into root/workers/<name>/ ◀─────────┘
                                   │
                                   ▼
                   Forge asks user: "run build now?"
@@ -124,7 +115,7 @@ Worker Forge ── interview ──▶ cascade plan ──▶ code gen ──�
 ```
 
 The Forge writes `AUTHORING.md`, `WORKER.md`, the runtime, the resources, and the build script into
-`workshop/workers/<name>/`. The Forge then asks the user whether to run the build now. On confirmation, and if the host
+`root/workers/<name>/`. The Forge then asks the user whether to run the build now. On confirmation, and if the host
 OS matches the target, the Forge runs the script itself. Otherwise it hands the script to the user with instructions
 for running it on a matching machine. The artifact lands in `dist/`.
 
@@ -161,16 +152,15 @@ user (change request) ──▶ Worker Forge
                   rebuilds artifact in dist/
 ```
 
-Reforge is the common case after the first build. A worker that can't be reforged from its own `AUTHORING.md` is a
-worker that failed Phase 1.
+Reforge is the common case after the first build. A worker that can't be reforged from its own `AUTHORING.md` failed
+Phase 1.
 
 ## Key design decisions
 
 ### The cascade is the runtime contract
 
-Every worker walks CODE → LOCAL → HOSTED for every unit. This forces the Forge to think about the task at design time
-instead of defaulting to a model call. The tradeoff is upfront design effort; the payoff is workers that don't break
-when a hosted model is unavailable.
+Every worker walks CODE → LOCAL → HOSTED for every unit. This forces the Forge to pick a tier at design time instead
+of defaulting to a model call. Workers built this way continue to function when a hosted model is unavailable.
 
 ### One worker per folder, one job per worker
 
@@ -184,16 +174,15 @@ spec and keeps reforge tractable.
 means the user-facing spec stays short and the rationale layer can grow as the worker is reforged without polluting the
 spec.
 
-### Plain Python source lives in the Workshop
+### Plain Python source ships with each worker
 
-The Workshop holds source, not just artifacts. The Forge needs to read and modify the source to reforge. The user can
-audit it. The artifact in `dist/` is the distributable, but it is not the source of truth — the Workshop is.
+Each worker folder holds source, not just artifacts. The Forge needs to read and modify the source to reforge. The user
+can audit it. The artifact in `dist/` is the distributable; the worker folder is the source of truth.
 
 ### Target OS is chosen at forge time
 
 The Forge asks the user which OS the worker targets and emits a build script for that OS. Cross-compilation is not
-supported. A worker built for Windows is built on Windows. This keeps the build path simple at the cost of requiring the
-user to have access to a machine for each target OS.
+supported. A worker built for Windows is built on Windows. The user needs access to a machine for each target OS.
 
 ## Failure modes
 
@@ -218,8 +207,8 @@ user to have access to a machine for each target OS.
   a thin cross-platform scheduler with each worker, or generate native scheduler config at forge time?
 - **Worker updates.** Today a reforge produces a new artifact the user has to redistribute by hand. Is there a
   lightweight update channel that doesn't require running a server?
-- **Artifact attestation.** A built `.exe` should be verifiable against the source in the Workshop. What's the minimum
-  scheme that gives the recipient confidence?
+- **Artifact attestation.** A built `.exe` should be verifiable against the source in the worker folder. What's the
+  minimum scheme that gives the recipient confidence?
 - **Local model selection.** Different users have different Ollama models installed. Does the Forge pin a model per
   worker, or query the host at run time and pick the best available?
 
