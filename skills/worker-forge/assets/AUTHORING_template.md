@@ -1,38 +1,51 @@
-# Authoring notes for {WORKER_NAME}
+# Authoring notes — {WORKER_NAME}
 
-This file records *why* the worker is shaped the way it is. The spec —
-what it does — is in `WORKER.md`. Read both before a reforge.
+Rationale layer for this worker. `WORKER.md` says *what* it does; this file says *why* it does it that way. A future reforge reads this before changing anything.
 
-## Original task description
+## {FORGE_DATE} — Initial forge
 
-{TASK_DESCRIPTION}
+**Task as the user described it.**
 
-## Confirmed spec (from the interview)
+> {TASK_DESCRIPTION}
 
-{CONFIRMED_SPEC}
+**Target OS.** {TARGET_OS}. {TARGET_OS_RATIONALE}
 
-## Interview answers
+**Trigger.** {TRIGGER}. {TRIGGER_RATIONALE}
 
-- **Target OS:** {TARGET_OS}
-- **Trigger:** {TRIGGER}
-- **Input:** {INPUT_DESCRIPTION}
-- **Output:** {OUTPUT_DESCRIPTION}
-- **Edge cases covered:** {EDGE_CASES}
-- **Inference budget:** {INFERENCE_BUDGET}
+**Input.** {INPUT_CONTRACT}
 
-## Cascade decisions
+**Output.** {OUTPUT_CONTRACT}
 
-{CASCADE_DECISIONS}
+## Decisions
 
-## Alternatives considered
+{DECISIONS}
+
+## Alternatives considered and rejected
 
 {ALTERNATIVES}
 
-## Change log
+## Edge cases surfaced in the interview
 
-Append a dated note for each reforge — what changed, why, what was
-considered. Future reforges read this to avoid re-litigating decisions.
+{EDGE_CASES}
 
-### {FORGE_DATE} — initial forge
+## Cascade-tier choices
 
-Worker scaffolded by Worker Forge based on the interview above.
+{CASCADE_RATIONALE}
+
+## Open questions
+
+{OPEN_QUESTIONS}
+
+---
+
+<!--
+For future reforges, append a new dated section like:
+
+## YYYY-MM-DD — Reforge: <short summary>
+
+**Change request.** <what the user asked for>
+**Old behavior.** <what changed>
+**New behavior.** <what it does now>
+**Why.** <reasoning, including any conflict with the original rationale>
+**Tier.** <CODE / LOCAL / HOSTED, if a tier changed>
+-->

@@ -2,31 +2,35 @@
 REM ---------------------------------------------------------------------
 REM build_windows.bat — produce a single-file Windows .exe for this worker.
 REM
-REM Requires Python 3.11+ on PATH. Install from https://python.org if not
-REM already installed. Re-run this script after each edit to main.py.
+REM This script lives in build/. It is invoked from the worker folder
+REM (its parent) — `build\build_windows.bat` from cmd, or by double-click
+REM after right-click → Run from inside build/.
 REM
-REM The output lands in dist\<worker-name>.exe (relative to the worker's
-REM project root, not this build/ subfolder).
+REM Requires Python 3.11+ on PATH. Install from https://python.org if not
+REM already installed. Re-run after each edit to main.py.
+REM
+REM Output lands in dist\<worker-name>.exe.
 REM ---------------------------------------------------------------------
 
 setlocal
 
-REM Resolve the worker's project root (parent of this build/ folder).
-pushd "%~dp0.."
+REM Resolve the worker folder (parent of this script) and cd into it.
+set "WORKER_DIR=%~dp0.."
+pushd "%WORKER_DIR%" || exit /b 1
 
-REM Worker name = the project folder name.
+REM Worker name = folder name.
 for %%I in ("%CD%") do set "WORKER_NAME=%%~nxI"
 
 echo.
-echo === Building worker: %WORKER_NAME% (Windows) ===
+echo === Building worker: %WORKER_NAME% (target: windows) ===
 echo.
 
-if not exist ".venv\Scripts\python.exe" (
-    echo Creating build venv...
-    python -m venv .venv || goto :error
+if not exist "build\.venv\Scripts\python.exe" (
+    echo Creating build venv at build\.venv ...
+    python -m venv build\.venv || goto :error
 )
 
-call .venv\Scripts\activate.bat || goto :error
+call build\.venv\Scripts\activate.bat || goto :error
 
 echo Installing dependencies...
 python -m pip install --upgrade pip >nul

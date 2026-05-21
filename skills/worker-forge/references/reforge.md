@@ -1,75 +1,76 @@
 # Reforge
 
-A reforge modifies an existing worker rather than producing a new one. It's the common case after the first build — the
-user runs the worker, finds an edge case the spec missed, and wants the worker updated. A worker that can't be reforged
-from its own `WORKER.md` and `AUTHORING.md` is a worker that failed the interview phase.
+Reforging is the common case after the first build. The user comes back with a change request — the format shifted, an edge case showed up, the output needs a new field — and the forge updates the worker in place rather than starting over. Reforge is what makes a worker durable: a one-line change should not require a fresh interview.
 
-## When it's a reforge vs. a fresh forge
+## What makes a reforge possible
 
-Reforge when:
+Two files in every worker folder:
 
-- The user points at an existing worker folder.
-- The change is incremental: a new edge case, a different output path, swapping a tier in one cascade unit.
+- **`WORKER.md`** — the spec. Metadata (name, description), trigger, cascade plan, input/output contract.
+- **`AUTHORING.md`** — the rationale. Interview notes, decisions, alternatives considered and rejected.
 
-Fresh forge when:
+A reforge starts by reading both. `WORKER.md` tells the forge what the worker does today. `AUTHORING.md` tells the forge *why* it does it that way. The combination is what lets the forge change one unit without breaking the rest.
 
-- The user describes a different task. (Two tasks means two workers.)
-- The change is sweeping enough that the cascade plan is no longer recognizable. In this case, archive the old folder
-  under `workshop/workers/<name>/history/<timestamp>/` and start over.
+If a worker can't be reforged from its own `AUTHORING.md`, the original interview was too thin. Fix the interview next time; for now, do whatever it takes (reinterview, infer from code, ask the user) to produce a reforge that holds together.
 
-If you're not sure, treat it as a reforge. The cost of an unnecessary patch is small; the cost of throwing away
-`AUTHORING.md` and re-interviewing is high.
+## The reforge flow
 
-## The reforge cycle
+1. **Read the worker folder.** `WORKER.md`, `AUTHORING.md`, `main.py`. Note the target OS — it doesn't change in a reforge.
 
-### 1. Load context
+2. **Confirm the change with the user.** Quote the part of `WORKER.md` that's about to change, and the proposed new wording. Wait for confirmation.
 
-Read `WORKER.md` and `AUTHORING.md` in full. They are the spec and the rationale. Do not re-interview from scratch — the
-user already answered those questions, and asking again wastes their time and signals that the Forge can't be trusted to
-remember.
+3. **Identify the affected cascade units.** Most reforges touch one unit. If the change reshuffles two or more units, that's still a reforge — but if it reshuffles all of them, see "When to do a fresh forge" below.
 
-If the change request is ambiguous, ask only the questions you need to disambiguate it. Use `AskUserQuestion`.
+4. **Modify the affected units.** Update `main.py`. Update the cascade table in `WORKER.md` if a tier choice changed.
 
-### 2. Identify the affected unit
+5. **Append to `AUTHORING.md`.** Under a new dated heading:
 
-The cascade plan in `WORKER.md` lists units by name. Find the one (or two) the change touches. Most reforges are
-single-unit changes.
+   > ## 2026-05-21 — Reforge: switch dedupe to content hash
+   > 
+   > **Change request.** "I want to re-process files when I re-download them. The current filename dedupe skips them."
+   > 
+   > **Old behavior.** Dedupe by filename in `~/.config/worker-name/seen.json`.
+   > 
+   > **New behavior.** Dedupe by SHA-256 of file contents.
+   > 
+   > **Why.** Original rationale was "user wants to re-process re-downloads" — but the implementation went the other way. Filename-based dedupe was wrong.
+   > 
+   > **Tier.** Still CODE; `hashlib.sha256` is a one-liner.
 
-If the change spans every unit, that's a signal the request might actually be a different task. Pause and check.
+6. **Ask for permission to rebuild.** Same prompt as the initial forge. If yes and host OS matches the target, run the build script. Otherwise hand the script to the user.
 
-### 3. Make the change
+## When to do a fresh forge
 
-Modify `main.py`. Keep the change small — don't refactor adjacent units. The runtime (`worker_runtime.py`) is never
-modified in a reforge.
+If the change is large enough that a patch is messier than a redo, throw out the old worker and forge a new one. Signals:
 
-If the change adds a new dependency, update `requirements.txt`. If it changes what the worker reads or writes, update
-`WORKER.md`.
+- The input format changes (was a folder, now a webhook).
+- The trigger changes (was a click, now a schedule).
+- The output shape changes enough that the cascade plan no longer fits.
+- More than half the cascade units are touched.
 
-### 4. Update the docs
+Before overwriting, preserve the old context:
 
-- **`WORKER.md`.** Update the cascade table if a tier changed, and update the description if the worker's job
-  description changed.
-- **`AUTHORING.md`.** Append a short dated note: what changed, why, what was considered. This is the audit trail. Future
-  reforges read it.
-
-```markdown
-## 2026-05-19 reforge
-
-User reported that PDFs with `Statement Date:` rather than ISO dates were skipped.
-Added `Statement Date: <date>` to the regex set in the CODE tier. Local model
-fallback unchanged.
+```
+<worker>/history/2026-05-21/
+├── AUTHORING.md
+├── WORKER.md
+└── main.py
 ```
 
-### 5. Rebuild
+The history folder is so a future forge can read the prior design — sometimes a "fresh" forge is actually two reforges that disagree, and the history clarifies which one to trust.
 
-Phase 4 from the main forge cycle: ask the user before invoking the build, build if your host matches the target,
-otherwise hand them the build script. See `packaging.md`.
+## Reforging across OS targets
 
-## What not to do
+A worker built for Windows can be reforged into a worker for macOS, but it requires:
 
-- **Don't re-interview from scratch.** Every question you ask again is a question the original interview should have
-  covered. If you have to re-interview, the original `AUTHORING.md` was incomplete — fix it.
-- **Don't rewrite the cascade for elegance.** Reforge changes one unit. Cascade-wide rewrites are a fresh forge.
-- **Don't skip the `AUTHORING.md` note.** A reforge without an audit trail makes the next reforge harder.
-- **Don't touch `worker_runtime.py`.** The runtime is shared infrastructure. If a runtime bug needs fixing, fix it in
-  the skill's `assets/worker_runtime.py` and re-scaffold workers that need the fix.
+- Auditing the `main.py` for OS-specific paths (`%APPDATA%`, `\\`, `\r\n`, etc.).
+- Swapping the build script.
+- Rebuilding on a matching host.
+
+Most OS-specific code lives in the runtime, not `main.py`, so this is usually shallow. If a worker's `main.py` is OS-aware in non-trivial ways, that's a design smell — surface it to the user before reforging.
+
+## What reforge does not do
+
+- **Reforge does not change the cascade-tier philosophy.** Cheaper tier first is permanent. A reforge can move a unit from LOCAL to HOSTED if LOCAL is unreliable, but it does not pre-emptively put a model call where code would do.
+- **Reforge does not silently widen scope.** If the user asks for "one more thing," ask whether the result is one worker or two. The single-responsibility rule applies on every reforge.
+- **Reforge does not regenerate from scratch without preserving history.** Even a full redo writes the old worker into `history/<date>/`.

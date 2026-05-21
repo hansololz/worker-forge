@@ -1,121 +1,94 @@
-# Packaging a worker
+# Packaging a worker into a native artifact
 
-PyInstaller produces a binary for the platform it runs on; it can't cross-compile. So the build needs to happen on a
-machine that matches the target OS chosen in the interview.
+PyInstaller produces an artifact for the platform it runs on. Cross-compiling is fragile and not supported. So packaging splits into two cases:
 
-This document covers what the worker folder looks like, the per-OS build scripts, and the ask-before-build flow.
+1. **Host OS matches target OS.** The forge can run the build itself, with the user's permission. The output lands in `dist/`.
+2. **Host OS does not match target OS.** The forge writes the build script into the worker folder and hands it to the user with instructions for running it on a matching machine.
 
-## What the worker project looks like
+The forge always asks before running the build, even when the host matches. The build is a real action — it installs dependencies, runs PyInstaller, writes a binary. Confirm with the user first.
 
-A forged worker is a Python project inside the Workshop:
+## What the worker folder looks like
+
+A forged worker is a Python project laid out for build and reforge:
 
 ```
-workshop/workers/<worker-name>/
-├── WORKER.md         # plain-language spec
-├── AUTHORING.md      # interview notes, decisions
-├── main.py           # task logic
-├── worker_runtime.py # cascade runtime, copied unchanged from assets/
-├── requirements.txt
-├── resources/        # prompts, schemas, sample inputs
-├── build/
-│   └── build_<os>.{bat,sh}
-└── dist/             # populated by the build step
+<root>/workers/<worker-name>/
+├── AUTHORING.md       # rationale: interview, decisions, alternatives considered
+├── WORKER.md          # spec: metadata + cascade plan
+├── main.py            # the worker's task logic
+├── worker_runtime.py  # the cascade runtime, copied unchanged from assets/
+├── requirements.txt   # pip dependencies, pinned
+├── resources/         # prompts, schemas, templates, sample inputs
+├── build/             # the build script for the target OS
+│   └── build.bat      # Windows — or build.sh for macOS / Linux
+├── dist/              # the built artifact lands here
+└── README.md          # what it does, how to run, what it touches
 ```
 
-`build/` holds one script for the target OS. The script creates a venv, installs deps, and runs PyInstaller with
-`--onefile --console`. Output lands in `dist/`.
+The `build/` folder holds exactly one script — the one for the target OS chosen at forge time. The scaffolder picks the right one from `assets/`.
 
-## Per-OS build scripts
+## Build outputs by target OS
 
-The skill's `assets/` folder holds three:
+| Target | Build script | Artifact | PyInstaller flags |
+|---|---|---|---|
+| Windows | `build/build.bat` | `dist/<worker>.exe` | `--onefile --console --name <worker>` |
+| macOS | `build/build.sh` | `dist/<worker>.app` (a bundle) | `--onefile --windowed --name <worker>` for `.app`; add `--console` if the worker prompts on first run |
+| Linux | `build/build.sh` | `dist/<worker>` (static-ish binary) | `--onefile --name <worker>`; optional AppImage wrapper |
 
-- `build_windows.bat` — runs PyInstaller on Windows. Output: `dist/<name>.exe`.
-- `build_macos.sh` — runs PyInstaller on macOS. Output: `dist/<name>` (executable). Add `.app` packaging only if the
-  user asks; `.app` is heavier and not needed for a console worker.
-- `build_linux.sh` — runs PyInstaller on Linux. Output: `dist/<name>` (executable).
-
-The scaffolder copies the right script into the worker's `build/` folder based on `--target-os`. The user gets exactly
-one build script per worker.
+Note on macOS: a `.app` with `--windowed` has no console, which breaks first-run prompts (API key, model setup). For workers that escalate to LOCAL or HOSTED, use `--console` and ship a `.command` wrapper, or accept that first-run prompts happen in Terminal. The default templates use `--console` for safety.
 
 ## PyInstaller flags worth knowing
 
-All three build scripts use the same flags:
-
-- `--onefile` — bundle everything into one binary. The "one file is the default" principle made literal. Trade-off:
-  PyInstaller unpacks to a temp dir on first run, adding ~1s startup. Worth it for shareability.
-- `--name <worker-name>` — the artifact's name.
-- `--console` — keep a console window. Workers print status and prompt for first-run setup (API key, model picker).
-  `--noconsole` breaks first-run UX.
+- `--onefile` — bundle everything into a single binary. The "one file at distribution" principle made literal. There is a startup cost (PyInstaller unpacks the bundle to a temp dir on first run) but the artifact is shareable as a single attachment.
+- `--name <worker-name>` — the artifact's name. Use the slug.
+- `--console` — keep a console window. Workers print status, errors, and prompts; without a console those go nowhere on Windows or in a macOS `.app`.
 - `--icon <path>` — optional. Skip unless the user provided one.
 
-If you find yourself wanting `--noconsole` to make the artifact "look nicer," stop. Workers are tools, not apps.
-
-## The ask-before-build flow
-
-Always ask the user before invoking a build. Two reasons: builds take a minute or two and pull dependencies, and the
-user may want to inspect the source first. Use `AskUserQuestion` with concrete options.
-
-After confirmation, branch on whether the host OS matches the target OS:
-
-### Host matches target → run the build yourself
-
-Run the build script from the worker's folder. Stream the output so the user sees progress. Common failure modes:
-
-- **Python not on PATH.** Surface the error message and tell the user to install Python 3.11+ from python.org (Windows)
-  or via the system package manager (macOS / Linux).
-- **Permission denied on the .sh script** (macOS / Linux). Tell the user to `chmod +x build/build_<os>.sh` and retry.
-  Better: the scaffolder should `chmod +x` at scaffold time.
-- **PyInstaller can't find a hidden import.** Add `--hidden-import <module>` to the build script and retry.
-
-On success, hand the user a `computer://` link to the artifact in `dist/`.
-
-### Host doesn't match target → hand off the script
-
-Don't try to cross-compile. Hand the user the path to the build script and one-line instructions:
-
-- Windows target: "Double-click `build/build_windows.bat` on a Windows machine. The artifact will be at
-  `dist/<name>.exe`."
-- macOS target: "Run `./build/build_macos.sh` from this folder on a macOS machine. The artifact will be at
-  `dist/<name>`."
-- Linux target: "Run `./build/build_linux.sh` from this folder on a Linux machine. The artifact will be at
-  `dist/<name>`."
-
-Then offer to walk through any first-time setup their target machine might need.
-
-### User declines → leave source in Workshop
-
-If the user says "not now," don't push. The source is in the Workshop; they can run the build script themselves, or come
-back later and ask the Forge to retry. Make sure they know both paths.
+If you find yourself wanting `--noconsole`, stop. A worker that needs to prompt the user (for an API key, to choose a model) needs stdin/stdout. Use `--console`.
 
 ## Dependencies
 
-Common pinned libraries for `requirements.txt`:
+Common Python libraries to pin in `requirements.txt`:
 
 - `requests` — HTTP. Almost always.
 - `pypdf` — PDF text extraction.
 - `feedparser` — RSS/Atom feeds.
 - `beautifulsoup4` + `lxml` — HTML scraping.
-- `anthropic` / `openai` — only if the worker can escalate to hosted LLM. The runtime uses raw `urllib` so these aren't
-  strictly required.
-- `ollama` — Python client for Ollama. Optional; the runtime falls back to raw HTTP to `localhost:11434`.
+- `anthropic` / `openai` — only if the worker can escalate to hosted LLM.
+- `keyring` — OS keyring access for storing the hosted API key.
 
-Pin specific versions when you can. Workers are frozen artifacts — a version that worked at forge time should keep
-working.
+Pin specific versions. Workers are frozen artifacts. A version that worked at forge time should work forever.
+
+## Running the build (host matches target)
+
+Before running the build, ask the user for permission and show them the command:
+
+> About to build the worker. This will create a virtualenv in `build/.venv/`, install dependencies, and run PyInstaller. Output will land in `dist/<worker>.<ext>`. Should I run it now?
+
+If they say yes, run the script. The build takes one to three minutes typically. When it finishes, hand the user a `computer://` link to the artifact.
+
+If the script fails (usually a missing system Python, a missing build tool, or a dep that needs a compiler), report the error verbatim. Don't paraphrase; the user may need the exact message to debug.
+
+## Handing the script to the user (host does not match target)
+
+When the host OS does not match the target, tell the user:
+
+> The worker is for {target_os}, but I'm running on {host_os}. The build script is at `<worker>/build/build.{ext}`. On a {target_os} machine: open a terminal in the worker folder and run `{command}`. The artifact will land in `<worker>/dist/`.
+
+Give them the exact command. For Windows that's a double-click on `build.bat` or `build\build.bat` in a `cmd` window. For macOS/Linux it's `cd <worker> && bash build/build.sh`.
+
+If the user gets stuck, the most common cause is a missing system Python. Direct them to install Python 3.11+ from python.org and re-run.
 
 ## Size
 
-A bare-bones worker is ~15-20 MB. With heavy deps (lxml, pypdf, an LLM client) you're at 40-60 MB. That's the price of "
-no runtime to install on the recipient's machine." If size becomes a real problem, the answer is a compiled-language
-rewrite — out of scope for v1.
+A bare-bones worker is ~15–20 MB. With heavy deps (e.g., `lxml`, `pypdf`, an LLM client) you're at 40–60 MB. That's the baseline price of "no runtime to install on the recipient's machine." If size becomes a real problem the answer is probably a compiled-language rewrite — out of scope for v1.
 
 ## Signing
 
-Code-signing is out of scope for v1.
+Code-signing requires a certificate and is out of scope for v1. The README the forge produces should note that:
 
-- **Windows.** The first run of an unsigned `.exe` triggers SmartScreen. The right path is "More info → Run anyway."
-  Note this in `WORKER.md` or the run instructions.
-- **macOS.** The first run of an unsigned binary requires the user to right-click → Open, then approve in System
-  Settings → Privacy & Security. Same drill — note it.
-- **Linux.** No signing prompt. The artifact needs `chmod +x`.
+- **Windows.** Running an unsigned `.exe` triggers SmartScreen the first time. "More info → Run anyway" is the right path.
+- **macOS.** Running an unsigned `.app` triggers Gatekeeper. Right-click → Open works; the standard double-click does not until the user has approved the binary once.
+- **Linux.** No equivalent prompt; the user needs to `chmod +x` the artifact if it isn't already executable.
 
-Future versions will fix this with code-signing certificates. For v1 the user accepts a one-time warning per target.
+This is acknowledged ugly behavior that future versions will fix via code-signing.
