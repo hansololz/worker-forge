@@ -1,41 +1,43 @@
 # Worker Forge
 
-Turn a plain-language task into a portable program that runs on your own machine. You describe what you want; you walk
-away with a single file you can double-click, schedule, or hand to a friend. The program is called a *worker*.
+Agent skill that turn a plain-language task into a portable program that runs on your own machine. You describe
+what you want; and it will produce a single program — a *worker* — that runs on your machine. Double-click it, schedule
+it, or hand it to someone else.
 
 ## The problem
 
-A lot of useful desktop work is small, manual, and repetitive: rename a folder of PDFs by the date inside each one,
-summarize today's downloads, check a page for changes, build a weekly digest from a few feeds. Each task is too small to
-justify hiring a developer, but you do it forever.
+A lot of useful desktop work is small, manual, and repetitive: renaming a folder of PDFs, checking a page for changes,
+building a weekly digest from a few feeds. Each task is often too narrow for off-the-shelf software and too small to pay
+a developer for, so it stays manual.
 
-The obvious fix — wire it to a hosted LLM — has three problems:
+The obvious solution — wire it to a hosted LLM — has three problems:
 
-1. **Cost.** Hosted-LLM prices today are propped up by VC subsidies. When subsidies end, you pay the real number.
-2. **Availability.** Providers shut down, deprecate models, and change pricing on their own schedule. A tool that
-   depends on a specific hosted model can break overnight.
-3. **Connectivity.** Hosted calls require an internet connection at run time. Many useful tasks should run on a laptop
-   in airplane mode.
+1. **Cost.** Hosted-LLM pricing today is subsidized by VC funding and subject to change.
+2. **Availability.** Providers shut down, deprecate models, and change pricing on their own schedule.
+3. **Connectivity.** Hosted calls require an internet connection at run time, and many useful tasks should run on a
+   laptop in airplane mode.
 
-Worker Forge bets the other way. Local hardware keeps getting better. Small models keep getting more capable. And a lot
-of subtasks don't need a model at all. The system produces programs that lean on deterministic code first, a local model
-second, and a hosted model only as a last resort. Most workers never make a network call.
+## How Worker Forge solves the problem
 
-## How it works
+Worker Forge bets on three things: local hardware keeps getting more capable at running models, local models keep
+getting better, and many subtasks don't need a model at all.
 
-A worker walks a three-tier cascade at run time:
+Each worker is built around a three-tier cascade:
 
-1. **CODE** — deterministic Python (regex, parser, HTTP, library call). Most work happens here.
-2. **LOCAL** — a small LLM running on your machine via Ollama. For fuzzy classification, short summaries, simple
-   extractions.
-3. **HOSTED** — a frontier model with your own API key. Only when the cheaper tiers can't.
+1. **CODE** — deterministic Python (regex, parser, HTTP, library call).
+2. **LOCAL** — a small LLM running on your machine via Ollama.
+3. **HOSTED** — a frontier model with your own API key.
+
+When forging a worker, Worker Forge tries to express each subtask in code first. If code can't handle the subtask, the
+worker calls a local model. If a local model isn't capable enough, the worker falls back to a hosted model. Most
+workers never reach the third tier.
 
 Worker Forge interviews you about edge cases, output location, error behavior, and target OS. It writes the worker into
 your *Workshop* (a persistent folder on your machine), builds the artifact for Windows / macOS / Linux, and hands you
 the result.
 
-One worker, one job. The worker runs and exits — no daemons, no servers. It triggers from a double-click, a schedule, a
-cron entry, or an event.
+One worker does one job. The worker runs and exits — no daemons, no servers. It triggers from a double-click, a
+schedule, a cron entry, or an event.
 
 ## Examples
 
@@ -70,6 +72,8 @@ Out of scope for v1, on the roadmap:
 - **Workers marketplace.** Browse and install workers other people have forged.
 - **Code-signing.** Sign Windows and macOS artifacts so recipients don't see the first-run security warning.
 - **An update channel.** Push reforged versions of a worker to recipients without re-emailing the binary.
+- **Auto-reforge on failure.** When a worker stops completing its task — an API changed, a site moved, a model
+  deprecated — Worker Forge reforges it from the original spec until it works again.
 - **A desktop UI for Worker Forge.** Today the interview happens in a chat; a desktop app would open the same flow to
   people who don't use a chat client.
 - **A CLI for power users.** Skip the interview and pass the spec on the command line.

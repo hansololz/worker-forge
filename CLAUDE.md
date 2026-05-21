@@ -92,6 +92,28 @@ posturing. No exclamation points. No emoji. No "we" unless you mean a specific t
 Prefer the imperative ("Set the timeout to 30s") over the conditional ("You might want to consider setting the timeout
 to 30s").
 
+## Preferred sentence shape: state the fact, let the consequence land
+
+When making a point about something unstable, temporary, or costly, state the fact flatly and let the phrasing carry
+the implication. The reader draws the conclusion. Do not editorialize.
+
+Preferred:
+
+> Hosted-LLM pricing today is subsidized by VC funding and subject to change.
+
+One sentence. Two clauses. The first reports the current state; the second names the instability without telling the
+reader how to feel about it. The reader infers "so it will get more expensive" on their own.
+
+Avoid the two-sentence kicker variant:
+
+> Hosted-LLM prices today are propped up by VC subsidies. When subsidies end, you pay the real number.
+
+This reads as witty rather than factual. State the facts in a single sentence and stop.
+
+Use this shape for claims about cost, availability, vendor lock-in, deprecation risk, or any other "today this is fine,
+tomorrow it isn't" situation. Avoid hedges ("might", "could potentially"), avoid alarm ("watch out!"), avoid
+punchlines. The flatness is the point.
+
 ## Anti-patterns
 
 - **Marketing intros.** "In today's fast-paced world of distributed systems..." Delete.
