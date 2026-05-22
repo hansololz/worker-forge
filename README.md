@@ -32,9 +32,9 @@ When forging a worker, Worker Forge tries to express each subtask in code first.
 worker calls a local model. If a local model isn't capable enough, the worker falls back to a hosted model. Most
 workers never reach the third tier.
 
-Worker Forge interviews you about edge cases, output location, error behavior, and target OS. It writes the worker
-into `root/workers/<worker-name>/` on your machine, builds the artifact for Windows / macOS / Linux, and hands you
-the result.
+Worker Forge interviews you about edge cases, output location, error behavior, and target OS. It writes the worker's
+Workshop into `root/workshops/<worker-name>/` on your machine, builds the artifact for Windows / macOS / Linux out of
+that Workshop, and hands you the result.
 
 One worker does one job. The worker runs and exits — no daemons, no servers. It triggers from a double-click, a
 schedule, a cron entry, or an event.
@@ -88,8 +88,8 @@ Out of scope for v1, on the roadmap:
 
 ## Learn more
 
-- [`worker.md`](./worker.md) — what a worker is and isn't.
-- [`design.md`](./design.md) — how Worker Forge, the Workshop, and workers fit together.
+- [`design.md`](docs/design.md) — what a worker is and isn't, and how Worker Forge, the Workshop, and workers fit
+  together.
 
 ## License
 
