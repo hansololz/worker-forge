@@ -1,0 +1,60 @@
+# {{WORKER_NAME}} — authoring notes
+
+This is the rationale layer for the worker. It exists so a future reforge can pick up enough context to make a confident change without re-interviewing the user. It's allowed to read like notes — `WORKER.md` is the clean version.
+
+## Original ask
+
+What the user said in their own words. Paste it verbatim.
+
+## Restatement
+
+The one-paragraph spec you read back to the user and they confirmed.
+
+## CODE-first alternatives considered
+
+Cases where the task seemed to need a LOCAL or HOSTED unit and you proposed a CODE shape instead. For each: what you proposed, what the user said, why you accepted or rejected the CODE shape. (If every unit was obvious, this section is short — say so.)
+
+## Interview answers
+
+- **Target OS:** windows / macos / linux (multi-select if more than one).
+- **Trigger style:** double-click / CLI / GUI (mutually exclusive: double-click vs. GUI).
+- **Scheduling:** none / loop while running / start on boot / external scheduler (list whichever applies; multi-select allowed).
+- **UI framework:** native (Tkinter / SwiftUI / WinUI) / other (which?) / N/A.
+- **Data storage format:** sqlite / json / text / user-provided.
+- **Data location:** worker dir / home dir / mounted drive / user-provided path.
+- **Local models used:** list each LOCAL unit and the model picked (e.g., "summarize → llama3.2:3b").
+- **Hosted providers used:** list each HOSTED unit and the provider/model picked.
+- **Bundled local-model setup script:** yes / no.
+- **Hosted-model auth strategy:** OS keyring / env var / config file.
+
+## Decisions and the reasoning
+
+For each non-obvious choice, write a sentence or two on what you picked and why. Examples that future-you will want to see:
+
+- "Picked JSON over SQLite for storage because the worker only writes a single timestamp per run; SQLite would be overkill."
+- "Picked LOCAL `llama3.2:3b` for the summary unit because the input is always one short article and the user explicitly said they don't want hosted dependencies."
+- "Picked PyInstaller over Nuitka for the Windows build to keep build times reasonable."
+
+## Alternatives considered and rejected
+
+Things you thought about and chose not to do. The discipline is to write these down even when the rejected option is dumb — future-you may be considering exactly that dumb option and the note saves the re-derivation.
+
+## Edge cases the user signed off on
+
+What the worker does when:
+
+- The input is empty.
+- Output already exists (overwrite / append / suffix / fail).
+- Partial failure (one of N sources is down).
+- It's the first run (initialization, baseline fetch).
+- It's run twice in a row (idempotent or not).
+
+## Reforge log
+
+A timestamped append-only list of changes after the initial forge.
+
+### Reforge YYYY-MM-DD
+
+- **User asked for:** <what they said>
+- **Changed:** <which units, what specifically>
+- **Notes:** <anything worth remembering for the next reforge>

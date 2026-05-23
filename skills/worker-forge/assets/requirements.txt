@@ -1,0 +1,7 @@
+# Base requirements for a worker. Add task-specific dependencies below.
+#
+# `keyring` is only needed if the worker has any HOSTED units. Leave it in by
+# default — it's small and the runtime imports it lazily so non-HOSTED workers
+# don't pay any startup cost.
+
+keyring>=24.0

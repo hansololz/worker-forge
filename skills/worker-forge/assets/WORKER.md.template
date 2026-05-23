@@ -1,0 +1,51 @@
+---
+name: {{WORKER_NAME}}
+description: >-
+  One-paragraph description of what this worker does, when to use it, and
+  what kind of input it expects. Written so someone who didn't sit through
+  the interview can read this and know whether the worker is the right tool
+  for their problem.
+---
+
+# {{WORKER_NAME}}
+
+## What it does
+
+One short paragraph. What's the task this worker exists to do? What does it touch (files, URLs, services)? What does it produce?
+
+## How to run it
+
+How does the user invoke it? Double-click? CLI flags? On a schedule? If there's setup the first run (model pull, API key prompt), say so here so the recipient knows what to expect.
+
+## What it reads and writes
+
+- **Reads:** list of files / URLs / services the worker touches as input.
+- **Writes:** list of paths and the format of each output.
+- **Network:** endpoints the worker calls, or "None" if it runs offline.
+
+This section is the user's audit trail. Don't skip it.
+
+## Cascade plan
+
+Each unit of work, in order. Tag each with its tier (CODE / LOCAL / HOSTED) and one line of what it does. If a unit has a fallback (CODE → LOCAL when CODE can't handle the input), say so.
+
+1. **<unit_name>** (CODE) — <one-line description>
+2. **<unit_name>** (LOCAL, `<model>`) — <one-line description>
+3. **<unit_name>** (HOSTED, `<provider>/<model>`) — <one-line description>
+
+## Setup notes
+
+Anything the recipient needs to know before first run:
+
+- Local model pull (the runtime does this automatically, but mention it so the user knows the first run is slow).
+- Hosted API key — which provider, how the runtime asks for it (keyring is the default).
+- Gatekeeper / SmartScreen warnings on first run for unsigned binaries — how to dismiss them.
+- Where the worker stores its data, and how to wipe it for a clean start.
+
+## Failure modes
+
+Real things that can go wrong, and what the worker does about each one:
+
+- **<failure>** — what happens (logs, retries, falls back, exits with an error code).
+
+Anything the worker doesn't gracefully handle, say so here. The user shouldn't have to find out by reading the source.
