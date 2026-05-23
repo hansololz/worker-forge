@@ -1,69 +1,51 @@
 # Worker Forge
 
-Agent skill that turn a plain-language task into a portable program that runs on your own machine. You describe
-what you want; and it will produce a single program — a *worker* — that runs on your machine. Double-click it, schedule
-it, or hand it to someone else.
+## What is Worker Forge
+
+Worker Forge is an agent that turns a plain-language task description into a small, single-purpose program that runs on
+your own machine. You describe what you want; the Forge interviews you about the details and produces a *worker* — a
+native artifact (`.exe` on Windows, `.app` on macOS, AppImage or static binary on Linux) that does one job, runs to
+completion, and exits. Trigger it with a double-click, a schedule, a cron entry, or an event.
 
 ## The problem
 
-A lot of useful desktop work is small, manual, and repetitive: renaming a folder of PDFs, checking a page for changes,
-building a weekly digest from a few feeds. Each task is often too narrow for off-the-shelf software and too small to pay
-a developer for, so it stays manual.
+A lot of useful desktop work is small, manual, and repetitive: checking a webpage for a specific change, pulling a
+daily digest from a set of sources, renaming a folder of files according to their content. These tasks stay manual for
+three reasons:
 
-The obvious solution — wire it to a hosted LLM — has three problems:
+- Automating them costs more time than they save.
+- Most users can't write the script themselves.
+- General-purpose tools don't cover them — the tasks are too niche.
 
-1. **Cost.** Hosted-LLM pricing today is subsidized by VC funding and subject to change.
-2. **Availability.** Providers shut down, deprecate models, and change pricing on their own schedule.
-3. **Connectivity.** Hosted calls require an internet connection at run time, and many useful tasks should run on a
-   laptop in airplane mode.
+Automating them with hosted-LLM solutions has three problems:
 
-## How Worker Forge solves the problem
-
-Worker Forge bets on three things: local hardware keeps getting more capable at running models, local models keep
-getting better, and many subtasks don't need a model at all.
-
-Each worker is built around a three-tier cascade:
-
-1. **CODE** — deterministic Python (regex, parser, HTTP, library call).
-2. **LOCAL** — a small LLM running on your machine via Ollama.
-3. **HOSTED** — a frontier model with your own API key.
-
-When forging a worker, Worker Forge tries to express each subtask in code first. If code can't handle the subtask, the
-worker calls a local model. If a local model isn't capable enough, the worker falls back to a hosted model. Most
-workers never reach the third tier.
-
-Worker Forge interviews you about edge cases, output location, error behavior, and target OS. It writes the worker's
-Workshop into `root/workshops/<worker-name>/` on your machine, builds the artifact for Windows / macOS / Linux out of
-that Workshop, and hands you the result.
-
-One worker does one job. The worker runs and exits — no daemons, no servers. It triggers from a double-click, a
-schedule, a cron entry, or an event.
+- **Cost.** Hosted-LLM pricing today is subsidized by VC funding and subject to change.
+- **Availability.** Providers shut down, deprecate models, and change pricing models on their own schedule.
+- **Connectivity.** Hosted calls require an internet connection at run time while many of these tasks could run on a
+  laptop in airplane mode.
 
 ## Examples
-
-### Rename PDFs by their document date
-
-The worker watches your Downloads folder, opens each new PDF, finds the document date on the first page, and renames the
-file to `YYYY-MM-DD_<original-name>.pdf`. It tries regex first and falls back to a local model when the date format is
-unusual. Every rename is logged.
-
-Cascade: CODE everywhere except date extraction (CODE → LOCAL fallback). No network calls.
 
 ### Daily news digest
 
 The worker pulls articles from a configured set of RSS feeds, deduplicates by URL, clusters near-duplicates, summarizes
-each cluster, and writes a Markdown briefing to `~/Documents/digest.md`. It runs on a schedule you wire into Task
-Scheduler / launchd / cron.
+each cluster, and writes a Markdown briefing to `~/Documents/digest.md`. Fetching, dedup, and output are deterministic;
+clustering and summaries are fuzzy enough to need a model but small enough for a local one. Wire it into Task
+Scheduler, launchd, or cron and walk away.
 
 Cascade: CODE for fetch, dedupe, and output. LOCAL for clustering and summaries. No hosted calls.
 
-### Contract obligation extractor
+### Expense receipt filer
 
-You drop a contract PDF on the worker. It extracts the text, identifies the parties, lists every obligation by party,
-and writes a report next to the source PDF. Legal nuance is past local-model reach, so this one uses a hosted model —
-the worker prompts for your API key on first run and saves it.
+The worker watches `~/Receipts/Inbox` for new files — PDFs the hotel emailed, photos snapped on a phone, screenshots of
+ride receipts. For each one it extracts the vendor, date, and total, renames the file to
+`YYYY-MM-DD_<vendor>_<amount>.pdf`, files it into `~/Receipts/<YYYY-MM>/<trip-name>/`, and appends a row to a running
+`expenses.csv` the finance team imports. Invoice-style PDFs fall into CODE (text extraction plus a regex for the
+total); photos and screenshots fall through to LOCAL (a vision-capable model via Ollama). Anything the worker can't
+parse confidently lands in a `review/` folder for the user to fix by hand. No receipt data leaves the laptop.
 
-Cascade: CODE for text extraction and report writing. HOSTED for party identification and obligation extraction.
+Cascade: CODE for clean PDFs, dedup, renaming, filing, and CSV output. LOCAL for image-based receipts. No hosted
+calls.
 
 ## Future improvements
 
@@ -71,25 +53,25 @@ Out of scope for v1, on the roadmap:
 
 - **Workers marketplace.** Browse and install workers other people have forged.
 - **Code-signing.** Sign Windows and macOS artifacts so recipients don't see the first-run security warning.
-- **An update channel.** Push reforged versions of a worker to recipients without re-emailing the binary.
+- **A remote update channel.** Push reforged versions of a worker to recipients without re-emailing the binary.
 - **Auto-reforge on failure.** When a worker stops completing its task — an API changed, a site moved, a model
   deprecated — Worker Forge reforges it from the original spec until it works again.
-- **A desktop UI for Worker Forge.** Today the interview happens in a chat; a desktop app would open the same flow to
-  people who don't use a chat client.
-- **A CLI for power users.** Skip the interview and pass the spec on the command line.
-- **Automated security scanning.** The Forge produces source you can read, but a scanner would catch the obvious classes
-  of mistake before the build.
-- **Cross-platform scheduling helper.** Today you wire the schedule into your OS scheduler. A thin scheduler shipped
-  with each worker could remove that step.
-- **Artifact attestation.** A built binary should be verifiable against the source in the Workshop, so a recipient knows
-  what they're running.
-- **Smarter local-model selection.** Different machines have different models installed. The runtime could query and
-  pick the best available rather than pin one at forge time.
+- **A desktop UI for the Forge itself.** Today the interview happens in a chat; a desktop app would open the same flow
+  to people who don't use a chat client.
+- **A CLI surface for workers.** Skip the interview and pass the spec on the command line.
+- **Automated security scanning.** The Forge produces source you can read, but a scanner would catch the obvious
+  classes of mistake before the build.
+- **Cross-platform scheduling helper.** Native schedulers — Windows Task Scheduler, launchd, cron — all work
+  differently. A thin cross-platform scheduler shipped with each worker could remove that step.
+- **Artifact attestation.** A built binary should be verifiable against the source in the Workshop, so a recipient
+  knows what they're running.
+- **Smarter local-model selection.** Different machines have different Ollama models installed. The runtime could query
+  the host and pick the best available rather than pin one at forge time.
 
 ## Learn more
 
-- [`design.md`](docs/design.md) — what a worker is and isn't, and how Worker Forge, the Workshop, and workers fit
-  together.
+- [`design.md`](docs/design.md) — what a worker is and isn't, the cascade as runtime contract, the Workshop layout, the
+  forge / run / reforge lifecycles, key design decisions, and known failure modes.
 
 ## License
 
