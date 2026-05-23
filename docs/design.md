@@ -26,8 +26,9 @@ These tasks stay manual for three reasons:
 
 Automating them with hosted-LLM solutions has three problems:
 
-- **Cost.** Hosted-LLM pricing today is subsidized by VC funding and subject to change.
-- **Availability.** Providers shut down, deprecate models, and change pricing models on their own schedule.
+- **Cost.** Hosted-LLM pricing today is subsidized by investor and corporate capital, subject to change, and may become
+  cost prohibitive.
+- **Availability.** Providers shut down and deprecate models on their own schedule.
 - **Connectivity.** Hosted calls require an internet connection at run time while many of these tasks could run on a
   laptop in airplane mode.
 
@@ -71,12 +72,12 @@ A **Worker** is the program the user runs on their own machine — a single-purp
 one repetitive task well. It's invoked by click, schedule, cron, or event. The artifact is whatever the target OS
 prefers natively: `.exe` on Windows, `.app` bundle on macOS, AppImage or static binary on Linux.
 
-A **Workshop** is the folder that holds everything needed to build, audit, and modify a Worker. It includes the spec,
-sources, build scripts, and distributable. Each worker has exactly one Workshop, and the Workshop, not the binary,
+A **Workspace** is the folder that holds everything needed to build, audit, and modify a Worker. It includes the spec,
+sources, build scripts, and distributable. Each worker has exactly one Workspace, and the Workspace, not the binary,
 is the source of truth.
 
 ```
-root/workshops/<worker-name>/
+root/workspaces/<worker-name>/
 ├── AUTHORING.md   # original task description, interview notes, decisions
 ├── WORKER.md      # plain-language spec: what it does, trigger, cascade plan
 ├── resources/     # prompts, schemas, templates, sample inputs needed at run time
@@ -88,7 +89,7 @@ root/workshops/<worker-name>/
 the worker's plain-language entry point. `AUTHORING.md` contains the interview transcript, decisions,
 and discarded alternatives. Worker forge skill uses the two file to reason about the worker program.
 
-**Worker Forge** is the agent that produces and edits Workshops. On a new build it runs four phases:
+**Worker Forge** is the agent that produces and edits Workspaces. On a new build it runs four phases:
 
 1. **Interview.** Pin down the task, edge cases, failure handling, output location, what counts as success. This
    is the highest-leverage phase — edge cases not surfaced here will fail at run time.
@@ -102,13 +103,13 @@ and discarded alternatives. Worker forge skill uses the two file to reason about
    decided.
 
    | Tier   | Mechanism                                 | Use for                                                   |
-   |--------|-------------------------------------------|-----------------------------------------------------------|
+      |--------|-------------------------------------------|-----------------------------------------------------------|
    | CODE   | Deterministic logic (regex, parser, HTTP) | Anything expressible as a precise rule                    |
    | LOCAL  | Local LLM via Ollama on the user's box    | Fuzzy classification, small summaries, simple extractions |
    | HOSTED | Hosted LLM with the user's API key        | Tasks that need frontier-model judgment                   |
 
 3. **Code generation.** Fill in the worker template, instantiate the runtime, wire the units together, and lay out the
-   Workshop under `root/workshops/`.
+   Workspace under `root/workspaces/`.
 4. **Packaging.** Produce a build script for the target OS. The Forge tries to run the build itself first, after
    asking the user for permission. If the host OS doesn't match the target, or the build fails, the Forge hands the
    script to the user with instructions for running it on a matching machine. Either way the output is the worker
@@ -136,7 +137,7 @@ quite fit.
 
 ### How they come together
 
-Three lifecycles run on top of a Workshop: the initial forge that creates it, the runs that follow once a worker has
+Three lifecycles run on top of a Workspace: the initial forge that creates it, the runs that follow once a worker has
 been built from it, and reforges when the user comes back with a change.
 
 #### Initial forge
@@ -147,7 +148,7 @@ user (plain-language task)
         ▼
 Worker Forge ── interview ──▶ cascade plan ──▶ code gen ──▶ build script
         │                                                       │
-        └─────── writes into root/workshops/<name>/ ◀───────┘
+        └─────── writes into root/workspaces/<name>/ ◀───────┘
                                   │
                                   ▼
                   Forge asks user: "run build now?"
@@ -209,7 +210,7 @@ user (change request) ──▶ Worker Forge
                   rebuilds artifact in dist/
 ```
 
-Reforge is the common case after the first build, and it's the test the Workshop has to pass: if the Forge
+Reforge is the common case after the first build, and it's the test the Workspace has to pass: if the Forge
 can't reconstruct enough context from `AUTHORING.md` and `WORKER.md` to make a confident change, the original
 interview failed. Most reforges touch one unit and rebuild. Full regeneration is reserved for changes large enough
 that a patch would be messier than a redo.
@@ -239,11 +240,11 @@ to chain through it.
 the user-facing spec short and stable while the rationale layer grows freely across reforges, without cluttering up
 the spec the user actually reads.
 
-#### The Workshop ships with every worker, not just the binary
+#### The Workspace ships with every worker, not just the binary
 
-Each Workshop holds Python source alongside the built artifact. Three reasons: the Forge needs to read the source to
-reforge, the user needs to be able to audit what's running on their machine, and a worker without its Workshop is a
-black box the next maintainer can't reason about. The artifact in `dist/` is the distributable; the Workshop is the
+Each Workspace holds Python source alongside the built artifact. Three reasons: the Forge needs to read the source to
+reforge, the user needs to be able to audit what's running on their machine, and a worker without its Workspace is a
+black box the next maintainer can't reason about. The artifact in `dist/` is the distributable; the Workspace is the
 source of truth.
 
 #### Target OS is chosen at forge time
@@ -267,10 +268,10 @@ a bug worth investigating.
 - **The build host's OS doesn't match the target.** The Forge doesn't attempt cross-compilation. It hands the build
   script to the user with instructions for running it on a matching machine. This is a known branch of the initial
   forge, not an error condition.
-- **The user declines the build prompt.** The Forge skips the build and leaves the source in the Workshop. The user
+- **The user declines the build prompt.** The Forge skips the build and leaves the source in the Workspace. The user
   can run the build script themselves later, or ask the Forge to retry the build at any point.
 - **A reforge would have to change too much.** When the requested change diverges from the original `AUTHORING.md`
-  enough that a patch would be messier than a fresh build, the Forge does the fresh build and replaces the Workshop.
+  enough that a patch would be messier than a fresh build, the Forge does the fresh build and replaces the Workspace.
   The previous `AUTHORING.md` is preserved in a `history/` subfolder for reference.
 
 ### Open questions
@@ -282,7 +283,7 @@ real enough to bite us if we don't pick an answer before the first batch of work
   ship a thin cross-platform scheduler with each worker, or generate native scheduler config at forge time?
 - **Worker updates.** A reforge today produces a new artifact the user has to redistribute by hand. Is there a
   lightweight update channel that doesn't require us to run a server?
-- **Artifact attestation.** A built `.exe` should be verifiable against the source in the Workshop. What's the
+- **Artifact attestation.** A built `.exe` should be verifiable against the source in the Workspace. What's the
   minimum scheme that gives the recipient confidence without turning the build pipeline into a research project?
 - **Local model selection.** Different users have different Ollama models installed. Does the Forge pin a specific
   model per worker, or query the host at run time and pick the best available?

@@ -1,9 +1,9 @@
 @echo off
 REM Build script for {{WORKER_NAME}} on Windows.
 REM
-REM Produces a single-file .exe in the parent workshop's dist\ folder.
-REM Run this from the build\ directory inside the workshop:
-REM     cd path\to\workshops\{{WORKER_NAME}}\build
+REM Produces a single-file .exe in the parent workspace's dist\ folder.
+REM Run this from the build\ directory inside the workspace:
+REM     cd path\to\workspaces\{{WORKER_NAME}}\build
 REM     build_windows.bat
 REM
 REM Requires Python 3.10+ on PATH.
@@ -24,7 +24,7 @@ python -m pip install -r "%BUILD_DIR%requirements.txt" pyinstaller || goto :erro
 echo Building executable...
 REM --onefile     : single binary
 REM --noconsole   : add for GUI workers, omit for CLI workers
-REM --add-data    : bundle the workshop's resources\ folder if present
+REM --add-data    : bundle the workspace's resources\ folder if present
 REM
 REM The forge sets WORKER_GUI=1 at code-gen time if the worker has a GUI;
 REM otherwise --noconsole is left off so the CLI worker can write to stdout.

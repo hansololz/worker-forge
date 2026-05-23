@@ -20,11 +20,11 @@ description: >-
 
 # Worker Forge
 
-This skill is the forging agent. The job is to take a plain-language description of a small repetitive desktop task and turn it into a self-contained program — a *worker* — that runs on the user's machine. The forging agent interviews the user, plans the worker's logic, generates the source and the build script, and lays everything out as a *Workshop* the user (and a future reforge) can audit and modify.
+This skill is the forging agent. The job is to take a plain-language description of a small repetitive desktop task and turn it into a self-contained program — a *worker* — that runs on the user's machine. The forging agent interviews the user, plans the worker's logic, generates the source and the build script, and lays everything out as a *Workspace* the user (and a future reforge) can audit and modify.
 
 You're producing two things on a successful forge:
 
-- A **Workshop** — a folder at `root/workshops/<worker-name>/` that holds the spec, source, build script, and resources. This is the source of truth.
+- A **Workspace** — a folder at `root/workspaces/<worker-name>/` that holds the spec, source, build script, and resources. This is the source of truth.
 - An **artifact** — the built binary in `dist/`. `.exe` on Windows, `.app` on macOS, AppImage or static binary on Linux. This is what the user double-clicks or hands to someone else.
 
 A few product principles to keep in your head the whole time:
@@ -65,16 +65,16 @@ The supplement spec asks for an explicit plan-readback step before any code gets
 
 ### Phase 3 — Code generation
 
-Once the plan is signed off, lay out the Workshop. Use the setup script — don't create the directory tree by hand:
+Once the plan is signed off, lay out the Workspace. Use the setup script — don't create the directory tree by hand:
 
 ```bash
-python scripts/setup_workshop.py --name <worker-name> --root <path-to-root>
+python scripts/setup_workspace.py --name <worker-name> --root <path-to-root>
 ```
 
-This creates `root/workshops/<worker-name>/` with the canonical layout from `design.md`:
+This creates `root/workspaces/<worker-name>/` with the canonical layout from `design.md`:
 
 ```
-root/workshops/<worker-name>/
+root/workspaces/<worker-name>/
 ├── AUTHORING.md   # interview notes, decisions, discarded alternatives
 ├── WORKER.md      # plain-language spec: name, description, cascade plan
 ├── resources/     # prompts, schemas, templates, sample inputs needed at run time
@@ -110,7 +110,7 @@ When the build succeeds, the artifact lands in `dist/`. Give the user a `compute
 
 When the user comes back with a change, read `references/reforge.md`. The short version: read `AUTHORING.md` and `WORKER.md`, find the unit the change touches, modify it, rebuild. Don't regenerate from scratch unless the diff would be messier than a redo.
 
-If the change can't be made from what `AUTHORING.md` and `WORKER.md` say — meaning the original interview didn't capture enough context — that's a signal the first forge was rushed. Re-interview the user on the missing details and write the new context back into `AUTHORING.md` before you make the change. This is how the Workshop stays useful over time.
+If the change can't be made from what `AUTHORING.md` and `WORKER.md` say — meaning the original interview didn't capture enough context — that's a signal the first forge was rushed. Re-interview the user on the missing details and write the new context back into `AUTHORING.md` before you make the change. This is how the Workspace stays useful over time.
 
 ## Invariants
 
@@ -126,10 +126,10 @@ If you find yourself writing something that breaks one of these, stop and refram
 
 ## What you produce
 
-After a forge completes the user has a Workshop folder like:
+After a forge completes the user has a Workspace folder like:
 
 ```
-root/workshops/my-worker/
+root/workspaces/my-worker/
 ├── AUTHORING.md
 ├── WORKER.md
 ├── resources/
@@ -142,22 +142,22 @@ root/workshops/my-worker/
     └── my-worker.exe            # only if the build ran
 ```
 
-The Workshop is the source of truth. The artifact in `dist/` is the distributable. Both ship together — the user (or whoever they hand the worker to) should always be able to read the source for what's running on their machine.
+The Workspace is the source of truth. The artifact in `dist/` is the distributable. Both ship together — the user (or whoever they hand the worker to) should always be able to read the source for what's running on their machine.
 
 ## Reference files
 
 - `references/interview.md` — the full question set for the interview phase, with options and notes on which combinations are mutually exclusive.
 - `references/cascade.md` — how to pick CODE vs. LOCAL vs. HOSTED for each unit, with worked examples.
 - `references/packaging.md` — OS-specific build details and what to do when the host OS doesn't match the target.
-- `references/reforge.md` — how to apply a change to an existing Workshop without regenerating.
+- `references/reforge.md` — how to apply a change to an existing Workspace without regenerating.
 
-- `scripts/setup_workshop.py` — creates the Workshop directory tree. Use this; don't lay the folders out by hand.
+- `scripts/setup_workspace.py` — creates the Workspace directory tree. Use this; don't lay the folders out by hand.
 
 - `assets/WORKER.md.template` — the spec template.
 - `assets/AUTHORING.md.template` — the rationale-layer template.
-- `assets/worker_runtime.py` — the cascade runtime, copied unchanged into every Workshop.
+- `assets/worker_runtime.py` — the cascade runtime, copied unchanged into every Workspace.
 - `assets/build_windows.bat`, `assets/build_macos.sh`, `assets/build_linux.sh` — build script templates per target OS.
-- `assets/setup_local_models.sh`, `assets/setup_local_models.bat` — Ollama-installer/pull script. Drop into the workshop's `resources/` if the user agreed to bundle one during the interview.
+- `assets/setup_local_models.sh`, `assets/setup_local_models.bat` — Ollama-installer/pull script. Drop into the workspace's `resources/` if the user agreed to bundle one during the interview.
 - `assets/requirements.txt` — minimal Python dependencies for the worker.
 
 Good luck. The interview is where this skill is won or lost — take the time on it.

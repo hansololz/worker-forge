@@ -1,6 +1,6 @@
 @echo off
 REM Ensure Ollama is installed and the models this worker needs are pulled.
-REM Copied into a workshop's resources\ folder when the user agreed to bundle
+REM Copied into a workspace's resources\ folder when the user agreed to bundle
 REM a setup script during the interview. The runtime calls this on first run
 REM if any LOCAL model isn't available.
 REM

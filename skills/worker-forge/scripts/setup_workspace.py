@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Create a new Workshop directory tree for a worker.
+Create a new Workspace directory tree for a worker.
 
-The Workshop is the source of truth for a worker - spec, source, build scripts,
+The Workspace is the source of truth for a worker - spec, source, build scripts,
 resources, and built artifact all live in one folder. This script lays out the
 canonical structure from design.md and stages the template files from the
 skill's `assets/` folder.
 
 Usage:
-    python setup_workshop.py --name my-worker --root /path/to/root
-    python setup_workshop.py --name my-worker --root /path/to/root --target-os windows
+    python setup_workspace.py --name my-worker --root /path/to/root
+    python setup_workspace.py --name my-worker --root /path/to/root --target-os windows
 """
 
 import argparse
@@ -99,30 +99,30 @@ def write_skeleton_main(dst, worker_slug):
     dst.write_text(text, encoding="utf-8")
 
 
-def setup_workshop(name, root, target_os):
+def setup_workspace(name, root, target_os):
     slug = slugify(name)
-    workshop = root / "workshops" / slug
+    workspace = root / "workspaces" / slug
 
-    if workshop.exists():
+    if workspace.exists():
         raise FileExistsError(
-            f"Workshop already exists at {workshop}. "
+            f"Workspace already exists at {workspace}. "
             f"Move or rename it before re-running, or use reforge instead."
         )
 
-    workshop.mkdir(parents=True)
-    (workshop / "resources").mkdir()
-    (workshop / "build").mkdir()
-    (workshop / "dist").mkdir()
+    workspace.mkdir(parents=True)
+    (workspace / "resources").mkdir()
+    (workspace / "build").mkdir()
+    (workspace / "dist").mkdir()
 
     assets = assets_dir()
     subs = {"WORKER_NAME": slug}
 
-    copy_template(assets / "WORKER.md.template", workshop / "WORKER.md", subs)
-    copy_template(assets / "AUTHORING.md.template", workshop / "AUTHORING.md", subs)
+    copy_template(assets / "WORKER.md.template", workspace / "WORKER.md", subs)
+    copy_template(assets / "AUTHORING.md.template", workspace / "AUTHORING.md", subs)
 
-    shutil.copy2(assets / "worker_runtime.py", workshop / "build" / "worker_runtime.py")
-    copy_template(assets / "requirements.txt", workshop / "build" / "requirements.txt", subs)
-    write_skeleton_main(workshop / "build" / "main.py", slug)
+    shutil.copy2(assets / "worker_runtime.py", workspace / "build" / "worker_runtime.py")
+    copy_template(assets / "requirements.txt", workspace / "build" / "requirements.txt", subs)
+    write_skeleton_main(workspace / "build" / "main.py", slug)
 
     if target_os:
         target_os = target_os.lower()
@@ -133,46 +133,46 @@ def setup_workshop(name, root, target_os):
         if target_os == "windows":
             copy_template(
                 assets / "build_windows.bat",
-                workshop / "build" / "build_windows.bat",
+                workspace / "build" / "build_windows.bat",
                 subs,
             )
         elif target_os == "macos":
             src = assets / "build_macos.sh"
-            dst = workshop / "build" / "build_macos.sh"
+            dst = workspace / "build" / "build_macos.sh"
             copy_template(src, dst, subs)
             os.chmod(dst, 0o755)
         elif target_os == "linux":
             src = assets / "build_linux.sh"
-            dst = workshop / "build" / "build_linux.sh"
+            dst = workspace / "build" / "build_linux.sh"
             copy_template(src, dst, subs)
             os.chmod(dst, 0o755)
 
-    return workshop
+    return workspace
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Create a Workshop directory for a worker.")
+    parser = argparse.ArgumentParser(description="Create a Workspace directory for a worker.")
     parser.add_argument("--name", required=True,
                         help="Worker name. Slugified for the folder.")
     parser.add_argument("--root", required=True, type=Path,
-                        help="Root directory under which workshops/<worker-name>/ will be created.")
+                        help="Root directory under which workspaces/<worker-name>/ will be created.")
     parser.add_argument("--target-os", choices=sorted(VALID_OS),
                         help="If set, copy the matching build script into build/.")
     args = parser.parse_args(argv)
 
     try:
-        workshop = setup_workshop(args.name, args.root, args.target_os)
+        workspace = setup_workspace(args.name, args.root, args.target_os)
     except (FileExistsError, FileNotFoundError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    print(f"Workshop created at: {workshop}")
+    print(f"Workspace created at: {workspace}")
     print()
     print("Next steps:")
-    print(f"  1. Fill in {workshop / 'WORKER.md'} with the spec and cascade plan.")
-    print(f"  2. Fill in {workshop / 'AUTHORING.md'} with the interview transcript.")
-    print(f"  3. Edit {workshop / 'build' / 'main.py'} to implement the cascade units.")
-    print(f"  4. Run the build script in {workshop / 'build'} to produce the artifact.")
+    print(f"  1. Fill in {workspace / 'WORKER.md'} with the spec and cascade plan.")
+    print(f"  2. Fill in {workspace / 'AUTHORING.md'} with the interview transcript.")
+    print(f"  3. Edit {workspace / 'build' / 'main.py'} to implement the cascade units.")
+    print(f"  4. Run the build script in {workspace / 'build'} to produce the artifact.")
     return 0
 
 

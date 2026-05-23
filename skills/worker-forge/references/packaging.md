@@ -15,7 +15,7 @@ The script:
 1. Creates a venv in `build/.venv`.
 2. `pip install -r requirements.txt pyinstaller`.
 3. `pyinstaller --onefile --name <worker-name> --noconsole main.py` (drop `--noconsole` for CLI workers — without it a console worker pops a window briefly).
-4. Copies the resulting `.exe` from `build/dist/` to the Workshop's top-level `dist/`.
+4. Copies the resulting `.exe` from `build/dist/` to the Workspace's top-level `dist/`.
 
 PyInstaller flags worth knowing:
 
@@ -56,10 +56,10 @@ Default to PyInstaller `--onefile` unless the user explicitly wants an AppImage.
 
 This is a normal branch, not an error. The supplement spec says to offer to build if possible and to leave a clear message saying why not if it isn't. Concretely:
 
-- If the host OS matches the target → ask the user "OK to run the build now?", and if yes, run `build/build_<os>.{bat,sh}` from the Workshop. Stream the output. When it finishes, link them to `dist/<worker-name>.<ext>` with a `computer://` URL.
+- If the host OS matches the target → ask the user "OK to run the build now?", and if yes, run `build/build_<os>.{bat,sh}` from the Workspace. Stream the output. When it finishes, link them to `dist/<worker-name>.<ext>` with a `computer://` URL.
 - If the host OS doesn't match the target → don't try to cross-compile. Leave the build script in `build/` and tell the user something like:
 
-  > "I can't build this from here — you picked Windows as the target and I'm running on Linux. The build script is at `<workshop>/build/build_windows.bat`. Run it on a Windows machine and you'll get the `.exe` in `<workshop>/dist/`."
+  > "I can't build this from here — you picked Windows as the target and I'm running on Linux. The build script is at `<workspace>/build/build_windows.bat`. Run it on a Windows machine and you'll get the `.exe` in `<workspace>/dist/`."
 
   Put the same note at the bottom of `WORKER.md` so it survives past the chat.
 
@@ -89,6 +89,6 @@ If the smoke test fails, read the error and patch the cascade or the build scrip
 After a successful build, the user gets two things:
 
 - The artifact in `dist/`. Link them to it with `computer://<absolute-path-to-artifact>`.
-- The full Workshop. They can audit the source, hand it to someone else, or come back later for a reforge.
+- The full Workspace. They can audit the source, hand it to someone else, or come back later for a reforge.
 
 Don't bury the artifact path in prose. Give the user a one-line link they can click.

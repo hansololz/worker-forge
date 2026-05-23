@@ -42,8 +42,8 @@ During the interview process
 
 # Setup
 
-- Have a setup script to deterministically create the workshop directory and necessary files. A workshop directory
-  should be `root/workshops/<worker-name>/`.
+- Have a setup script to deterministically create the workspace directory and necessary files. A workspace directory
+  should be `root/workspaces/<worker-name>/`.
 
 # Build Worker
 

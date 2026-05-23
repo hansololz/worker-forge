@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Ensure Ollama is installed and the models this worker needs are pulled.
-# Copied into a workshop's resources/ folder when the user agreed to bundle
+# Copied into a workspace's resources/ folder when the user agreed to bundle
 # a setup script during the interview. The runtime calls this on first run
 # if any LOCAL model isn't available.
 #

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Build script for {{WORKER_NAME}} on Linux.
 #
-# Produces a single-file ELF binary in the parent workshop's dist/ folder.
+# Produces a single-file ELF binary in the parent workspace's dist/ folder.
 # If `appimagetool` is on PATH, also wraps it in an AppImage. Run from the
 # build/ directory:
-#     cd path/to/workshops/{{WORKER_NAME}}/build
+#     cd path/to/workspaces/{{WORKER_NAME}}/build
 #     ./build_linux.sh
 #
 # Requires Python 3.10+ on PATH.
@@ -51,7 +51,7 @@ Icon=$WORKER_NAME
 Type=Application
 Categories=Utility;
 EOF
-    # If the workshop ships an icon at resources/icon.png, use it. Otherwise
+    # If the workspace ships an icon at resources/icon.png, use it. Otherwise
     # skip the icon — appimagetool warns but produces a usable AppImage.
     if [[ -f "$BUILD_DIR/../resources/icon.png" ]]; then
         cp "$BUILD_DIR/../resources/icon.png" "$APPDIR/$WORKER_NAME.png"

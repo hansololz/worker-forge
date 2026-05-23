@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Build script for {{WORKER_NAME}} on macOS.
 #
-# Produces a single-file artifact in the parent workshop's dist/ folder.
+# Produces a single-file artifact in the parent workspace's dist/ folder.
 # For a GUI worker the artifact is an .app bundle; for a CLI worker it's a
 # plain executable. Run from the build/ directory:
-#     cd path/to/workshops/{{WORKER_NAME}}/build
+#     cd path/to/workspaces/{{WORKER_NAME}}/build
 #     ./build_macos.sh
 #
 # Requires Python 3.10+ on PATH.

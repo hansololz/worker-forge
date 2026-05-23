@@ -19,8 +19,9 @@ three reasons:
 
 Automating them with hosted-LLM solutions has three problems:
 
-- **Cost.** Hosted-LLM pricing today is subsidized by VC funding and subject to change.
-- **Availability.** Providers shut down, deprecate models, and change pricing models on their own schedule.
+- **Cost.** Hosted-LLM pricing today is subsidized by investor and corporate capital, subject to change, and may become
+  cost prohibitive.
+- **Availability.** Providers shut down and deprecate models on their own schedule.
 - **Connectivity.** Hosted calls require an internet connection at run time while many of these tasks could run on a
   laptop in airplane mode.
 
@@ -63,14 +64,14 @@ Out of scope for v1, on the roadmap:
   classes of mistake before the build.
 - **Cross-platform scheduling helper.** Native schedulers — Windows Task Scheduler, launchd, cron — all work
   differently. A thin cross-platform scheduler shipped with each worker could remove that step.
-- **Artifact attestation.** A built binary should be verifiable against the source in the Workshop, so a recipient
+- **Artifact attestation.** A built binary should be verifiable against the source in the Workspace, so a recipient
   knows what they're running.
 - **Smarter local-model selection.** Different machines have different Ollama models installed. The runtime could query
   the host and pick the best available rather than pin one at forge time.
 
 ## Learn more
 
-- [`design.md`](docs/design.md) — what a worker is and isn't, the cascade as runtime contract, the Workshop layout, the
+- [`design.md`](docs/design.md) — what a worker is and isn't, the cascade as runtime contract, the Workspace layout, the
   forge / run / reforge lifecycles, key design decisions, and known failure modes.
 
 ## License
