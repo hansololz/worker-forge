@@ -165,8 +165,10 @@ def main(argv=None):
     parser.add_argument("--name", required=True,
                         help="Worker name. Slugified for the folder.")
     parser.add_argument("--display-name",
-                        help="Human-readable name for window titles and headings. "
-                             "Defaults to a title-cased version of --name.")
+                        help="Human-readable name for window titles, headings, and the "
+                             "built artifact filename (e.g. 'Manga Katana Watcher.exe', "
+                             "not 'manga-katana-watcher.exe'). Defaults to a title-cased "
+                             "version of --name.")
     parser.add_argument("--root", required=True, type=Path,
                         help="Root directory under which workspaces/<worker-name>/ will be created.")
     parser.add_argument("--target-os", choices=sorted(VALID_OS),

@@ -14,7 +14,7 @@ The flow is roughly:
 2. Restate it back. One short paragraph. Wait for confirmation.
 3. **If the restated task needs a local model anywhere, try to find a CODE-only shape first.** This is the most important habit in the entire interview. A user who asks for "AI" usually doesn't need one — they're describing the *behavior* they want, not the implementation. "Categorize my downloads" sounds like classification but probably means "look at the extension and bucket by type." Propose the deterministic version; if it satisfies them you've just saved them a model download and a lot of run-time slowness. Escalate to LOCAL only when you've genuinely failed to find a CODE shape.
 4. Run through the structured questions below. Skip the ones that don't apply.
-5. End with the plan readback (see `cascade.md`). The user signs off on both the worker name and the cascade plan before you write any code.
+5. End with the plan readback (see `cascade.md` for the format, including the `START OF PLAN` banner and the visually-set-off confirmation prompt). The user signs off on both the worker name and the cascade plan before you write any code — don't bury the "please confirm" ask in a paragraph of plan text, or they'll skim past it and you'll end up building the wrong worker.
 
 ## Questions to ask
 
@@ -26,8 +26,8 @@ Ask these in order; skip any that obviously don't apply. Options labeled "USER_P
 
 Two things to capture, and you should propose both before the user has to think:
 
-- **Worker name (slug)** — kebab-case, used for the workspace folder (`workspaces/<slug>/`), the artifact filename (`<slug>.exe`, `<slug>.app`), and the `name:` field in `WORKER.md`'s frontmatter. Has to be filesystem-safe — lowercase, letters/digits/hyphens only, no spaces. Derive a candidate from what the user described and offer it.
-- **Display name** — the human-readable version. Shows up in the window title, the about box, the first-line log message, and the `# Heading` of `WORKER.md`. Title Case is the safe default. If the user doesn't care, derive it from the slug (`receipt-filer` → `Receipt Filer`) and move on.
+- **Worker name (slug)** — kebab-case, used for the workspace folder (`workspaces/<slug>/`), the `name:` field in `WORKER.md`'s frontmatter, and any internal identifier that needs to be filesystem-/shell-safe. Lowercase, letters/digits/hyphens only, no spaces. Derive a candidate from what the user described and offer it.
+- **Display name** — the human-readable version. Shows up in the window title, the about box, the first-line log message, the `# Heading` of `WORKER.md`, **and the artifact filename in `dist/`** (e.g., `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`). Title Case is the safe default. If the user doesn't care, derive it from the slug (`receipt-filer` → `Receipt Filer`) and move on. The artifact is the thing the recipient sees in their downloads folder or on their desktop, so it gets the name a human would write, not the slug.
 
 The two often differ only in capitalization and spaces; don't make the user think about them as separate decisions unless they push back on the proposed pair. If the user types a display name with characters that won't slugify cleanly ("Dave's Receipt Filer!"), pick the obvious slug ("daves-receipt-filer") and confirm in one beat.
 

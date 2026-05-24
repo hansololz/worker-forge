@@ -1,7 +1,8 @@
 @echo off
-REM Build script for {{WORKER_NAME}} on Windows.
+REM Build script for {{WORKER_DISPLAY_NAME}} ({{WORKER_NAME}}) on Windows.
 REM
 REM Produces a single-file .exe in the parent workspace's dist\ folder.
+REM The .exe is named with the display name (e.g. "My Worker.exe"), not the slug.
 REM Run this from the build\ directory inside the workspace:
 REM     cd path\to\workspaces\{{WORKER_NAME}}\build
 REM     build_windows.bat
@@ -9,7 +10,8 @@ REM
 REM Requires Python 3.10+ on PATH.
 
 setlocal enabledelayedexpansion
-set WORKER_NAME={{WORKER_NAME}}
+set WORKER_SLUG={{WORKER_NAME}}
+set WORKER_DISPLAY_NAME={{WORKER_DISPLAY_NAME}}
 set BUILD_DIR=%~dp0
 set DIST_DIR=%BUILD_DIR%..\dist
 
@@ -25,6 +27,9 @@ echo Building executable...
 REM --onefile     : single binary
 REM --noconsole   : add for GUI workers, omit for CLI workers
 REM --add-data    : bundle the workspace's resources\ folder if present
+REM --name        : the display name (quoted, may contain spaces) — drives the
+REM                 final .exe filename so the recipient sees a human-readable
+REM                 name in their downloads folder.
 REM
 REM The forge sets WORKER_GUI=1 at code-gen time if the worker has a GUI;
 REM otherwise --noconsole is left off so the CLI worker can write to stdout.
@@ -37,14 +42,14 @@ REM If the workspace ships an icon at resources\icon.ico, embed it.
 if exist "%BUILD_DIR%..\resources\icon.ico" (
     set EXTRA_FLAGS=%EXTRA_FLAGS% --icon "%BUILD_DIR%..\resources\icon.ico"
 )
-pyinstaller --onefile --name %WORKER_NAME% %EXTRA_FLAGS% "%BUILD_DIR%main.py" || goto :error
+pyinstaller --onefile --name "%WORKER_DISPLAY_NAME%" %EXTRA_FLAGS% "%BUILD_DIR%main.py" || goto :error
 
 echo Copying artifact to dist...
 if not exist "%DIST_DIR%" mkdir "%DIST_DIR%"
-copy /Y "%BUILD_DIR%dist\%WORKER_NAME%.exe" "%DIST_DIR%\%WORKER_NAME%.exe" || goto :error
+copy /Y "%BUILD_DIR%dist\%WORKER_DISPLAY_NAME%.exe" "%DIST_DIR%\%WORKER_DISPLAY_NAME%.exe" || goto :error
 
 echo.
-echo Done. Artifact: %DIST_DIR%\%WORKER_NAME%.exe
+echo Done. Artifact: %DIST_DIR%\%WORKER_DISPLAY_NAME%.exe
 exit /b 0
 
 :error

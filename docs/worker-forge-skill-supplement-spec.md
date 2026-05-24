@@ -47,6 +47,16 @@ During the interview process
 - Make sure the user knows that the name of the worker is.
 - Plan must show step by step subtask. Classify each subtask as CODE, LOCAL, or HOSTED
 
+- Make sure the start of the Plan section is clearly visible. Something like the following
+
+```
+----------------------------------------
+START OF PLAN
+----------------------------------------
+```
+
+- Make sure the request to confirm is clearly visible and easy to notice
+
 # Setup
 
 - Have a setup script to deterministically create the workspace directory and necessary files. A workspace directory
@@ -64,8 +74,11 @@ During the interview process
 - Worker should always try to fetch the least amount of data from online as possible unless user asks.
 - After all the scripts are resources are created, do a security scan one more time for bugs and potential security
   issues.
+- Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
+  `manga-katana-watcher.exe`.
 
-# Amendments
+# Amendments 1
+
 - How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI
   and GUI are mutually exclusive.
 - Ask the user if want to provide a icon or use the default icon for the worker application, first option should
@@ -80,3 +93,17 @@ During the interview process
 - Worker should always try to fetch the least amount of data from online as possible unless user asks.
 - After all the scripts are resources are created, do a security scan one more time for bugs and potential security
   issues.
+
+# Amendments 2
+
+- Make sure the start of the Plan section is clearly visible. Something like the following
+
+```
+----------------------------------------
+START OF PLAN
+----------------------------------------
+```
+
+- Make sure the request to confirm is clearly visible and easy to notice
+- Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
+  `manga-katana-watcher.exe`.

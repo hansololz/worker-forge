@@ -25,7 +25,7 @@ This skill is the forging agent. The job is to take a plain-language description
 You're producing two things on a successful forge:
 
 - A **Workspace** — a folder at `root/workspaces/<worker-name>/` that holds the spec, source, build script, and resources. This is the source of truth.
-- An **artifact** — the built binary in `dist/`. `.exe` on Windows, `.app` on macOS, AppImage or static binary on Linux. This is what the user double-clicks or hands to someone else.
+- An **artifact** — the built binary in `dist/`, named with the worker's display name (e.g., `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`). `.exe` on Windows, `.app` on macOS, AppImage or static binary on Linux. This is what the user double-clicks or hands to someone else, and the display name is what they'll see in their downloads folder, so use it.
 
 A few product principles to keep in your head the whole time:
 
@@ -63,6 +63,16 @@ Read `references/cascade.md` for the tier rules. Decompose the task into units o
 
 The supplement spec asks for an explicit plan-readback step before any code gets written: a step-by-step list of the units, each tagged CODE / LOCAL / HOSTED, and the worker's name shown clearly. The reason is that a tier disagreement caught here is a one-minute conversation; the same disagreement caught after the code is written is a rewrite. So write the plan, show the user the units, show them the name, and wait for them to confirm before moving on. If they want to swap a unit to a different tier ("I'd rather you call Claude for the summary"), that's the moment to do it.
 
+Two presentation rules the user notices when they're missing: open the plan with a banner the user can't scroll past, and end with a confirmation prompt that's visually unmistakable. Something like:
+
+```
+----------------------------------------
+START OF PLAN
+----------------------------------------
+```
+
+at the top, and a clearly-set-off "**Reply `confirm` to proceed, or tell me what to change.**" at the bottom. The reason is the same in both cases: this is the one decision point the user has to make consciously before code gets written, and a wall of plan text with the ask buried inside it is a wall of plan text the user skims and waves through. Make both edges of the plan impossible to miss.
+
 ### Phase 3 — Code generation
 
 Once the plan is signed off, lay out the Workspace. Use the setup script — don't create the directory tree by hand:
@@ -71,7 +81,7 @@ Once the plan is signed off, lay out the Workspace. Use the setup script — don
 python scripts/setup_workspace.py --name <worker-slug> --display-name "<Display Name>" --root <path-to-root>
 ```
 
-`--name` is the kebab-case slug (drives the folder, the artifact filename, and `WORKER.md`'s `name:` field); `--display-name` is what the user sees in window titles and headings. If you omit `--display-name`, the script title-cases the slug — only worth passing explicitly when the user picked a name the slug can't reconstruct (e.g., display *"Dave's Receipt Filer"*, slug `daves-receipt-filer`).
+`--name` is the kebab-case slug (drives the folder and `WORKER.md`'s `name:` field); `--display-name` is what the user sees in window titles, headings, and **the artifact filename** (`Dave's Receipt Filer.exe`, not `daves-receipt-filer.exe`). If you omit `--display-name`, the script title-cases the slug — only worth passing explicitly when the user picked a name the slug can't reconstruct (e.g., display *"Dave's Receipt Filer"*, slug `daves-receipt-filer`). Pass it whenever the artifact name is meant to look like prose rather than a slug.
 
 This creates `root/workspaces/<worker-name>/` with the canonical layout from `design.md`:
 
@@ -141,7 +151,7 @@ root/workspaces/my-worker/
 │   ├── requirements.txt
 │   └── build_windows.bat        # or build_macos.sh, build_linux.sh
 └── dist/
-    └── my-worker.exe            # only if the build ran
+    └── My Worker.exe            # display name, not the slug; only if the build ran
 ```
 
 The Workspace is the source of truth. The artifact in `dist/` is the distributable. Both ship together — the user (or whoever they hand the worker to) should always be able to read the source for what's running on their machine.

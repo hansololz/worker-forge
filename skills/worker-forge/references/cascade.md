@@ -120,3 +120,19 @@ The cascade plan goes into `WORKER.md` as a short Markdown block. Format:
 Each unit gets a name, a tier, and a one-line description of what it does. If the unit has a fallback (CODE → LOCAL when CODE can't handle the input), say so. If it's LOCAL or HOSTED, name the model.
 
 This is the contract a future reforge reads. Keep it tight.
+
+## Showing the plan to the user
+
+When you read the plan back in chat for sign-off (separate from the copy that lands in `WORKER.md`), bracket it so the user can't miss either end. Open with a banner:
+
+```
+----------------------------------------
+START OF PLAN
+----------------------------------------
+```
+
+…then the worker name (display name + slug), then the numbered unit list, then a confirmation prompt that's visually set off — its own line, bolded, no ambiguity about what you need from the user. Something like:
+
+> **Reply `confirm` to proceed, or tell me what to change.**
+
+The reason for both edges: the plan is the one decision point before code gets written, and a user who skims past it ends up with a worker built on the wrong tier. The banner makes the start scannable, and the bolded ask makes the "I need a response here" unmissable. Don't bury the confirmation request in a paragraph of plan text — it's the whole point of this step.

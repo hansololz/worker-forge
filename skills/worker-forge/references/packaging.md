@@ -1,6 +1,6 @@
 # Packaging
 
-The packaging phase turns the Python source in `build/` into a native artifact the user can double-click. The artifact lands in `dist/`.
+The packaging phase turns the Python source in `build/` into a native artifact the user can double-click. The artifact lands in `dist/`, named with the worker's **display name** — `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`. The slug is for filesystem paths and internal identifiers; the artifact is the thing the recipient sees in their downloads folder, so it gets the human-readable name. The build script templates already wire this up via `pyinstaller --name "{{WORKER_DISPLAY_NAME}}"` — leave it alone, don't substitute the slug back in.
 
 Cross-compilation is out. A Windows `.exe` is built on Windows, a macOS `.app` on macOS, a Linux AppImage on Linux. You picked the target OS during the interview; that decision drove which build script you copied into `build/`. Now you either run the matching build script (if your host OS matches the target and the user has approved) or you hand it to the user with instructions.
 
@@ -35,7 +35,7 @@ The script:
 
 1. Creates a venv in `build/.venv`.
 2. `pip install -r requirements.txt pyinstaller`.
-3. `pyinstaller --onefile --name <worker-name> --noconsole main.py` (drop `--noconsole` for CLI workers — without it a console worker pops a window briefly).
+3. `pyinstaller --onefile --name "<Display Name>" --noconsole main.py` (drop `--noconsole` for CLI workers — without it a console worker pops a window briefly). The display-name string is what determines the artifact filename — quote it because it usually has spaces.
 4. Copies the resulting `.exe` from `build/dist/` to the Workspace's top-level `dist/`.
 
 PyInstaller flags worth knowing:
@@ -57,7 +57,7 @@ The script:
 
 1. Creates a venv.
 2. `pip install -r requirements.txt pyinstaller` (or `py2app`).
-3. `pyinstaller --onefile --windowed --name <worker-name> main.py` — `--windowed` is the macOS equivalent of `--noconsole`.
+3. `pyinstaller --onefile --windowed --name "<Display Name>" main.py` — `--windowed` is the macOS equivalent of `--noconsole`. The display-name string (quoted, with spaces) is what the `.app` bundle is named.
 4. Copies the artifact to the top-level `dist/`.
 
 Unsigned `.app` bundles trigger Gatekeeper on first launch ("can't open because Apple cannot check it for malicious software"). The user can right-click → Open the first time to bypass. Note this in `WORKER.md`'s setup section — recipients hit this and it looks like the worker is broken.
@@ -77,10 +77,10 @@ Default to PyInstaller `--onefile` unless the user explicitly wants an AppImage.
 
 This is a normal branch, not an error. The supplement spec says to offer to build if possible and to leave a clear message saying why not if it isn't. Concretely:
 
-- If the host OS matches the target → ask the user "OK to run the build now?", and if yes, run `build/build_<os>.{bat,sh}` from the Workspace. Stream the output. When it finishes, link them to `dist/<worker-name>.<ext>` with a `computer://` URL.
+- If the host OS matches the target → ask the user "OK to run the build now?", and if yes, run `build/build_<os>.{bat,sh}` from the Workspace. Stream the output. When it finishes, link them to `dist/<Display Name>.<ext>` with a `computer://` URL.
 - If the host OS doesn't match the target → don't try to cross-compile. Leave the build script in `build/` and tell the user something like:
 
-  > "I can't build this from here — you picked Windows as the target and I'm running on Linux. The build script is at `<workspace>/build/build_windows.bat`. Run it on a Windows machine and you'll get the `.exe` in `<workspace>/dist/`."
+  > "I can't build this from here — you picked Windows as the target and I'm running on Linux. The build script is at `<workspace>/build/build_windows.bat`. Run it on a Windows machine and you'll get `<workspace>/dist/<Display Name>.exe`."
 
   Put the same note at the bottom of `WORKER.md` so it survives past the chat.
 
@@ -94,7 +94,7 @@ This isn't a failure — it's a known branch of the forge. Don't apologize for i
 
 Sanity-check the output:
 
-- Is there a file at `dist/<worker-name>.<ext>`?
+- Is there a file at `dist/<Display Name>.<ext>` (display name, with spaces, not the slug)?
 - Does it have a reasonable size (PyInstaller `--onefile` artifacts are usually 10–40 MB; an under-1-MB binary almost always means something went wrong)?
 - For Windows / Linux: does it run? `--onefile` binaries can fail on first invoke for missing data files; smoke-test by running it once if the worker is safe to invoke.
 - For macOS: same, plus note the Gatekeeper bypass step in `WORKER.md`.

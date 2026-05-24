@@ -16,8 +16,8 @@ Cases where the task seemed to need a LOCAL or HOSTED unit and you proposed a CO
 
 ## Interview answers
 
-- **Worker name (slug):** the kebab-case identifier used for the workspace folder, the artifact filename, and the `name:` field in `WORKER.md`.
-- **Display name:** the human-readable name used in window titles, the about box, and `WORKER.md`'s `# Heading`.
+- **Worker name (slug):** the kebab-case identifier used for the workspace folder and the `name:` field in `WORKER.md`.
+- **Display name:** the human-readable name used in window titles, the about box, `WORKER.md`'s `# Heading`, and the artifact filename in `dist/` (e.g. `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`).
 - **Target OS:** windows / macos / linux (multi-select if more than one).
 - **Trigger style:** double-click / CLI / GUI (mutually exclusive: double-click vs. GUI).
 - **Icon:** default / user-provided (path to the file the user supplied, dropped into `resources/`).
