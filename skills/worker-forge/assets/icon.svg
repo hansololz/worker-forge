@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="96" ry="96" fill="#FFF7ED"/>
+
+  <!-- Big gear (12 teeth) — upper-left, rotated 15° so a tooth points down-right -->
+  <g transform="translate(192,192) rotate(15)">
+    <g fill="#1C1917">
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(30)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(60)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(90)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(120)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(150)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(180)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(210)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(240)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(270)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(300)"/>
+      <rect x="-19" y="-165" width="38" height="65" rx="13" ry="13" transform="rotate(330)"/>
+    </g>
+    <circle r="130" fill="#1C1917"/>
+    <!-- Cream center hole -->
+    <circle r="42" fill="#FFF7ED"/>
+  </g>
+
+  <!-- Small gear (8 teeth) — lower-right, rotated 22.5° so a gap faces up-left -->
+  <g transform="translate(372,372) rotate(22.5)">
+    <g fill="#1C1917">
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(45)"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(90)"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(135)"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(180)"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(225)"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(270)"/>
+      <rect x="-19" y="-116" width="38" height="52" rx="13" ry="13" transform="rotate(315)"/>
+    </g>
+    <circle r="81" fill="#1C1917"/>
+    <!-- Cream center hole -->
+    <circle r="26" fill="#FFF7ED"/>
+  </g>
+
+</svg>

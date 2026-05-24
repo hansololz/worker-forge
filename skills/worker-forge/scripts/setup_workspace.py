@@ -9,6 +9,7 @@ skill's `assets/` folder.
 
 Usage:
     python setup_workspace.py --name my-worker --root /path/to/root
+    python setup_workspace.py --name my-worker --display-name "My Worker" --root /path/to/root
     python setup_workspace.py --name my-worker --root /path/to/root --target-os windows
 """
 
@@ -32,6 +33,11 @@ def slugify(name):
     return name
 
 
+def default_display_name(slug):
+    """Title-case the slug as a fallback display name (`receipt-filer` → `Receipt Filer`)."""
+    return " ".join(part.capitalize() for part in slug.split("-") if part)
+
+
 def assets_dir():
     return Path(__file__).resolve().parent.parent / "assets"
 
@@ -47,7 +53,7 @@ def copy_template(src, dst, substitutions=None):
 
 
 SKELETON_MAIN = '''"""
-WORKER_NAME
+WORKER_DISPLAY_NAME (slug: WORKER_SLUG)
 
 Cascade plan (filled in during code-gen):
 
@@ -81,7 +87,7 @@ def example_local_unit(worker):
 
 
 def main():
-    worker = Worker(name="WORKER_NAME")
+    worker = Worker(name="WORKER_DISPLAY_NAME")
     # Register cascade units in the order the worker should run them.
     # worker.code("prepare", example_code_unit)
     # worker.local("classify", example_local_unit)
@@ -94,13 +100,17 @@ if __name__ == "__main__":
 '''
 
 
-def write_skeleton_main(dst, worker_slug):
-    text = SKELETON_MAIN.replace("WORKER_NAME", worker_slug)
+def write_skeleton_main(dst, worker_slug, display_name):
+    text = SKELETON_MAIN.replace("WORKER_DISPLAY_NAME", display_name)
+    text = text.replace("WORKER_SLUG", worker_slug)
     dst.write_text(text, encoding="utf-8")
 
 
-def setup_workspace(name, root, target_os):
+def setup_workspace(name, root, target_os, display_name=None):
     slug = slugify(name)
+    display = display_name.strip() if display_name else default_display_name(slug)
+    if not display:
+        display = default_display_name(slug)
     workspace = root / "workspaces" / slug
 
     if workspace.exists():
@@ -115,14 +125,14 @@ def setup_workspace(name, root, target_os):
     (workspace / "dist").mkdir()
 
     assets = assets_dir()
-    subs = {"WORKER_NAME": slug}
+    subs = {"WORKER_NAME": slug, "WORKER_DISPLAY_NAME": display}
 
     copy_template(assets / "WORKER.md.template", workspace / "WORKER.md", subs)
     copy_template(assets / "AUTHORING.md.template", workspace / "AUTHORING.md", subs)
 
     shutil.copy2(assets / "worker_runtime.py", workspace / "build" / "worker_runtime.py")
     copy_template(assets / "requirements.txt", workspace / "build" / "requirements.txt", subs)
-    write_skeleton_main(workspace / "build" / "main.py", slug)
+    write_skeleton_main(workspace / "build" / "main.py", slug, display)
 
     if target_os:
         target_os = target_os.lower()
@@ -154,6 +164,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Create a Workspace directory for a worker.")
     parser.add_argument("--name", required=True,
                         help="Worker name. Slugified for the folder.")
+    parser.add_argument("--display-name",
+                        help="Human-readable name for window titles and headings. "
+                             "Defaults to a title-cased version of --name.")
     parser.add_argument("--root", required=True, type=Path,
                         help="Root directory under which workspaces/<worker-name>/ will be created.")
     parser.add_argument("--target-os", choices=sorted(VALID_OS),
@@ -161,7 +174,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     try:
-        workspace = setup_workspace(args.name, args.root, args.target_os)
+        workspace = setup_workspace(args.name, args.root, args.target_os,
+                                    display_name=args.display_name)
     except (FileExistsError, FileNotFoundError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

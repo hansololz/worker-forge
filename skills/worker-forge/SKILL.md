@@ -43,9 +43,9 @@ A forge runs in four phases — interview, cascade design, code generation, pack
 
 ### Phase 1 — Interview
 
-This is the highest-leverage phase. Edge cases the user didn't surface here will fail at run time, and you'll be back to forge it again. Read `references/interview.md` for the full question set and the order to ask them in — it's organized around the questions from the supplement spec (OS target, trigger style, scheduling, UI framework, data storage, local/hosted models per subtask).
+This is the highest-leverage phase. Edge cases the user didn't surface here will fail at run time, and you'll be back to forge it again. Read `references/interview.md` for the full question set and the order to ask them in — it's organized around the questions from the supplement spec (worker name + display name, OS target, trigger style, icon, scheduling, UI framework, color theme, data storage, local/hosted models per subtask).
 
-Use the AskUserQuestion tool for the structured choices in the interview. It forces concrete answers and the multi-select form maps cleanly onto the supplement spec's "options are mutually inclusive when possible" rule (e.g., a user can want both "double-click" and "schedule on startup"; those aren't mutually exclusive).
+Use the AskUserQuestion tool for the structured choices in the interview. It forces concrete answers and the multi-select form maps cleanly onto the supplement spec's "options are mutually inclusive when possible" rule (e.g., a user can want both "double-click" and "schedule on startup"; those aren't mutually exclusive). For every question, propose a concrete default the user can confirm with one tap — read the task description, infer the obvious pick, and present it as the first option. The skill earns its keep when the user is mostly saying "yes, that" instead of generating a spec from a blank menu.
 
 One habit during the interview that's easy to forget: if the task as described needs a local model, try to find a simpler CODE-only shape first. A user who says "categorize my downloads by type" probably means "look at the extension and the filename" — that's regex, not LLM. The reason this matters is that the cheaper tier is always faster, more available, and more predictable than the one above it, so a model call where a rule would do makes the worker worse for everyone who runs it later. Suggest the deterministic version, see if it satisfies the user, and escalate only if it doesn't. The supplement spec calls this out specifically and it's the single highest-impact habit during the interview.
 
@@ -68,8 +68,10 @@ The supplement spec asks for an explicit plan-readback step before any code gets
 Once the plan is signed off, lay out the Workspace. Use the setup script — don't create the directory tree by hand:
 
 ```bash
-python scripts/setup_workspace.py --name <worker-name> --root <path-to-root>
+python scripts/setup_workspace.py --name <worker-slug> --display-name "<Display Name>" --root <path-to-root>
 ```
+
+`--name` is the kebab-case slug (drives the folder, the artifact filename, and `WORKER.md`'s `name:` field); `--display-name` is what the user sees in window titles and headings. If you omit `--display-name`, the script title-cases the slug — only worth passing explicitly when the user picked a name the slug can't reconstruct (e.g., display *"Dave's Receipt Filer"*, slug `daves-receipt-filer`).
 
 This creates `root/workspaces/<worker-name>/` with the canonical layout from `design.md`:
 
@@ -89,20 +91,20 @@ After the script runs, fill in:
 - `build/main.py` — the worker's task logic. Import `worker_runtime` (copied unchanged from `assets/worker_runtime.py`), instantiate a `Worker` with the cascade plan, and wire the units together. The runtime handles first-run setup — Ollama check, API key prompt, keyring storage — so don't reinvent it.
 - `build/requirements.txt` — Python dependencies.
 - `build/build_<os>.{bat,sh}` — the build script for the target OS. Copy the matching template from `assets/`.
-- `resources/` — anything the worker needs at run time that isn't code: prompts, schemas, sample inputs.
+- `resources/` — anything the worker needs at run time that isn't code: prompts, schemas, sample inputs. If the user provided an icon during the interview, drop it here as `icon.<ext>` and the build script will wire it in.
+
+As you create each script, give it a quick security read — sanitize anything coming from outside the worker (CLI args, files, HTTP responses, model output) before using it in a path, shell, or query, and keep each unit's inputs scoped to only what it needs. `references/packaging.md` has the full checklist; the point is to fix the easy stuff while you're already looking at the code, not save it all for the end.
 
 Cross-compilation is out. A worker for Windows is built on Windows. The supplement spec backs this up and `design.md` is explicit about it — the build script you generate is for the target OS the user chose in the interview, not for whatever box you happen to be running on.
 
 ### Phase 4 — Packaging
 
-Read `references/packaging.md` for the OS-specific build details (PyInstaller flags for Windows, py2app for macOS, AppImage tooling for Linux).
+Read `references/packaging.md` for the OS-specific build details (PyInstaller flags for Windows, py2app for macOS, AppImage tooling for Linux), the binary-distribution and minimum-network-fetch rules, and the final security pass.
 
-The supplement spec asks for an explicit offer to build (or an explicit decline with a reason). Two things make a build possible from your side:
+Two things to do before you offer to build:
 
-1. The host OS matches the target OS (you're a forge running on Windows building a Windows worker, etc.).
-2. You have permission from the user to run the build script.
-
-If both are true, run the build script. If either isn't, leave the build script in `build/` with a short note in `WORKER.md` telling the user how to run it themselves on a matching machine. Don't try to cross-compile and don't silently skip the step — the user wants to know whether they have a finished `.exe` or a folder of source.
+1. **Final security scan.** Re-read the Workspace as a whole — every script in `build/`, every file in `resources/`, the build script itself. The per-script reads during code-gen catch local issues; this pass catches the ones that only show up when units compose (a URL fetched by one unit getting used as a filename by another, leftover debug flags, `resources/` files the worker no longer uses). `references/packaging.md` has the checklist.
+2. **Offer to build, or decline with a reason.** A build needs both the host OS to match the target and the user's permission to run the script. If both are true, run the build script. If either isn't, leave the build script in `build/` with a short note in `WORKER.md` telling the user how to run it themselves on a matching machine. Don't try to cross-compile and don't silently skip the step — the user wants to know whether they have a finished `.exe` or a folder of source.
 
 When the build succeeds, the artifact lands in `dist/`. Give the user a `computer://` link to it so they can grab it from their workspace folder.
 
@@ -148,7 +150,7 @@ The Workspace is the source of truth. The artifact in `dist/` is the distributab
 
 - `references/interview.md` — the full question set for the interview phase, with options and notes on which combinations are mutually exclusive.
 - `references/cascade.md` — how to pick CODE vs. LOCAL vs. HOSTED for each unit, with worked examples.
-- `references/packaging.md` — OS-specific build details and what to do when the host OS doesn't match the target.
+- `references/packaging.md` — OS-specific build details, binary-distribution rules, minimum-network-fetch rules, the per-script and final security review, and what to do when the host OS doesn't match the target.
 - `references/reforge.md` — how to apply a change to an existing Workspace without regenerating.
 
 - `scripts/setup_workspace.py` — creates the Workspace directory tree. Use this; don't lay the folders out by hand.

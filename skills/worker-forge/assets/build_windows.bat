@@ -33,6 +33,10 @@ if /I "%WORKER_GUI%"=="1" set EXTRA_FLAGS=%EXTRA_FLAGS% --noconsole
 if exist "%BUILD_DIR%..\resources" (
     set EXTRA_FLAGS=%EXTRA_FLAGS% --add-data "%BUILD_DIR%..\resources;resources"
 )
+REM If the workspace ships an icon at resources\icon.ico, embed it.
+if exist "%BUILD_DIR%..\resources\icon.ico" (
+    set EXTRA_FLAGS=%EXTRA_FLAGS% --icon "%BUILD_DIR%..\resources\icon.ico"
+)
 pyinstaller --onefile --name %WORKER_NAME% %EXTRA_FLAGS% "%BUILD_DIR%main.py" || goto :error
 
 echo Copying artifact to dist...

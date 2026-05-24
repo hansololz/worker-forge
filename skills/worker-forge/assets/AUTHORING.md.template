@@ -1,4 +1,4 @@
-# {{WORKER_NAME}} — authoring notes
+# {{WORKER_DISPLAY_NAME}} — authoring notes
 
 This is the rationale layer for the worker. It exists so a future reforge can pick up enough context to make a confident change without re-interviewing the user. It's allowed to read like notes — `WORKER.md` is the clean version.
 
@@ -16,10 +16,14 @@ Cases where the task seemed to need a LOCAL or HOSTED unit and you proposed a CO
 
 ## Interview answers
 
+- **Worker name (slug):** the kebab-case identifier used for the workspace folder, the artifact filename, and the `name:` field in `WORKER.md`.
+- **Display name:** the human-readable name used in window titles, the about box, and `WORKER.md`'s `# Heading`.
 - **Target OS:** windows / macos / linux (multi-select if more than one).
 - **Trigger style:** double-click / CLI / GUI (mutually exclusive: double-click vs. GUI).
+- **Icon:** default / user-provided (path to the file the user supplied, dropped into `resources/`).
 - **Scheduling:** none / loop while running / start on boot / external scheduler (list whichever applies; multi-select allowed).
 - **UI framework:** native (Tkinter / SwiftUI / WinUI) / other (which?) / N/A.
+- **Color theme:** dark / light / user-provided (palette) / N/A if no GUI.
 - **Data storage format:** sqlite / json / text / user-provided.
 - **Data location:** worker dir / home dir / mounted drive / user-provided path.
 - **Local models used:** list each LOCAL unit and the model picked (e.g., "summarize → llama3.2:3b").

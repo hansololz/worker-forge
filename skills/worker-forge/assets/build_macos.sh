@@ -38,6 +38,13 @@ fi
 if [[ -d "$BUILD_DIR/../resources" ]]; then
     EXTRA_FLAGS+=(--add-data "$BUILD_DIR/../resources:resources")
 fi
+# If the workspace ships an icon, embed it. PyInstaller wants .icns on macOS;
+# fall back to PNG (PyInstaller converts) if no .icns is provided.
+if [[ -f "$BUILD_DIR/../resources/icon.icns" ]]; then
+    EXTRA_FLAGS+=(--icon "$BUILD_DIR/../resources/icon.icns")
+elif [[ -f "$BUILD_DIR/../resources/icon.png" ]]; then
+    EXTRA_FLAGS+=(--icon "$BUILD_DIR/../resources/icon.png")
+fi
 pyinstaller --onefile --name "$WORKER_NAME" "${EXTRA_FLAGS[@]}" "$BUILD_DIR/main.py"
 
 echo "Copying artifact to dist..."

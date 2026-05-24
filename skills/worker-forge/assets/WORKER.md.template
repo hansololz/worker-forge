@@ -1,5 +1,6 @@
 ---
 name: {{WORKER_NAME}}
+display_name: {{WORKER_DISPLAY_NAME}}
 description: >-
   One-paragraph description of what this worker does, when to use it, and
   what kind of input it expects. Written so someone who didn't sit through
@@ -7,7 +8,7 @@ description: >-
   for their problem.
 ---
 
-# {{WORKER_NAME}}
+# {{WORKER_DISPLAY_NAME}}
 
 ## What it does
 

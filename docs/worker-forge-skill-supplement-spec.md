@@ -9,16 +9,23 @@ During the interview process
 - After understand what the user is asking. If the worker require local model to complete the task, then suggest
   alternatives that could simplify the task instead so that task can be done with CODE.
 
-- During the interview process, ask the following questions if appropriate. Options are should mutually inclusive when possible.
+- During the interview process, ask the following questions if appropriate. Options are should mutually inclusive when
+  possible. Always try to give suggestions to make it easier for the users to use this skill.
+    - Ask user what they want the worker name to be also what should the display name. Give suggestions.
     - OS target [Windows. macOS, Linux, USER_PROVIDE]
-    - How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI and GUI are mutually exclusive.
+    - How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI
+      and GUI are mutually exclusive.
     - Do you want the user to schedule the worker. Ask how user want the schedule to be done. Periodic trigger only when
       worker is running, start worker on startup. User may want multiple option.
+    - Ask the user if want to provide a icon or use the default icon for the worker application, first option should
+      using the default icon.
     - Tool to build the UI [Native GUI, OTHERS, USER_PROVIDE].
         - **OTHERS** Try to find available UI frameworks on local machine and present them as options. This could be
           electron or tauri as example.
         - **USER_PROVIDE** Let the user provide the framework that they want to use. Work with the user to install or
           find them.
+    - If using GUI, ask user what color theme do they prefer. Always try to default to dark theme
+      first. [DARK (recommneded), Light, USER_PROVIDER]
     - How user want to store the data. [SQLite, text file, json file, USER_PROVIDE]
     - Where data should be store [In the same directory, in home directory, mounted drive, USER_PROVIDE]
     - Ask the user to describe the UI
@@ -49,3 +56,27 @@ During the interview process
 
 - After create all the resources to build the worker, if possible, offer to build the worker for the user. If not, leave
   a message saying that the agent can't build the worker and why.
+- After creating each script, examine the script for security issues. Things to always do includes making sure all
+  inputs are sanitized. Make sure inputs are restricted to only what is needed.
+- Always try to use a binary for distribution. Try your best to make sure there is no dependency on the user's machine.
+  Unless the user specifically ask for it. External dependencies that are generally allowed are interface for local
+  models and hosted external models.
+- Worker should always try to fetch the least amount of data from online as possible unless user asks.
+- After all the scripts are resources are created, do a security scan one more time for bugs and potential security
+  issues.
+
+# Amendments
+- How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI
+  and GUI are mutually exclusive.
+- Ask the user if want to provide a icon or use the default icon for the worker application, first option should
+  using the default icon.
+- If using GUI, ask user what color theme do they prefer. Always try to default to dark theme
+  first. [DARK (recommneded), Light, USER_PROVIDER]
+- After creating each script, examine the script for security issues. Things to always do includes making sure all
+  inputs are sanitized. Make sure inputs are restricted to only what is needed.
+- Always try to use a binary for distribution. Try your best to make sure there is no dependency on the user's machine.
+  Unless the user specifically ask for it. External dependencies that are generally allowed are interface for local
+  models and hosted external models.
+- Worker should always try to fetch the least amount of data from online as possible unless user asks.
+- After all the scripts are resources are created, do a security scan one more time for bugs and potential security
+  issues.

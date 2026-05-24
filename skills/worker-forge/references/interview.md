@@ -4,6 +4,8 @@ The interview is the highest-leverage phase of the forge. Most workers that turn
 
 Use the AskUserQuestion tool for structured choices. It forces concrete answers and renders cleanly. Free-text answers are fine for things like "describe the UI" and "what does success look like", but anything that's a known-set choice (OS target, data store, trigger) should be a multiple-choice question.
 
+**Suggest a concrete default for every question.** Don't just present a blank menu — read what the user already told you and propose the pick you'd make if it were up to you, then let them confirm or override. "Looks like a Mac-only worker since you're filing screenshots to iCloud — I'd ship macOS only, sound right?" beats "Which OSes do you want to target?" by a mile, because the user's job is to react to a guess instead of generating a spec from scratch. The same goes for the worker name, the data location, the model picks, even the icon — the skill is more useful when the user mostly has to say "yes" or "no, do this other thing instead." If you genuinely can't infer a default, say so and ask, but treat that as the exception.
+
 ## How to run it
 
 The flow is roughly:
@@ -17,6 +19,17 @@ The flow is roughly:
 ## Questions to ask
 
 Ask these in order; skip any that obviously don't apply. Options labeled "USER_PROVIDE" mean "let the user type a custom value if none of the presets fit." Where two options are mutually exclusive, the question can be single-select; otherwise let the user pick multiple.
+
+### Worker name and display name
+
+> "I'd call this `receipt-filer` (display name *Receipt Filer*). Want to use that, or pick your own?"
+
+Two things to capture, and you should propose both before the user has to think:
+
+- **Worker name (slug)** — kebab-case, used for the workspace folder (`workspaces/<slug>/`), the artifact filename (`<slug>.exe`, `<slug>.app`), and the `name:` field in `WORKER.md`'s frontmatter. Has to be filesystem-safe — lowercase, letters/digits/hyphens only, no spaces. Derive a candidate from what the user described and offer it.
+- **Display name** — the human-readable version. Shows up in the window title, the about box, the first-line log message, and the `# Heading` of `WORKER.md`. Title Case is the safe default. If the user doesn't care, derive it from the slug (`receipt-filer` → `Receipt Filer`) and move on.
+
+The two often differ only in capitalization and spaces; don't make the user think about them as separate decisions unless they push back on the proposed pair. If the user types a display name with characters that won't slugify cleanly ("Dave's Receipt Filer!"), pick the obvious slug ("daves-receipt-filer") and confirm in one beat.
 
 ### Target OS
 
@@ -35,6 +48,16 @@ Options: DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE.
 DOUBLE_CLICK_ONLY_NO_GUI and GUI are mutually exclusive — a worker either pops a window or it doesn't, you can't half-do it. CLI can be combined with either of the other two (a GUI worker can still accept command-line flags, a no-GUI worker can take CLI args too).
 
 If they pick GUI, ask the UI framework question next. If they pick CLI or DOUBLE_CLICK_ONLY_NO_GUI, skip it.
+
+### Icon
+
+> "Want me to use the default worker-forge icon, or do you have one to ship with this worker?"
+
+Options: Default icon (recommended), USER_PROVIDE.
+
+Default is the right call for almost everyone — the worker already has a usable icon and you save the user a round trip. Offer it first. If they say USER_PROVIDE, ask for an image (PNG works for everything, `.ico` for Windows specifically, `.icns` for macOS app bundles) and drop it into the workspace's `resources/` as `icon.<ext>`. The build script picks it up from there and passes it to PyInstaller via `--icon`.
+
+If the worker is a no-GUI CLI tool with no `.app` / `.exe` shell that ever shows an icon, you can skip this question entirely — there's no surface to put the icon on.
 
 ### Scheduling
 
@@ -63,6 +86,16 @@ Options: Native GUI (Tkinter on every OS; SwiftUI on macOS if they prefer; WinUI
 - **USER_PROVIDE** — let the user name the framework. If it isn't installed, help them install it before you continue. Don't generate code against a framework the user doesn't have.
 
 If the user has no strong preference, default to Tkinter — it ships with Python, builds with PyInstaller cleanly, and produces small binaries.
+
+### Color theme
+
+Ask only if the trigger style includes GUI.
+
+> "Dark theme or light theme for the UI?"
+
+Options: DARK (recommended), Light, USER_PROVIDE.
+
+Default to dark. Most desktop workers run in environments where a dark UI looks more at home next to the user's other tools, and dark is the safer pick for workers that sit on the screen for a long time. Offer Light as a one-tap alternative for users who want it, and USER_PROVIDE for someone who has a specific palette (e.g., they want the worker to follow their company's brand colors). Whatever they pick, record it in `AUTHORING.md` and apply it consistently across every window the worker draws — half-themed UIs feel broken.
 
 ### Data storage format
 
