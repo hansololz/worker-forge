@@ -1,0 +1,16 @@
+# Instructions
+
+## Creating README.md
+
+- Understand `docs/design.md` and use that to create the README.md
+- README.md should have five section
+    1. What worker-froge and worker are
+    2. The problems the project is trying to solve
+    3. Examples
+    4. Future improvements
+    5. Supplementary resources
+
+## Creating worker-forge-skill
+
+- Read the `docs/design.md` and `docs/worker-forge-skill-supplement-spec.md` doc to create the skill.
+- Store the skill in `skill/` directory.
