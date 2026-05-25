@@ -3,19 +3,16 @@ name: worker-forge
 description: >-
   Use this skill whenever the user wants to turn a small, repetitive desktop
   task into a self-contained program (a "worker") they can double-click,
-  schedule, or hand to someone else. Trigger on phrases like "make me a tool
-  that...", "build me a script for...", "I want to automate...", "turn this
-  into an .exe / .app / AppImage", "package this as a desktop app", "create
-  a worker that...", or "every time X happens, do Y". Also trigger when the
-  user describes a small recurring chore (renaming files, summarizing PDFs,
-  tracking a webpage, generating a digest, filing receipts) and the natural
-  outcome is a standalone program, not a one-off answer. Runs the whole
-  forge cycle — interviewing the user about edge cases, designing a runtime
-  execution cascade (deterministic code, then local LLM via Ollama, then
-  hosted LLM with the user's own API key), generating Python source, and
-  producing a native artifact for Windows, macOS, or Linux. Prefer over
-  ad-hoc scripts whenever the deliverable is something the user will run
-  repeatedly or share.
+  schedule, or hand off. Trigger on phrases like "make me a tool that...",
+  "build me a script for...", "I want to automate...", "turn this into an
+  .exe/.app/AppImage", "package this as a desktop app", or "every time X
+  happens, do Y". Also trigger when the user describes a small recurring
+  chore (renaming files, summarizing PDFs, tracking a webpage, filing
+  receipts) and the natural outcome is a standalone program. Runs the full
+  forge cycle: interview, cascade design (deterministic code → local LLM
+  via Ollama → hosted LLM with the user's key), Python source generation,
+  and native build for Windows, macOS, or Linux. Prefer over ad-hoc scripts
+  whenever the deliverable will be run repeatedly or shared.
 ---
 
 # Worker Forge
