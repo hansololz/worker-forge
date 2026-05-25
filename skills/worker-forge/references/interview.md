@@ -2,9 +2,13 @@
 
 The interview is the highest-leverage phase of the forge. Most workers that turn out wrong, turn out wrong because someone rushed the interview. The point isn't to fill out a form — it's to get a description sharp enough that you (or a future reforge) could build the worker from it without having to ask the user anything else.
 
-Use the AskUserQuestion tool for structured choices. It forces concrete answers and renders cleanly. Free-text answers are fine for things like "describe the UI" and "what does success look like", but anything that's a known-set choice (OS target, data store, trigger) should be a multiple-choice question.
+Use the AskUserQuestion tool for structured choices. It forces concrete answers and renders cleanly. Free-text answers are fine for things like "describe the UI" and "what does success look like", but anything that's a known-set choice (data store, trigger style) should be a multiple-choice question.
 
-**Suggest a concrete default for every question.** Don't just present a blank menu — read what the user already told you and propose the pick you'd make if it were up to you, then let them confirm or override. "Looks like a Mac-only worker since you're filing screenshots to iCloud — I'd ship macOS only, sound right?" beats "Which OSes do you want to target?" by a mile, because the user's job is to react to a guess instead of generating a spec from scratch. The same goes for the worker name, the data location, the model picks, even the icon — the skill is more useful when the user mostly has to say "yes" or "no, do this other thing instead." If you genuinely can't infer a default, say so and ask, but treat that as the exception.
+**Suggest a concrete default for every question.** Don't just present a blank menu — read what the user already told you and propose the pick you'd make if it were up to you, then let them confirm or override. "JSON file in your home directory sounds right for a worker that just keeps a last-seen timestamp — want that, or pick another?" beats "How should the worker store its data?" by a mile, because the user's job is to react to a guess instead of generating a spec from scratch. The same goes for the worker name, the model picks, even the icon — the skill is more useful when the user mostly has to say "yes" or "no, do this other thing instead." If you genuinely can't infer a default, say so and ask, but treat that as the exception.
+
+**Don't ask about the target OS.** The skill builds for whichever OS it's currently running on; that's the only OS it will ever target in a single run. Detect the host OS (`platform.system()`) and write that down, but don't ask the user to pick. If they later want to ship to a second OS, they re-run the skill on that machine and it adds a sibling folder to the existing Workspace — see `reforge.md` for the flow.
+
+**The interview splits across two files.** Anything that's true of the worker regardless of OS — what it does, the cascade plan, edge cases, partial-failure behavior, the data shape — goes into `AUTHORING.md` at the workspace root. Anything tied to a specific OS — which UI framework on this OS, which scheduler glue, where data conventionally lives on this OS, which keychain backend — goes into `<os>/<os>-specific.md`. This split is what lets a later "now build this for Linux" reforge skip the common questions and only ask the OS-specific ones. When in doubt about where a piece belongs, ask yourself: "would this answer change if we ran this same worker on a different OS?" If yes, OS-specific. If no, common.
 
 ## How to run it
 
@@ -30,14 +34,6 @@ Two things to capture, and you should propose both before the user has to think:
 - **Display name** — the human-readable version. Shows up in the window title, the about box, the first-line log message, the `# Heading` of `WORKER.md`, **and the artifact filename in `dist/`** (e.g., `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`). Title Case is the safe default. If the user doesn't care, derive it from the slug (`receipt-filer` → `Receipt Filer`) and move on. The artifact is the thing the recipient sees in their downloads folder or on their desktop, so it gets the name a human would write, not the slug.
 
 The two often differ only in capitalization and spaces; don't make the user think about them as separate decisions unless they push back on the proposed pair. If the user types a display name with characters that won't slugify cleanly ("Dave's Receipt Filer!"), pick the obvious slug ("daves-receipt-filer") and confirm in one beat.
-
-### Target OS
-
-> "Which OS should the worker run on?"
-
-Options: Windows, macOS, Linux, USER_PROVIDE (multi-select OK — some workers will ship to all three, but you'll generate a separate build script per OS).
-
-This decides the build script and the artifact format. Cross-compilation is out — a worker for Windows is built on Windows. If the user picks an OS that doesn't match the machine you're running on, that's fine; you'll hand them the build script and they'll run it on a matching box.
 
 ### Trigger style
 
@@ -149,18 +145,36 @@ If the worker uses any HOSTED unit, also ask how the user wants the worker to au
 
 If the worker has no HOSTED units, skip this section entirely. The user shouldn't see an API-key prompt for a worker that doesn't need one.
 
-## What to capture in AUTHORING.md
+## What to capture, and where
 
-The whole interview transcript goes into `AUTHORING.md`. Specifically:
+Two files take the interview transcript: `AUTHORING.md` at the workspace root for everything that holds across OSes, and `<os>/<os>-specific.md` for the answers tied to the OS you're forging on right now. The split is what makes a later "build me a Mac version too" reforge cheap.
+
+**Goes in `AUTHORING.md` (workspace root, OS-agnostic):**
 
 - The user's original ask, in their own words.
 - Your restatement and their confirmation.
 - The CODE-only shapes you proposed and why they were accepted or rejected.
-- Every structured-question answer.
-- Any back-and-forth on edge cases (what happens on partial failure, what counts as a duplicate, where outputs go, what success looks like).
-- Decisions you made and rejected — "I considered storing this in SQLite but the user only needs to read it once per run, so JSON is simpler." This is the part future-you will thank you for during reforge.
+- Worker name (slug), display name.
+- Trigger style (double-click / CLI / GUI).
+- Scheduling intent (run on startup, periodic loop while running, external scheduler, ad-hoc — what the user *wants*, not how it's wired on each OS).
+- Color theme.
+- Data storage **format** (SQLite, JSON, text, etc.).
+- UI description (what the windows do, in words — not which framework draws them).
+- Hosted model picks per HOSTED unit.
+- Cascade plan, edge cases, partial-failure behavior, idempotency rules.
+- Decisions and rejected alternatives — "I considered storing this in SQLite but the user only needs to read it once per run, so JSON is simpler." This is the part future-you will thank you for during reforge.
 
-Don't polish `AUTHORING.md`. It's allowed to read like notes. The clean version lives in `WORKER.md`.
+**Goes in `<os>/<os>-specific.md`:**
+
+- The host OS this was forged on (so a future read knows which OS this answer set applies to).
+- UI framework picked on this OS (Tkinter / SwiftUI / WinUI / Electron / whatever).
+- Data **location** on this OS (the actual path — `~/.<worker>/`, `%LOCALAPPDATA%\<worker>\`, `$XDG_DATA_HOME/<worker>/`).
+- Scheduler glue picked on this OS (launchd `.plist`, Windows Task Scheduler XML, systemd user unit, `.desktop` autostart).
+- Local model picks per LOCAL unit on this OS (e.g., Ollama vs. Apple Foundation Models vs. Windows Copilot Runtime).
+- Keychain backend (Keychain on macOS, Credential Manager on Windows, Secret Service on Linux).
+- Packaging caveats specific to this OS (Gatekeeper bypass step on macOS, SmartScreen warning on Windows, AppImage tooling on Linux).
+
+Don't polish either file. They're allowed to read like notes. The clean spec lives in `WORKER.md`.
 
 ## Common interview misses
 

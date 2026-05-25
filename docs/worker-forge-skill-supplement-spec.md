@@ -8,11 +8,13 @@ During the interview process
 
 - After understand what the user is asking. If the worker require local model to complete the task, then suggest
   alternatives that could simplify the task instead so that task can be done with CODE.
-
+- For authoring, if the answer is common to all, keep it in `AUTHROR.md`, if the answer is only specific to an OS, keep
+  it in the OS-specific.md
+- When user asks to rebuild the app on a new OS, read from `AUTHROR.md`, `WORKER.md` and do the interview process again.
 - During the interview process, ask the following questions if appropriate. Options are should mutually inclusive when
   possible. Always try to give suggestions to make it easier for the users to use this skill.
     - Ask user what they want the worker name to be also what should the display name. Give suggestions.
-    - OS target [Windows. macOS, Linux, USER_PROVIDE]
+      ~~- OS target [Windows. macOS, Linux, USER_PROVIDE]~~
     - How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI
       and GUI are mutually exclusive.
     - Do you want the user to schedule the worker. Ask how user want the schedule to be done. Periodic trigger only when
@@ -26,7 +28,7 @@ During the interview process
           find them.
     - If using GUI, ask user what color theme do they prefer. Always try to default to dark theme
       first. [DARK (recommneded), Light, USER_PROVIDER]
-    - How user want to store the data. [SQLite, text file, json file, USER_PROVIDE]
+    - How user want to store the data. [Local Database (SQLite), text file, json file, USER_PROVIDE]
     - Where data should be store [In the same directory, in home directory, mounted drive, USER_PROVIDE]
     - Ask the user to describe the UI
     - What Local Model [OLLAMA, OS MODELS, USER_PROVIDE], Only if local models are needed. Different subtask might need
@@ -61,6 +63,22 @@ START OF PLAN
 
 - Have a setup script to deterministically create the workspace directory and necessary files. A workspace directory
   should be `root/workspaces/<worker-name>/`.
+- Create script to set up build directory, new directory should be
+  ```
+  root\workspaces\
+      <worker-name>\
+          windows\
+              windows-specific.md
+          mac\
+              mac-specific.md
+          linux\
+              linux-specific.md
+          AUTHROR.md
+          WORKER.md
+  ```
+  Each folder should contain all the files to build the app for the OS. Each folder may contain different languages
+  depending on what the user specify. There is no need to read about the code for other OS. Just focus on the
+  current OS as the primary context.
 
 # Build Worker
 
@@ -77,33 +95,27 @@ START OF PLAN
 - Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
   `manga-katana-watcher.exe`.
 
-# Amendments 1
+# Amendments
 
-- How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI
-  and GUI are mutually exclusive.
-- Ask the user if want to provide a icon or use the default icon for the worker application, first option should
-  using the default icon.
-- If using GUI, ask user what color theme do they prefer. Always try to default to dark theme
-  first. [DARK (recommneded), Light, USER_PROVIDER]
-- After creating each script, examine the script for security issues. Things to always do includes making sure all
-  inputs are sanitized. Make sure inputs are restricted to only what is needed.
-- Always try to use a binary for distribution. Try your best to make sure there is no dependency on the user's machine.
-  Unless the user specifically ask for it. External dependencies that are generally allowed are interface for local
-  models and hosted external models.
-- Worker should always try to fetch the least amount of data from online as possible unless user asks.
-- After all the scripts are resources are created, do a security scan one more time for bugs and potential security
-  issues.
-
-# Amendments 2
-
-- Make sure the start of the Plan section is clearly visible. Something like the following
-
-```
-----------------------------------------
-START OF PLAN
-----------------------------------------
-```
-
-- Make sure the request to confirm is clearly visible and easy to notice
-- Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
-  `manga-katana-watcher.exe`.
+- No need to ask for `OS target [Windows. macOS, Linux, USER_PROVIDE]`. Only build for the current OS that the skill is
+  running on.
+- Create script to set up build directory, new directory should be
+  ```
+  root\workspaces\
+      <worker-name>\
+          windows\
+              windows-specific.md
+          mac\
+              mac-specific.md
+          linux\
+              linux-specific.md
+          AUTHROR.md
+          WORKER.md
+  ```
+  Each folder should contain all the files to build the app for the OS. Each folder may contain different languages
+  depending on what the user specify. There is no need to read about the code for other OS. Just focus on the
+  current OS as the primary context.
+- For authoring, if the answer is common to all, keep it in `AUTHROR.md`, if the answer is only specific to an OS, keep
+  it in the OS-specific.md
+- When user asks to rebuild the app on a new OS, read from `AUTHROR.md`, `WORKER.md` and do the interview process again.
+- How user want to store the data. [Local Database (SQLite), text file, json file, USER_PROVIDE]

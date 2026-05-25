@@ -1,8 +1,8 @@
 # Packaging
 
-The packaging phase turns the Python source in `build/` into a native artifact the user can double-click. The artifact lands in `dist/`, named with the worker's **display name** — `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`. The slug is for filesystem paths and internal identifiers; the artifact is the thing the recipient sees in their downloads folder, so it gets the human-readable name. The build script templates already wire this up via `pyinstaller --name "{{WORKER_DISPLAY_NAME}}"` — leave it alone, don't substitute the slug back in.
+The packaging phase turns the Python source in `<os>/` into a native artifact the user can double-click. The artifact lands in `<os>/dist/`, named with the worker's **display name** — `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`. The slug is for filesystem paths and internal identifiers; the artifact is the thing the recipient sees in their downloads folder, so it gets the human-readable name. The build script templates already wire this up via `pyinstaller --name "{{WORKER_DISPLAY_NAME}}"` — leave it alone, don't substitute the slug back in.
 
-Cross-compilation is out. A Windows `.exe` is built on Windows, a macOS `.app` on macOS, a Linux AppImage on Linux. You picked the target OS during the interview; that decision drove which build script you copied into `build/`. Now you either run the matching build script (if your host OS matches the target and the user has approved) or you hand it to the user with instructions.
+The skill only ever builds for the OS it's currently running on, so there's no cross-compilation to worry about and no "host doesn't match target" branch. The OS folder you're working in (`windows/`, `mac/`, or `linux/`) was created by the setup script after auto-detecting the host, and its `build_<os>.{bat,sh}` is the one you run. If the user wants the same worker on a different OS, that's a separate forge they kick off on that machine (see `reforge.md`).
 
 ## Distribute as a single binary
 
@@ -27,16 +27,18 @@ The exception is when the user asked for the bigger thing — "summarize the who
 
 ## Per-OS build details
 
+Only one of these sections is relevant per forge — the one for the OS you're running on. The other two are here so a contributor reading this doc can see the full picture, not because you need to think about them in a single run.
+
 ### Windows → `.exe` via PyInstaller
 
-Build script: `build_windows.bat` (copied from `assets/`).
+Build script: `windows/build_windows.bat` (copied from `assets/` by the setup script).
 
 The script:
 
-1. Creates a venv in `build/.venv`.
+1. Creates a venv in `windows/.venv`.
 2. `pip install -r requirements.txt pyinstaller`.
 3. `pyinstaller --onefile --name "<Display Name>" --noconsole main.py` (drop `--noconsole` for CLI workers — without it a console worker pops a window briefly). The display-name string is what determines the artifact filename — quote it because it usually has spaces.
-4. Copies the resulting `.exe` from `build/dist/` to the Workspace's top-level `dist/`.
+4. Copies the resulting `.exe` from `windows/build/dist/` (PyInstaller's working dir) to `windows/dist/`.
 
 PyInstaller flags worth knowing:
 
@@ -49,7 +51,7 @@ PyInstaller is the safe default on Windows. Nuitka produces faster binaries but 
 
 ### macOS → `.app` via py2app or PyInstaller
 
-Build script: `build_macos.sh`.
+Build script: `mac/build_macos.sh`.
 
 py2app produces a more native-feeling `.app` (better Finder integration, proper Info.plist, optional code-signing hook). PyInstaller works too and the script is simpler — default to PyInstaller unless the user asked for a real app bundle.
 
@@ -58,13 +60,13 @@ The script:
 1. Creates a venv.
 2. `pip install -r requirements.txt pyinstaller` (or `py2app`).
 3. `pyinstaller --onefile --windowed --name "<Display Name>" main.py` — `--windowed` is the macOS equivalent of `--noconsole`. The display-name string (quoted, with spaces) is what the `.app` bundle is named.
-4. Copies the artifact to the top-level `dist/`.
+4. Copies the artifact to `mac/dist/`.
 
-Unsigned `.app` bundles trigger Gatekeeper on first launch ("can't open because Apple cannot check it for malicious software"). The user can right-click → Open the first time to bypass. Note this in `WORKER.md`'s setup section — recipients hit this and it looks like the worker is broken.
+Unsigned `.app` bundles trigger Gatekeeper on first launch ("can't open because Apple cannot check it for malicious software"). The user can right-click → Open the first time to bypass. Note this in `mac/mac-specific.md` (so the next reforge on this OS sees it) and in `WORKER.md`'s setup section (so recipients see it) — this looks like the worker is broken and it isn't.
 
 ### Linux → AppImage or static binary
 
-Build script: `build_linux.sh`.
+Build script: `linux/build_linux.sh`.
 
 Two reasonable shapes:
 
@@ -73,20 +75,13 @@ Two reasonable shapes:
 
 Default to PyInstaller `--onefile` unless the user explicitly wants an AppImage. The AppImage path needs `appimagetool` on the build host; the script checks for it and falls back to plain PyInstaller if it isn't there.
 
-## When the host OS doesn't match the target
+## Running the build
 
-This is a normal branch, not an error. The supplement spec says to offer to build if possible and to leave a clear message saying why not if it isn't. Concretely:
-
-- If the host OS matches the target → ask the user "OK to run the build now?", and if yes, run `build/build_<os>.{bat,sh}` from the Workspace. Stream the output. When it finishes, link them to `dist/<Display Name>.<ext>` with a `computer://` URL.
-- If the host OS doesn't match the target → don't try to cross-compile. Leave the build script in `build/` and tell the user something like:
-
-  > "I can't build this from here — you picked Windows as the target and I'm running on Linux. The build script is at `<workspace>/build/build_windows.bat`. Run it on a Windows machine and you'll get `<workspace>/dist/<Display Name>.exe`."
-
-  Put the same note at the bottom of `WORKER.md` so it survives past the chat.
+When you're ready, ask the user "OK to run the build now?". If yes, run `<os>/build_<os>.{bat,sh}` from the Workspace. Stream the output. When it finishes, link them to `<os>/dist/<Display Name>.<ext>` with a `computer://` URL.
 
 ## When the user declines the build
 
-If the user says no to the build prompt, leave the source in `build/` with a note in `WORKER.md` explaining what to run. They can come back later and ask you to retry the build, or they can run the script themselves.
+If the user says no, leave the source in `<os>/` with a note in `WORKER.md` explaining what to run. They can come back later and ask you to retry the build, or they can run the script themselves.
 
 This isn't a failure — it's a known branch of the forge. Don't apologize for it, just hand off cleanly.
 
@@ -94,10 +89,10 @@ This isn't a failure — it's a known branch of the forge. Don't apologize for i
 
 Sanity-check the output:
 
-- Is there a file at `dist/<Display Name>.<ext>` (display name, with spaces, not the slug)?
+- Is there a file at `<os>/dist/<Display Name>.<ext>` (display name, with spaces, not the slug)?
 - Does it have a reasonable size (PyInstaller `--onefile` artifacts are usually 10–40 MB; an under-1-MB binary almost always means something went wrong)?
 - For Windows / Linux: does it run? `--onefile` binaries can fail on first invoke for missing data files; smoke-test by running it once if the worker is safe to invoke.
-- For macOS: same, plus note the Gatekeeper bypass step in `WORKER.md`.
+- For macOS: same, plus note the Gatekeeper bypass step in both `mac/mac-specific.md` and `WORKER.md`.
 
 If the smoke test fails, read the error and patch the cascade or the build script. Common failures:
 
@@ -109,7 +104,7 @@ If the smoke test fails, read the error and patch the cascade or the build scrip
 
 Workers run with the recipient's privileges on the recipient's machine, touch their files, and sometimes their network. A small security pass at code-gen time and a second one before handoff catches the easy mistakes before they ship.
 
-**As you create each script** (`build/main.py`, any helper, any build script, anything in `resources/`), give it a quick read with these questions in mind:
+**As you create each script** (`<os>/main.py`, any helper, the build script, anything in `<os>/resources/`), give it a quick read with these questions in mind:
 
 - Are all inputs from the outside (CLI args, files the worker reads, HTTP responses, model output) sanitized before they're used in a path, a shell command, a SQL string, or an HTML/Markdown render? Use `pathlib` + a path-traversal check for file paths, parameterized queries for SQL, `shlex.quote` (or skip the shell entirely with `subprocess.run([...], shell=False)`) for shell calls.
 - Are inputs restricted to only what the unit needs? A unit that only reads `.txt` files in one folder shouldn't accept an arbitrary path. A unit that calls one API endpoint shouldn't be reachable for other endpoints.
@@ -118,20 +113,20 @@ Workers run with the recipient's privileges on the recipient's machine, touch th
 
 Fix anything you find before moving on to the next script. It's cheaper to fix the regex while you're looking at it than to come back during the final pass.
 
-**Before you offer to build**, do one more pass over the whole Workspace as a unit. Things you only catch at this level:
+**Before you offer to build**, do one more pass over the current OS folder as a unit. Things you only catch at this level:
 
 - Two units that are individually safe but compose into something unsafe (one fetches a URL from a config, another uses the response as a filename — that's a path-traversal vector that neither unit owns).
-- A `resources/` file the worker no longer uses but that still ships with the binary (delete it — it's just attack surface).
-- A `requirements.txt` entry the code no longer imports (same — drop it; smaller bundle, fewer CVEs to inherit).
+- A `<os>/resources/` file the worker no longer uses but that still ships with the binary (delete it — it's just attack surface).
+- A `<os>/requirements.txt` entry the code no longer imports (same — drop it; smaller bundle, fewer CVEs to inherit).
 - A debug flag, a `print(api_key)`, a hard-coded test path that snuck in during code-gen.
 
-Note any non-trivial finding in `AUTHORING.md` under "Decisions and reasoning" so the next reforge has the context. If you find something you can't fix without re-interviewing the user (the worker fundamentally needs broader filesystem access than the user originally signed off on), flag it and ask before you ship.
+Note any non-trivial finding in `AUTHORING.md` under "Decisions and reasoning" (if it's an OS-agnostic concern) or `<os>/<os>-specific.md` (if it's tied to this OS only) so the next reforge has the context. If you find something you can't fix without re-interviewing the user (the worker fundamentally needs broader filesystem access than the user originally signed off on), flag it and ask before you ship.
 
 ## Handing off the artifact
 
 After a successful build, the user gets two things:
 
-- The artifact in `dist/`. Link them to it with `computer://<absolute-path-to-artifact>`.
+- The artifact in `<os>/dist/`. Link them to it with `computer://<absolute-path-to-artifact>`.
 - The full Workspace. They can audit the source, hand it to someone else, or come back later for a reforge.
 
 Don't bury the artifact path in prose. Give the user a one-line link they can click.

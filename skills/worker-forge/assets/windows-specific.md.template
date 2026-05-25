@@ -1,0 +1,29 @@
+# {{WORKER_DISPLAY_NAME}} — Windows-specific notes
+
+The Windows-only answers from the interview, plus packaging caveats for the `.exe` build. Anything that's true regardless of OS (the task itself, the cascade, edge cases, the data shape) lives in `../AUTHORING.md`. Anything that's the worker's *spec* lives in `../WORKER.md`. This file is for the Windows-specific pieces only.
+
+If the same worker is later built on a different OS, a sibling folder (`../mac/` or `../linux/`) gets its own `<os>-specific.md`. Those files are independent of this one — don't try to factor common bits across them.
+
+## OS-specific interview answers
+
+- **Host OS at forge time:** Windows (record the version — Win 10, Win 11, Server 2022 — if it mattered for a decision).
+- **UI framework picked on Windows:** Tkinter / WinUI 3 / PySide6 / Electron / Tauri / other. Note why this and not Tkinter (if it isn't Tkinter — Tkinter is the no-fuss default).
+- **Data location:** the actual path the worker writes to on Windows. Convention is `%LOCALAPPDATA%\<worker-slug>\` for per-user state; deviate only when the user asked for it.
+- **Scheduler glue:** none / Task Scheduler XML in `resources/` / autostart shortcut in `shell:startup` / loops internally. If Task Scheduler, link to the `.xml` file.
+- **Local-model runtime:** Ollama (default) / Windows Copilot Runtime / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, etc.).
+- **Keychain backend:** Windows Credential Manager via `keyring`. Default — record an alternative only if the user explicitly asked for one.
+
+## Packaging notes
+
+- Built with PyInstaller `--onefile`. `--noconsole` is on for GUI workers and off for CLI workers so console output stays visible.
+- The display-name string is what determines the `.exe` filename — quoted in the PyInstaller command because it usually has spaces.
+- **SmartScreen warning on first launch.** Unsigned `.exe` artifacts trigger Windows SmartScreen ("Windows protected your PC"). The user can click "More info" → "Run anyway" the first time to bypass. Make sure this is mentioned in the recipient-facing `../WORKER.md` setup section so it doesn't look like the worker is broken.
+- Anything else worth knowing for the next Windows reforge — a workaround you applied, a dependency that needed pinning, a hidden-import flag that PyInstaller wouldn't pick up on its own.
+
+## Reforge log (Windows-only changes)
+
+### Reforge YYYY-MM-DD
+
+- **User asked for:** <what they said>
+- **Changed:** <what you actually changed in `windows/`>
+- **Notes:** <anything worth remembering>

@@ -1,0 +1,30 @@
+# {{WORKER_DISPLAY_NAME}} — Linux-specific notes
+
+The Linux-only answers from the interview, plus packaging caveats for the binary (or AppImage) build. Anything that's true regardless of OS lives in `../AUTHORING.md`; the worker's spec lives in `../WORKER.md`. This file is for the Linux-specific pieces only.
+
+If the same worker is later built on a different OS, a sibling folder (`../windows/` or `../mac/`) gets its own `<os>-specific.md`. Those files are independent of this one — don't try to factor common bits across them.
+
+## OS-specific interview answers
+
+- **Host OS at forge time:** distro + version (`lsb_release -ds` or `/etc/os-release`). Glibc version matters too if it's likely to bite recipients on older distros.
+- **UI framework picked on Linux:** Tkinter / PySide6 / GTK / Electron / Tauri / other. Note why this and not Tkinter (Tkinter is the no-fuss default for GUI workers; headless workers skip this).
+- **Data location:** the actual path the worker writes to. Convention is `${XDG_DATA_HOME:-~/.local/share}/<worker-slug>/` for per-user state; deviate only when the user asked for it.
+- **Scheduler glue:** none / systemd user unit in `resources/` / cron line / `.desktop` autostart entry / loops internally. If systemd, link to the unit file and note `systemctl --user enable …`.
+- **Local-model runtime:** Ollama (default) / llama.cpp / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, etc.).
+- **Keychain backend:** Secret Service via `keyring` (works on GNOME and KDE out of the box; headless boxes may need `gnome-keyring-daemon` or fall back to a `keyring`-supported file backend). Note which way the user wants to go.
+
+## Packaging notes
+
+- Default build shape: PyInstaller `--onefile` for headless workers, AppImage (wrapped around the PyInstaller output) for GUI workers.
+- The display-name string with spaces becomes the binary name (`My Worker`); recipients can `chmod +x` and run directly, or you can wrap it in a `.desktop` file for menu integration.
+- AppImage requires `appimagetool` on the build host. The build script checks for it and falls back to plain PyInstaller if missing — note here which path actually ran.
+- Glibc symbol version is the most common "works on my machine" gotcha on Linux. Build on the oldest distro you want to support, or pin a manylinux Python in the venv.
+- Anything else worth knowing for the next Linux reforge.
+
+## Reforge log (Linux-only changes)
+
+### Reforge YYYY-MM-DD
+
+- **User asked for:** <what they said>
+- **Changed:** <what you actually changed in `linux/`>
+- **Notes:** <anything worth remembering>

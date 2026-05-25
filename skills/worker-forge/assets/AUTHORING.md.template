@@ -1,6 +1,6 @@
-# {{WORKER_DISPLAY_NAME}} — authoring notes
+# {{WORKER_DISPLAY_NAME}} — authoring notes (OS-agnostic)
 
-This is the rationale layer for the worker. It exists so a future reforge can pick up enough context to make a confident change without re-interviewing the user. It's allowed to read like notes — `WORKER.md` is the clean version.
+This is the rationale layer for the worker. It exists so a future reforge can pick up enough context to make a confident change without re-interviewing the user. Keep it strictly to answers that hold *regardless of OS* — the answers tied to one specific OS live in `<os>/<os>-specific.md`. It's allowed to read like notes — `WORKER.md` is the clean version.
 
 ## Original ask
 
@@ -14,30 +14,26 @@ The one-paragraph spec you read back to the user and they confirmed.
 
 Cases where the task seemed to need a LOCAL or HOSTED unit and you proposed a CODE shape instead. For each: what you proposed, what the user said, why you accepted or rejected the CODE shape. (If every unit was obvious, this section is short — say so.)
 
-## Interview answers
+## Interview answers (common to every OS)
 
 - **Worker name (slug):** the kebab-case identifier used for the workspace folder and the `name:` field in `WORKER.md`.
-- **Display name:** the human-readable name used in window titles, the about box, `WORKER.md`'s `# Heading`, and the artifact filename in `dist/` (e.g. `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`).
-- **Target OS:** windows / macos / linux (multi-select if more than one).
+- **Display name:** the human-readable name used in window titles, the about box, `WORKER.md`'s `# Heading`, and the artifact filename in `<os>/dist/` (e.g. `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`).
 - **Trigger style:** double-click / CLI / GUI (mutually exclusive: double-click vs. GUI).
-- **Icon:** default / user-provided (path to the file the user supplied, dropped into `resources/`).
-- **Scheduling:** none / loop while running / start on boot / external scheduler (list whichever applies; multi-select allowed).
-- **UI framework:** native (Tkinter / SwiftUI / WinUI) / other (which?) / N/A.
+- **Icon:** default / user-provided (path to the file the user supplied, dropped into `<os>/resources/`).
+- **Scheduling intent:** none / loop while running / start on boot / external scheduler (what the user *wants*; the per-OS glue lives in `<os>-specific.md`).
 - **Color theme:** dark / light / user-provided (palette) / N/A if no GUI.
-- **Data storage format:** sqlite / json / text / user-provided.
-- **Data location:** worker dir / home dir / mounted drive / user-provided path.
-- **Local models used:** list each LOCAL unit and the model picked (e.g., "summarize → llama3.2:3b").
+- **Data storage format:** sqlite / json / text / user-provided. (The *location* on disk is per-OS — record that in `<os>-specific.md`.)
+- **UI description:** what windows/screens exist, what controls each one has, what the worker does on each interaction. Framework-agnostic.
 - **Hosted providers used:** list each HOSTED unit and the provider/model picked.
-- **Bundled local-model setup script:** yes / no.
-- **Hosted-model auth strategy:** OS keyring / env var / config file.
+- **Hosted-model auth strategy:** OS keyring / env var / config file. (The keyring backend differs per OS — that goes in `<os>-specific.md`.)
 
 ## Decisions and the reasoning
 
-For each non-obvious choice, write a sentence or two on what you picked and why. Examples that future-you will want to see:
+For each non-obvious choice, write a sentence or two on what you picked and why. Keep this OS-agnostic. Examples that future-you will want to see:
 
 - "Picked JSON over SQLite for storage because the worker only writes a single timestamp per run; SQLite would be overkill."
-- "Picked LOCAL `llama3.2:3b` for the summary unit because the input is always one short article and the user explicitly said they don't want hosted dependencies."
-- "Picked PyInstaller over Nuitka for the Windows build to keep build times reasonable."
+- "Picked HOSTED Anthropic Claude for the summary unit because the input runs to ~30 pages and local models lose the thread."
+- "Picked the single-binary distribution shape because the user wants to be able to email this to her assistant."
 
 ## Alternatives considered and rejected
 
@@ -55,10 +51,11 @@ What the worker does when:
 
 ## Reforge log
 
-A timestamped append-only list of changes after the initial forge.
+A timestamped append-only list of changes after the initial forge. Per-OS-only changes are fine to log here too, with the OS noted — gives a single chronological view of what's happened to the worker.
 
 ### Reforge YYYY-MM-DD
 
 - **User asked for:** <what they said>
+- **OS in play:** <windows / mac / linux / all>
 - **Changed:** <which units, what specifically>
 - **Notes:** <anything worth remembering for the next reforge>

@@ -1,0 +1,32 @@
+# {{WORKER_DISPLAY_NAME}} — macOS-specific notes
+
+The macOS-only answers from the interview, plus packaging caveats for the `.app` (or single-binary) build. Anything that's true regardless of OS lives in `../AUTHORING.md`; the worker's spec lives in `../WORKER.md`. This file is for the macOS-specific pieces only.
+
+If the same worker is later built on a different OS, a sibling folder (`../windows/` or `../linux/`) gets its own `<os>-specific.md`. Those files are independent of this one — don't try to factor common bits across them.
+
+## OS-specific interview answers
+
+- **Host OS at forge time:** macOS (record the version — `sw_vers -productVersion` — if it mattered for a decision).
+- **Chip:** Apple Silicon / Intel (matters for which Python wheels PyInstaller picks up).
+- **UI framework picked on macOS:** Tkinter / SwiftUI bridge / PySide6 / Electron / Tauri / other. Note why this and not Tkinter (Tkinter is the no-fuss default).
+- **Data location:** the actual path the worker writes to. Convention is `~/Library/Application Support/<worker-slug>/` for per-user state; deviate only when the user asked for it.
+- **Scheduler glue:** none / launchd `.plist` in `resources/` / Login Items entry / loops internally. If launchd, link to the `.plist` and note where the user should `cp` it (`~/Library/LaunchAgents/`).
+- **Local-model runtime:** Ollama (default) / Apple Foundation Models / MLX / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, `llava`, etc.).
+- **Keychain backend:** macOS Keychain via `keyring`. Default — record an alternative only if the user explicitly asked for one.
+
+## Packaging notes
+
+- Default build: PyInstaller `--onefile --windowed` (or drop `--windowed` for CLI workers).
+- For a real `.app` bundle with proper Info.plist and Finder integration, use py2app instead — note in this section if the user asked for that.
+- The display-name string is what names the `.app` bundle — quoted in the PyInstaller command because it usually has spaces.
+- **Gatekeeper warning on first launch.** Unsigned `.app` bundles trigger "can't open because Apple cannot check it for malicious software." The user can right-click → Open the first time to bypass. Make sure this is mentioned in the recipient-facing `../WORKER.md` setup section so it doesn't look like the worker is broken.
+- If the worker is universal vs. arch-specific (Apple Silicon only), note it here — recipients on the other arch will need to know.
+- Anything else worth knowing for the next macOS reforge.
+
+## Reforge log (macOS-only changes)
+
+### Reforge YYYY-MM-DD
+
+- **User asked for:** <what they said>
+- **Changed:** <what you actually changed in `mac/`>
+- **Notes:** <anything worth remembering>
