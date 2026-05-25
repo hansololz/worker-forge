@@ -14,3 +14,9 @@
 
 - Read the `docs/design.md` and `docs/worker-forge-skill-supplement-spec.md` doc to create the skill.
 - Store the skill in `skill/` directory.
+
+# Creating worker-forge skill distribution
+
+- The skill is located in `skills/worker-forge/` directory.
+- Build the `worker-forge.skill` and store it in the `dist/` directory.
+- If a `worker-forge.skill` previously exists, then replace it.
