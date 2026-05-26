@@ -163,11 +163,12 @@ def write_skeleton_main(dst, worker_slug, display_name, target_os):
 
 
 def write_root_files(workspace, slug, display, assets):
-    """Create AUTHORING.md and WORKER.md at the workspace root if they aren't there yet."""
+    """Create README.md, AUTHORING.md, and WORKER.md at the workspace root if they aren't there yet."""
     subs = {"WORKER_NAME": slug, "WORKER_DISPLAY_NAME": display}
     for filename, template in (
         ("WORKER.md", "WORKER.md.template"),
         ("AUTHORING.md", "AUTHORING.md.template"),
+        ("README.md", "README.md.template"),
     ):
         target = workspace / filename
         if target.exists():
@@ -298,9 +299,10 @@ def main(argv=None):
     if not args.add_os:
         print(f"  1. Fill in {workspace / 'WORKER.md'} with the spec and cascade plan.")
         print(f"  2. Fill in {workspace / 'AUTHORING.md'} with OS-agnostic interview notes.")
-        next_n = 3
+        print(f"  3. Fill in {workspace / 'README.md'} with the short blurb + ordered feature bullets.")
+        next_n = 4
     else:
-        print(f"  (AUTHORING.md and WORKER.md already exist — leave them alone.)")
+        print(f"  (AUTHORING.md, WORKER.md, and README.md already exist — leave them alone.)")
         next_n = 1
     print(f"  {next_n}. Fill in {os_dir / OS_INFO[target_os]['specific_md']} "
           f"with OS-specific interview answers.")

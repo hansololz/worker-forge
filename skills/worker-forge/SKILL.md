@@ -100,18 +100,21 @@ After the script runs, fill in:
 
 As you create each script, give it a quick security read — sanitize anything coming from outside the worker (CLI args, files, HTTP responses, model output) before using it in a path, shell, or query, and keep each unit's inputs scoped to only what it needs. `references/packaging.md` has the full checklist; the point is to fix the easy stuff while you're already looking at the code, not save it all for the end.
 
+If the worker has a GUI, the look-and-feel default is **not** "whatever Tkinter draws out of the box." Read `references/default-theme.md` and apply it. The short version: a Discord-/Slack-style dark palette, rounded corners on every container and control, a title bar painted the same color as the app body (the single rule that breaks most often — don't let the OS draw a default white title bar over a dark window), and a single system font at a small set of sizes. The reason this is a default rather than an option is that "modern desktop app" is the bar users expect now, and a worker that doesn't clear it reads as broken even when it works. Deviate only when the user explicitly asked for a different look during the interview and recorded that in `AUTHORING.md`.
+
 Cross-compilation is out. The skill always builds for the current OS, never for a different one — there's no flag, no question, no fallback. If the user wants the worker on a different OS, they run the forge again on that OS (see Reforge).
 
 ### Phase 4 — Packaging
 
 Read `references/packaging.md` for the build details on the OS you're running on (PyInstaller flags on Windows, py2app or PyInstaller on macOS, AppImage tooling on Linux), the binary-distribution and minimum-network-fetch rules, and the final security pass.
 
-Two things to do before you offer to build:
+Three things to do before you offer to build:
 
 1. **Final security scan.** Re-read the OS folder as a whole — every script under `<os>/`, every file in `<os>/resources/`, the build script itself. The per-script reads during code-gen catch local issues; this pass catches the ones that only show up when units compose (a URL fetched by one unit getting used as a filename by another, leftover debug flags, `resources/` files the worker no longer uses). `references/packaging.md` has the checklist.
-2. **Offer to build, or decline with a reason.** The build needs the user's permission to run the script. If they say yes, run `<os>/build_<os>.{bat,sh}`. If they decline, leave the script in place with a short note in `WORKER.md` telling them how to run it themselves. Don't silently skip the step — the user wants to know whether they have a finished binary or a folder of source.
+2. **Write the workspace `README.md`.** Copy `assets/README.md.template` to `workspaces/<worker-name>/README.md` and fill in three things: the worker's display name as the heading, a one-or-two-sentence description of what it does, and a bulleted feature list ordered with the most important feature first. This is the "what is this folder" doc for anyone who opens the workspace; it isn't a duplicate of `WORKER.md` (which is the full spec) — it's the front-door blurb.
+3. **Offer to build, run it if the user agrees, and test the result.** The build needs the user's permission. If they say yes, run `<os>/build_<os>.{bat,sh}` and stream the output. **Then actually invoke the artifact** if it's safe to (CLI workers with `--help` or a dry-run flag, GUI workers via a short headless smoke test where the framework allows it). If it fails, read the error, patch the code or the build script, and rebuild. Don't ship a binary you haven't seen run at least once. If the user declines the build, leave the script in place with a short note in `WORKER.md` telling them how to run it themselves — that's a known branch, not a failure.
 
-When the build succeeds, the artifact lands in `<os>/dist/`. Give the user a `computer://` link to it so they can grab it from their workspace folder.
+When the build succeeds and smoke-tests cleanly, the artifact lands in `<os>/dist/`. Give the user a `computer://` link to it so they can grab it from their workspace folder.
 
 ## Reforge
 
@@ -139,6 +142,7 @@ After a forge completes the user has a Workspace folder like:
 
 ```
 root/workspaces/my-worker/
+├── README.md                     # short front-door doc: name, blurb, ordered feature bullets
 ├── AUTHORING.md
 ├── WORKER.md
 └── windows/                      # or mac/, or linux/ — whichever OS this forge ran on
@@ -160,6 +164,7 @@ The Workspace is the source of truth. The artifact in `<os>/dist/` is the distri
 
 - `references/interview.md` — the full question set for the interview phase, with options and notes on which combinations are mutually exclusive.
 - `references/cascade.md` — how to pick CODE vs. LOCAL vs. HOSTED for each unit, with worked examples.
+- `references/default-theme.md` — the default look-and-feel for workers with a GUI (Discord-style dark, rounded corners, unified title bar). Apply verbatim unless the user explicitly asked for something else.
 - `references/packaging.md` — OS-specific build details, binary-distribution rules, minimum-network-fetch rules, the per-script and final security review, and what to do when the host OS doesn't match the target.
 - `references/reforge.md` — how to apply a change to an existing Workspace without regenerating.
 
@@ -167,6 +172,7 @@ The Workspace is the source of truth. The artifact in `<os>/dist/` is the distri
 
 - `assets/WORKER.md.template` — the spec template (workspace root, OS-agnostic).
 - `assets/AUTHORING.md.template` — the rationale-layer template (workspace root, OS-agnostic).
+- `assets/README.md.template` — the short front-door blurb that lands at the workspace root after a successful forge.
 - `assets/windows-specific.md.template`, `assets/mac-specific.md.template`, `assets/linux-specific.md.template` — OS-specific interview-answer templates. The setup script drops the right one inside the new `<os>/` folder.
 - `assets/worker_runtime.py` — the cascade runtime, copied unchanged into every OS folder.
 - `assets/build_windows.bat`, `assets/build_macos.sh`, `assets/build_linux.sh` — build scripts per OS. The setup script copies whichever one matches the current OS into the new `<os>/` folder.

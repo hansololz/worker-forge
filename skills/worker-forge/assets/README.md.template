@@ -1,0 +1,11 @@
+# {{WORKER_DISPLAY_NAME}}
+
+One- or two-sentence description of what this worker does and when it runs. Keep it tight — the audience is someone who just opened the workspace folder and wants to know what they're looking at in five seconds.
+
+## Features
+
+- Most important feature — the headline reason this worker exists.
+- Next most important — a secondary capability the user signed off on during the interview.
+- Smaller features and conveniences, ordered by how often they'll matter at run time.
+
+Order matters: the most important bullet comes first, the least important last. If a feature isn't worth a bullet, drop it — `WORKER.md` is the place for completeness, this file is the place for the headline.

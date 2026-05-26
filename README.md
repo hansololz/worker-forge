@@ -2,7 +2,7 @@
 
 ## What is Worker Forge
 
-Make it easy to build desktop apps that automates repetitive tasks.
+Make small, repetitive manual desktop tasks worth automating.
 
 Worker Forge is an agent that turns a plain-language task description into a small, single-purpose program that runs on
 your own machine. You describe what you want; the Forge interviews you about the details and produces a *worker* — a

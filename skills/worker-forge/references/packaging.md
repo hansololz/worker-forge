@@ -77,7 +77,7 @@ Default to PyInstaller `--onefile` unless the user explicitly wants an AppImage.
 
 ## Running the build
 
-When you're ready, ask the user "OK to run the build now?". If yes, run `<os>/build_<os>.{bat,sh}` from the Workspace. Stream the output. When it finishes, link them to `<os>/dist/<Display Name>.<ext>` with a `computer://` URL.
+The default is to build. Ask the user "OK to run the build now?" and assume they want a yes — a worker the user has to package themselves is a worker they may never actually run. Lean into actually completing the build whenever the host can do it: don't preemptively decline, don't list reasons it might fail before trying, just run `<os>/build_<os>.{bat,sh}` from the Workspace and stream the output. When it finishes, link them to `<os>/dist/<Display Name>.<ext>` with a `computer://` URL.
 
 ## When the user declines the build
 
@@ -87,18 +87,31 @@ This isn't a failure — it's a known branch of the forge. Don't apologize for i
 
 ## After a successful build
 
-Sanity-check the output:
+Sanity-check the output, then smoke-test it. Don't skip the smoke test — finishing the build script without verifying the binary actually launches is how broken workers ship.
 
 - Is there a file at `<os>/dist/<Display Name>.<ext>` (display name, with spaces, not the slug)?
 - Does it have a reasonable size (PyInstaller `--onefile` artifacts are usually 10–40 MB; an under-1-MB binary almost always means something went wrong)?
-- For Windows / Linux: does it run? `--onefile` binaries can fail on first invoke for missing data files; smoke-test by running it once if the worker is safe to invoke.
-- For macOS: same, plus note the Gatekeeper bypass step in both `mac/mac-specific.md` and `WORKER.md`.
+- Run it. For Windows / Linux: invoke the binary once and confirm it launches (or, for a CLI worker, that `--help` returns sensibly). For macOS: same, plus note the Gatekeeper bypass step in both `mac/mac-specific.md` and `WORKER.md`. If the worker has side effects (writes files, sends network), use a flag or env var the worker honors as "dry run", or run it in a scratch directory — but do run it.
+- If the worker has a GUI, eyeball it against `references/default-theme.md` while it's open: top bar matches the body, corners are rounded on the panels and buttons, no white chrome anywhere. The theme bugs caught here are five-minute fixes; the same bugs caught after the user has clicked the artifact for the first time are an embarrassment.
 
-If the smoke test fails, read the error and patch the cascade or the build script. Common failures:
+**If the smoke test fails, fix it before handing the artifact over.** Read the error, patch the cascade or the build script, rebuild, retest. Iterate until the binary actually runs. This is the single most-skipped step in the forge and the one that most determines whether the user trusts the next worker they ask for. Common failures and what to do:
 
 - `ModuleNotFoundError` after build — a dependency that's imported dynamically wasn't picked up by PyInstaller's analysis. Add it explicitly in `requirements.txt` or use `--hidden-import=<name>`.
 - `FileNotFoundError` on a resource — the file is in the source tree but wasn't bundled. Add it with `--add-data`.
 - Permission denied on first run (Linux) — the binary needs `chmod +x`. Document it in `WORKER.md`.
+- GUI launches but the title bar is OS-default white on a dark body — see `references/default-theme.md` "The top-bar rule" and fix in the worker's source, not by editing the binary.
+
+## Writing the workspace README
+
+Once the binary is built (or once the user has explicitly declined the build), drop a short `README.md` at the workspace root. This is *not* `WORKER.md` and it's *not* `AUTHORING.md` — it's the friendliest possible recipient-facing intro to the worker, the file the user (or whoever they hand the Workspace to) sees first when they open the folder.
+
+Use `assets/README.md.template`. Three sections, no more:
+
+1. **Name** — the display name as an H1.
+2. **One-to-two-sentence description** — what this worker does, in plain language. Don't list features here; that comes next.
+3. **Features** — a bullet list, **ordered most-important-first**. Lead with the headline thing the worker does, then secondary capabilities, then nice-to-haves. Three to six bullets is the sweet spot; if you have ten, prune to the ones that matter.
+
+Keep it short on purpose. The detailed spec is in `WORKER.md`; the rationale is in `AUTHORING.md`. `README.md` is the elevator pitch — a recipient who's never seen the worker should know in under thirty seconds whether it's the right tool for them.
 
 ## Security review
 

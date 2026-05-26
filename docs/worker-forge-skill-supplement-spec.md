@@ -94,28 +94,28 @@ START OF PLAN
   issues.
 - Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
   `manga-katana-watcher.exe`.
+- During building of the worker app, I want the GUI to look modern and slick. Some think like the Discord or Slack
+  desktop app. Create a default theme for the workers apps in references. Always use that as the default unless user
+  request changes. Default theme should be similar to the dark Discord Dark mode. Make sure the corners are round.
+  Make sure the GUI looks and feels good.
+- The top bar of the work app sometime is white while the color them is dark. Make sure that the top bar is the same
+  color as the app body.
+- After the worker is created, create a short README.md in the workspace for the worker. It just needs a
+  - name
+  - one-two sentence description
+  - a list of feature in bullet points ordered by most important bullet point
+- Always try to build the app for the user. Try to test it if you can and fix any issues.
 
 # Amendments
 
-- No need to ask for `OS target [Windows. macOS, Linux, USER_PROVIDE]`. Only build for the current OS that the skill is
-  running on.
-- Create script to set up build directory, new directory should be
-  ```
-  root\workspaces\
-      <worker-name>\
-          windows\
-              windows-specific.md
-          mac\
-              mac-specific.md
-          linux\
-              linux-specific.md
-          AUTHROR.md
-          WORKER.md
-  ```
-  Each folder should contain all the files to build the app for the OS. Each folder may contain different languages
-  depending on what the user specify. There is no need to read about the code for other OS. Just focus on the
-  current OS as the primary context.
-- For authoring, if the answer is common to all, keep it in `AUTHROR.md`, if the answer is only specific to an OS, keep
-  it in the OS-specific.md
-- When user asks to rebuild the app on a new OS, read from `AUTHROR.md`, `WORKER.md` and do the interview process again.
-- How user want to store the data. [Local Database (SQLite), text file, json file, USER_PROVIDE]
+- During building of the worker app, I want the GUI to look modern and slick. Some think like the Discord or Slack
+  desktop app. Create a default theme for the workers apps in references. Always use that as the default unless user
+  request changes. Default theme should be similar to the dark Discord Dark mode. Make sure the corners are round.
+  Make sure the GUI looks and feels good.
+- The top bar of the work app sometime is white while the color them is dark. Make sure that the top bar is the same
+  color as the app body.
+- After the worker is created, create a short README.md in the workspace for the worker. It just needs a
+  - name
+  - one-two sentence description
+  - a list of feature in bullet points ordered by most important bullet point
+- Always try to build the app for the user. Try to test it if you can and fix any issues.

@@ -91,7 +91,9 @@ Ask only if the trigger style includes GUI.
 
 Options: DARK (recommended), Light, USER_PROVIDE.
 
-Default to dark. Most desktop workers run in environments where a dark UI looks more at home next to the user's other tools, and dark is the safer pick for workers that sit on the screen for a long time. Offer Light as a one-tap alternative for users who want it, and USER_PROVIDE for someone who has a specific palette (e.g., they want the worker to follow their company's brand colors). Whatever they pick, record it in `AUTHORING.md` and apply it consistently across every window the worker draws — half-themed UIs feel broken.
+Default to dark. The skill ships a Discord-style dark theme in `references/default-theme.md` — that's what "DARK" applies, top to bottom: palette, rounded corners, unified title bar, typography, spacing. Don't make the user pick hex codes or component-by-component styling; "dark" is the whole package. Most desktop workers run in environments where a dark UI looks more at home next to the user's other tools, and dark is the safer pick for workers that sit on the screen for a long time. Offer Light as a one-tap alternative (same rules — palette is in `default-theme.md`), and USER_PROVIDE for someone who has a specific palette (e.g., they want the worker to follow their company's brand colors). Whatever they pick, record it in `AUTHORING.md` and apply it consistently across every window the worker draws — half-themed UIs feel broken.
+
+One question that's easy to forget but matters: the worker's title bar should be the same color as the body. The OS will happily draw a white native title bar over a dark Tkinter or Electron window if you don't override it, and that's the single thing that makes a worker look unfinished. `default-theme.md` has the per-framework recipe; don't ship a worker with a mismatched title bar.
 
 ### Data storage format
 
