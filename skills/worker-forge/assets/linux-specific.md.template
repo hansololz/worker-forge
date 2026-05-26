@@ -7,7 +7,7 @@ If the same worker is later built on a different OS, a sibling folder (`../windo
 ## OS-specific interview answers
 
 - **Host OS at forge time:** distro + version (`lsb_release -ds` or `/etc/os-release`). Glibc version matters too if it's likely to bite recipients on older distros.
-- **UI framework picked on Linux:** Tkinter / PySide6 / GTK / Electron / Tauri / other. Note why this and not Tkinter (Tkinter is the no-fuss default for GUI workers; headless workers skip this).
+- **UI framework picked on Linux:** Electron + Tailwind / Tauri / PySide6 / GTK / Tkinter / other. Default is Electron + Tailwind when `npm` is on the `PATH`; if the user picked something else, note why (no npm, hard dependency on a Python-only stack, headless worker that skips a GUI entirely, etc.).
 - **Data location:** the actual path the worker writes to. Convention is `${XDG_DATA_HOME:-~/.local/share}/<worker-slug>/` for per-user state; deviate only when the user asked for it.
 - **Scheduler glue:** none / systemd user unit in `resources/` / cron line / `.desktop` autostart entry / loops internally. If systemd, link to the unit file and note `systemctl --user enable …`.
 - **Local-model runtime:** Ollama (default) / llama.cpp / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, etc.).

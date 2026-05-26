@@ -7,7 +7,7 @@ If the same worker is later built on a different OS, a sibling folder (`../mac/`
 ## OS-specific interview answers
 
 - **Host OS at forge time:** Windows (record the version — Win 10, Win 11, Server 2022 — if it mattered for a decision).
-- **UI framework picked on Windows:** Tkinter / WinUI 3 / PySide6 / Electron / Tauri / other. Note why this and not Tkinter (if it isn't Tkinter — Tkinter is the no-fuss default).
+- **UI framework picked on Windows:** Electron + Tailwind / Tauri / PySide6 / WinUI 3 / Tkinter / other. Default is Electron + Tailwind when `npm` is on the `PATH`; if the user picked something else, note why (no npm, hard dependency on a Python-only stack, etc.).
 - **Data location:** the actual path the worker writes to on Windows. Convention is `%LOCALAPPDATA%\<worker-slug>\` for per-user state; deviate only when the user asked for it.
 - **Scheduler glue:** none / Task Scheduler XML in `resources/` / autostart shortcut in `shell:startup` / loops internally. If Task Scheduler, link to the `.xml` file.
 - **Local-model runtime:** Ollama (default) / Windows Copilot Runtime / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, etc.).

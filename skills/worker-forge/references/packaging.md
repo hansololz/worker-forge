@@ -79,9 +79,26 @@ Default to PyInstaller `--onefile` unless the user explicitly wants an AppImage.
 
 The default is to build. Ask the user "OK to run the build now?" and assume they want a yes — a worker the user has to package themselves is a worker they may never actually run. Lean into actually completing the build whenever the host can do it: don't preemptively decline, don't list reasons it might fail before trying, just run `<os>/build_<os>.{bat,sh}` from the Workspace and stream the output. When it finishes, link them to `<os>/dist/<Display Name>.<ext>` with a `computer://` URL.
 
+## When you can't run the build script yourself
+
+There are a handful of legitimate reasons the agent can't run the build from inside the forge session — the sandbox doesn't have the toolchain needed (no `pyinstaller`, no `npm`, no `appimagetool`), code-signing requires a credential only the user has, the build needs an interactive prompt the agent can't satisfy, or the sandbox doesn't allow the network access the install step needs. When that happens, **do not stay quiet about it**. Tell the user three things, in this order, in a single short message:
+
+1. **What you tried and why it didn't work.** One sentence. Name the specific blocker (e.g., "`npm` isn't available inside my sandbox, so I can't run `electron-builder` from here") — don't say a vague "I can't build it." The user needs enough to know whether the blocker is on their end or yours.
+2. **The exact command to run.** Print it as a fenced code block, with the working directory shown on the line above. Use the real path inside the user's Workspace, not a placeholder. For example:
+
+   ```text
+   cd /Users/.../workspaces/receipt-filer/mac
+   ./build_macos.sh
+   ```
+
+   For Windows, use the `.bat` form and the Windows-style path. If the build needs an environment variable or a flag the user has to supply (an Apple Developer ID, a Windows code-signing cert), name it in the same block.
+3. **What success looks like.** One sentence about where the artifact lands (`<os>/dist/<Display Name>.<ext>`) and how to get back to you afterward ("ping me when it finishes and I'll smoke-test it / fix it if it broke").
+
+The reason this matters: a worker the user can't actually run isn't a worker. If the user closes the session without knowing the build is on them, that's a forge that produced nothing. A clear blocker + an exact command is the difference between "Claude built me a worker" and "Claude wrote me some files."
+
 ## When the user declines the build
 
-If the user says no, leave the source in `<os>/` with a note in `WORKER.md` explaining what to run. They can come back later and ask you to retry the build, or they can run the script themselves.
+If the user says no, leave the source in `<os>/` with a note in `WORKER.md` explaining what to run — same format as the "can't build" case above (working directory, fenced command, where the artifact will land). They can come back later and ask you to retry the build, or they can run the script themselves.
 
 This isn't a failure — it's a known branch of the forge. Don't apologize for it, just hand off cleanly.
 

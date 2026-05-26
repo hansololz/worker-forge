@@ -49,9 +49,11 @@ If they pick GUI, ask the UI framework question next. If they pick CLI or DOUBLE
 
 > "Want me to use the default worker-forge icon, or do you have one to ship with this worker?"
 
-Options: Default icon (recommended), USER_PROVIDE.
+Options: **Default icon (recommended)**, USER_PROVIDE.
 
-Default is the right call for almost everyone — the worker already has a usable icon and you save the user a round trip. Offer it first. If they say USER_PROVIDE, ask for an image (PNG works for everything, `.ico` for Windows specifically, `.icns` for macOS app bundles) and drop it into the workspace's `resources/` as `icon.<ext>`. The build script picks it up from there and passes it to PyInstaller via `--icon`.
+Always present the default icon as the **first** option and the recommended pick. Most users don't have a custom icon ready, and the bundled `assets/icon.{png,ico,svg}` is good enough to ship — making them produce one before they see their worker run is the wrong tradeoff. Offer "default" first and let them confirm with a single tap.
+
+If they choose USER_PROVIDE, ask for an image (PNG works for everything, `.ico` for Windows specifically, `.icns` for macOS app bundles) and drop it into the workspace's `<os>/resources/` as `icon.<ext>`. The build script picks it up from there and passes it to PyInstaller / electron-builder via the right flag.
 
 If the worker is a no-GUI CLI tool with no `.app` / `.exe` shell that ever shows an icon, you can skip this question entirely — there's no surface to put the icon on.
 
@@ -74,26 +76,31 @@ If the user wants startup launch, write the OS-specific glue (a `.plist` for lau
 
 Ask only if the trigger style includes GUI.
 
-> "Which UI framework do you want?"
+Before you ask, check whether `npm` is on the `PATH` (e.g., `shutil.which("npm")` or a quick `subprocess.run(["npm", "--version"])`). The answer changes which option you recommend first:
 
-Options: Native GUI (Tkinter on every OS; SwiftUI on macOS if they prefer; WinUI on Windows if they prefer), OTHERS, USER_PROVIDE.
+- **If `npm` is available** → recommend **Electron + Tailwind CSS** as the first option. This is the default GUI stack for workers and the closest match for the Claude-desktop look defined in `references/default-theme.md`. Phrase it as: *"I'd build the UI with Electron and Tailwind CSS — that gets us a Claude-desktop-style window with one stack. Sound good, or pick another?"*
+- **If `npm` is not available** → don't silently fall back to Tkinter. Ask explicitly: *"I'd usually build the UI with Electron + Tailwind, but npm isn't installed on this machine. Want me to walk you through installing Node/npm, or pick a different framework?"* If they don't want to install npm, suggest concrete alternatives — Tauri if they already have Rust toolchain, PySide6 if they want a Python-only stack, Tkinter as the always-available fallback. Record what they pick.
 
-- **OTHERS** — try to detect what UI frameworks are already installed on the host machine (Electron, Tauri, PySide6, etc.) and present those as options. If you can't detect anything, fall back to Native GUI.
+Options: Electron + Tailwind CSS (recommended when npm is present), Native GUI (Tkinter on every OS; SwiftUI on macOS if they prefer; WinUI on Windows if they prefer), OTHERS, USER_PROVIDE.
+
+- **OTHERS** — try to detect what UI frameworks are already installed on the host machine (Tauri, PySide6, etc.) and present those as options. If you can't detect anything, fall back to Native GUI.
 - **USER_PROVIDE** — let the user name the framework. If it isn't installed, help them install it before you continue. Don't generate code against a framework the user doesn't have.
 
-If the user has no strong preference, default to Tkinter — it ships with Python, builds with PyInstaller cleanly, and produces small binaries.
+Whichever framework gets picked, the look-and-feel target is the same — see `references/default-theme.md`.
 
 ### Color theme
 
 Ask only if the trigger style includes GUI.
 
-> "Dark theme or light theme for the UI?"
+> "Light theme or dark theme for the UI?"
 
-Options: DARK (recommended), Light, USER_PROVIDE.
+Options: LIGHT (recommended), Dark, USER_PROVIDE.
 
-Default to dark. The skill ships a Discord-style dark theme in `references/default-theme.md` — that's what "DARK" applies, top to bottom: palette, rounded corners, unified title bar, typography, spacing. Don't make the user pick hex codes or component-by-component styling; "dark" is the whole package. Most desktop workers run in environments where a dark UI looks more at home next to the user's other tools, and dark is the safer pick for workers that sit on the screen for a long time. Offer Light as a one-tap alternative (same rules — palette is in `default-theme.md`), and USER_PROVIDE for someone who has a specific palette (e.g., they want the worker to follow their company's brand colors). Whatever they pick, record it in `AUTHORING.md` and apply it consistently across every window the worker draws — half-themed UIs feel broken.
+Default to light. The skill ships a Claude-desktop-style light theme in `references/default-theme.md` — warm off-white canvas, soft borders, terracotta accent, unified title bar, generous spacing. That's what "LIGHT" applies, top to bottom: palette, rounded corners, typography, spacing, components. Don't make the user pick hex codes or component-by-component styling; "light" is the whole package, and it's calibrated to look at home next to the Claude desktop app the user probably already has open.
 
-One question that's easy to forget but matters: the worker's title bar should be the same color as the body. The OS will happily draw a white native title bar over a dark Tkinter or Electron window if you don't override it, and that's the single thing that makes a worker look unfinished. `default-theme.md` has the per-framework recipe; don't ship a worker with a mismatched title bar.
+Offer Dark as a one-tap alternative (same set of rules, different palette — `default-theme.md` covers both), and USER_PROVIDE for someone who has a specific palette (e.g., they want the worker to follow their company's brand colors). Whatever they pick, record it in `AUTHORING.md` and apply it consistently across every window the worker draws — half-themed UIs feel broken.
+
+One question that's easy to forget but matters: the worker's title bar should be the same color as the body. The OS will happily draw a native title bar that doesn't match your Electron or Tkinter window if you don't override it, and that's the single thing that makes a worker look unfinished. `default-theme.md` has the per-framework recipe; don't ship a worker with a mismatched title bar.
 
 ### Data storage format
 
