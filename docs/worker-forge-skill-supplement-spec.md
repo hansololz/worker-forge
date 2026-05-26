@@ -14,7 +14,6 @@ During the interview process
 - During the interview process, ask the following questions if appropriate. Options are should mutually inclusive when
   possible. Always try to give suggestions to make it easier for the users to use this skill.
     - Ask user what they want the worker name to be also what should the display name. Give suggestions.
-      ~~- OS target [Windows. macOS, Linux, USER_PROVIDE]~~
     - How user want to trigger the worker [DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE]. DOUBLE_CLICK_ONLY_NO_GUI
       and GUI are mutually exclusive.
     - Do you want the user to schedule the worker. Ask how user want the schedule to be done. Periodic trigger only when
@@ -94,28 +93,29 @@ START OF PLAN
   issues.
 - Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
   `manga-katana-watcher.exe`.
-- During building of the worker app, I want the GUI to look modern and slick. Some think like the Discord or Slack
-  desktop app. Create a default theme for the workers apps in references. Always use that as the default unless user
-  request changes. Default theme should be similar to the dark Discord Dark mode. Make sure the corners are round.
-  Make sure the GUI looks and feels good.
+- During building of the worker app, I want the GUI to look modern and slick. Something the claude doc Mac desktop app
+  as inspiration, I want the worker app to look like that.
+  Try to use light theme. If the user has NPM installed, try to use electron and tailwind-css to build the app. 
+  If NPM is not found, ask if the user want to install it or user another GUI framework.
+  Suggest a few frameworks to use.
 - The top bar of the work app sometime is white while the color them is dark. Make sure that the top bar is the same
   color as the app body.
 - After the worker is created, create a short README.md in the workspace for the worker. It just needs a
-  - name
-  - one-two sentence description
-  - a list of feature in bullet points ordered by most important bullet point
+    - name
+    - one-two sentence description
+    - a list of feature in bullet points ordered by most important bullet point
 - Always try to build the app for the user. Try to test it if you can and fix any issues.
+- If you can't build run the build script for the user, clearly state why you can't run it and print the command the 
+  user could use to run the build command.
 
 # Amendments
 
-- During building of the worker app, I want the GUI to look modern and slick. Some think like the Discord or Slack
-  desktop app. Create a default theme for the workers apps in references. Always use that as the default unless user
-  request changes. Default theme should be similar to the dark Discord Dark mode. Make sure the corners are round.
-  Make sure the GUI looks and feels good.
-- The top bar of the work app sometime is white while the color them is dark. Make sure that the top bar is the same
-  color as the app body.
-- After the worker is created, create a short README.md in the workspace for the worker. It just needs a
-  - name
-  - one-two sentence description
-  - a list of feature in bullet points ordered by most important bullet point
-- Always try to build the app for the user. Try to test it if you can and fix any issues.
+- During building of the worker app, I want the GUI to look modern and slick. Something the claude doc Mac desktop app
+  as inspiration, I want the worker app to look like that.
+  Try to use light theme. If the user has NPM installed, try to use electron and tailwind-css to build the app. 
+  If NPM is not found, ask if the user want to install it or user another GUI framework.
+  Suggest a few frameworks to use.
+- During interview, remember to ask the user if they want to use their own icon or the default icon. 
+  Have the default icon show up first.
+- If you can't build run the build script for the user, clearly state why you can't run it and print the command the 
+  user could use to run the build command.
