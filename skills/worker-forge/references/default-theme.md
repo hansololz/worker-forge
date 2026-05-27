@@ -1,6 +1,6 @@
 # Default theme
 
-Every worker with a GUI ships with the same default theme unless the user asked for something else during the interview. The reference is the **Claude desktop app for macOS** — clean, light, lots of breathing room, soft shadows, rounded corners, a single system font. The goal is a worker that looks at home next to that app, next to Linear, next to Notion — not the bare-Tkinter look that screams "Python script with a window stapled on."
+Every worker with a GUI ships with the same default theme unless the user asked for something else during the interview. The references are two: **Tailwind CSS** (for the color tokens, spacing scale, corner radii, and component sizing — the bits Tailwind gets right that ad-hoc CSS gets wrong) and **the Claude Code app on macOS** (for the lived-in feel — warm off-white canvas, soft shadows, unified title bar, single system font, lots of breathing room). The goal is a worker that looks at home next to Claude Code, next to Linear, next to Notion — not the bare-Tkinter look that screams "Python script with a window stapled on."
 
 If the user picked Dark or USER_PROVIDE for the color theme, skip this file and theme accordingly. But the default is light, and light means *this* light.
 
@@ -8,13 +8,23 @@ If the user picked Dark or USER_PROVIDE for the color theme, skip this file and 
 
 Worker authors aren't UI designers. Half the GUI workers that come out of this skill would otherwise ship with system-default chrome — a default native title bar over a custom canvas, square 1990s-era buttons, the wrong font, hairline borders that look broken on HiDPI. That look isn't neutral; it makes the worker feel like a debug tool. A single default theme that's *good* means every worker the user builds looks intentional from the first run.
 
-The default below is calibrated against the Claude desktop app because that's the reference users will most often have nearby when they run a worker we built. If you find yourself fighting it, fight it — the goal is "looks good," not "exactly matches these hex codes."
+The default below is calibrated against Tailwind's design tokens and the Claude Code desktop app because those are the references users will most often have nearby when they run a worker we built. If you find yourself fighting it, fight it — the goal is "looks good," not "exactly matches these hex codes."
 
-## Preferred stack: Electron + Tailwind CSS
+## Framework choice (and how big the binary ends up)
 
-When the host has `npm` on the `PATH`, the default framework is **Electron** with **Tailwind CSS** for styling. The reasons are practical: Tailwind makes the spacing/typography/radius rules below cheap to express, Electron lets the title bar and chrome be themed end-to-end (no fighting OS defaults the way you have to with Tkinter), and the resulting window looks the most like the Claude reference. The interview captures this; if `npm` isn't present, ask the user before falling back to a Python-native GUI framework (Tauri, PySide6, Tkinter), and record the pick in `<os>-specific.md`.
+The default framework for a GUI worker is **the OS-native one**. Native gives the smallest binary, the lightest run-time cost, and — because the theme below is calibrated to the platform's own look anyway — the cleanest match for the reference. Suggest the native option first, then offer cross-platform alternatives as fallbacks only when their toolchain is already on the host. Quote a rough installed size next to each option so the user can trade off explicitly:
 
-The palette tokens below are written assuming a CSS variable home in Tailwind's `:root`, but they translate directly to a `QPalette` (PySide6), a `ttk.Style` map (Tkinter), or a Tauri stylesheet. Whatever the framework, the tokens come from this file — don't redefine the colors in the worker's source.
+| Framework                       | Roughly how big          | When to offer it                                                  |
+|---------------------------------|--------------------------|-------------------------------------------------------------------|
+| **Native (recommended, first)** | 5–15 MB                  | Always. SwiftUI on macOS, WinUI / WinAppSDK on Windows, GTK4 (or Qt against the system libs) on Linux. |
+| **Electron + Tailwind CSS**     | 80–150 MB                | When `npm` is on the `PATH`. Heavy because it bundles Chromium, but the shortest path to a Tailwind-driven Claude-Code-style window if the user wants a true webview UI. |
+| **Tauri**                       | 5–20 MB                  | When a Rust toolchain (`cargo`) is on the `PATH`. Uses the system webview, so the binary stays near-native-sized while still letting you style with Tailwind. |
+| **PySide6 / PyQt**              | 40–80 MB                 | Python-only stacks where the user doesn't want to install Node or Rust. Heavier than Tauri but lighter than Electron. |
+| **Tkinter**                     | 10–30 MB                 | Last-resort fallback when the user has nothing else and won't install a toolchain. Themable enough with `ttk` to clear the bar, but the chrome is the hardest to fix. |
+
+Phrase the question to the user as "I'd build the UI as a native `<platform>` app (~X MB) — that gets us the smallest binary and the closest match for the look. Want that, or a cross-platform option?" and list the alternatives that the host's toolchains actually support. The pick lands in `<os>-specific.md` along with the size estimate the user agreed to.
+
+The palette tokens below are written assuming a CSS variable home (Tailwind's `:root` for Electron / Tauri), but they translate directly to a SwiftUI `Color` set on macOS, a WinUI `ThemeDictionary` on Windows, a `QPalette` for PySide6, or a `ttk.Style` map for Tkinter. Whatever the framework, the tokens come from this file — don't redefine the colors in the worker's source.
 
 ## Palette
 
@@ -22,7 +32,7 @@ Claude-desktop adjacent: a near-white canvas, very soft borders, a single warm a
 
 | Token            | Hex       | Use for                                                                 |
 |------------------|-----------|-------------------------------------------------------------------------|
-| `bg.base`        | `#FAFAF7` | Window background, the largest surface; the warm off-white you see in Claude desktop. |
+| `bg.base`        | `#FAFAF7` | Window background, the largest surface; the warm off-white you see in the Claude Code app. |
 | `bg.surface`     | `#FFFFFF` | Cards, panels, the main content area.                                   |
 | `bg.elevated`    | `#FFFFFF` | Inputs, dropdowns, anything that floats — distinguish with shadow, not a different fill. |
 | `bg.hover`       | `#F1F0EB` | Hover state on buttons, list rows, menu items.                          |
@@ -58,17 +68,17 @@ The progression matters. Bigger surfaces get bigger radii; small interactive bit
 
 What "top bar" means depends on the framework. In each case, the fix is to draw the title bar yourself or theme it to match the body:
 
-- **Electron (the default when npm is available)**: set `titleBarStyle: 'hiddenInset'` on macOS and `titleBarStyle: 'hidden'` with `titleBarOverlay` configured to use `bg.base` on Windows/Linux. Render the title text and any window controls inside the renderer process with Tailwind classes so the bar matches the body exactly. The macOS traffic-light buttons stay native; that's fine and expected. For Linux, render your own close/minimize/maximize controls or use a library like `custom-electron-titlebar`.
-- **Tauri**: set `decorations: false` in `tauri.conf.json` and render the title bar in the webview using the same Tailwind classes you'd use in Electron. Wire up window-drag with `data-tauri-drag-region` on the bar.
+- **Native (the default — SwiftUI on macOS, WinUI on Windows, GTK4 / Qt on Linux)**: prefer the platform's title-bar-tint API rather than going frameless. SwiftUI: `.toolbarBackground(Color(hex: "#FAFAF7"), for: .windowToolbar)` plus `.windowStyle(.hiddenTitleBar)` if you want the chrome to dissolve into the body. WinUI: `AppWindow.TitleBar.BackgroundColor = ...` plus matching `ButtonBackgroundColor` and `InactiveBackgroundColor`. GTK4: set `gtk_header_bar_set_decoration_layout` and theme the header bar through CSS so it picks up `bg.base`.
+- **Electron (only when npm is available)**: set `titleBarStyle: 'hiddenInset'` on macOS and `titleBarStyle: 'hidden'` with `titleBarOverlay` configured to use `bg.base` on Windows/Linux. Render the title text and any window controls inside the renderer process with Tailwind classes so the bar matches the body exactly. The macOS traffic-light buttons stay native; that's fine and expected. For Linux, render your own close/minimize/maximize controls or use a library like `custom-electron-titlebar`.
+- **Tauri (only when a Rust toolchain is available)**: set `decorations: false` in `tauri.conf.json` and render the title bar in the webview using the same Tailwind classes you'd use in Electron. Wire up window-drag with `data-tauri-drag-region` on the bar.
 - **PySide6 / PyQt**: set `Qt.FramelessWindowHint` and draw a custom title bar widget at the top of the central widget, styled with `bg.base`. Add window-drag handling on the custom bar so the window remains movable.
 - **Tkinter**: by default, the window title bar is the OS chrome — never matching `bg.base`. Options: (a) call `root.overrideredirect(True)` and draw your own title bar as the first row in the window using `bg.base` for the background, with a label for the title and a close button. (b) on Windows 10+, use `pywinstyles` or set `DWMWA_CAPTION_COLOR` via `ctypes` so the native title bar follows the app's theme. (a) is the more reliable fix; (b) is less code if you only target Windows.
-- **Native (SwiftUI on macOS, WinUI on Windows)**: prefer the platform's title-bar-tint API rather than going frameless. SwiftUI: `.toolbarBackground(Color(hex: "#FAFAF7"), for: .windowToolbar)`. WinUI: `AppWindow.TitleBar.BackgroundColor = ...` plus matching `ButtonBackgroundColor`.
 
 Whichever path you take, the title bar's background must be exactly `bg.base` (or one shade lighter/darker if you want a subtle separator) — *not* the OS default, *not* a slightly-different-shade that catches the eye.
 
 ## Typography
 
-- Sans-serif system stack. Don't ship a custom font unless the user asked for one. For Electron, this is one line in Tailwind's config (`fontFamily.sans`); for the Python frameworks, set it once on the root style.
+- Sans-serif system stack. Don't ship a custom font unless the user asked for one. For native frameworks, this falls out of the platform automatically (SwiftUI / WinUI / GTK pick the right system face on their own); for Electron and Tauri, it's one line in Tailwind's config (`fontFamily.sans`); for the Python frameworks, set it once on the root style.
   - macOS: `-apple-system, "SF Pro Text"`
   - Windows: `"Segoe UI Variable Text", "Segoe UI"`
   - Linux: `"Inter", "Cantarell", "Ubuntu"`
@@ -86,7 +96,7 @@ Avoid: shadowed text, all-caps headings, anything italic-by-default.
 - Inside a card: 12–16 px padding.
 - Button padding: 8 px vertical, 16 px horizontal.
 
-The rule of thumb is "more space than you think." Cramped UIs read as toy UIs. The Claude desktop app errs on the side of generous spacing; the workers we build should too.
+The rule of thumb is "more space than you think." Cramped UIs read as toy UIs. The Claude Code app errs on the side of generous spacing; the workers we build should too.
 
 ## Components
 
@@ -116,8 +126,11 @@ When there's nothing to show (no items yet, no results), don't leave a blank pan
 
 How you actually wire this into a framework depends on what the user picked in the interview:
 
-- **Electron + Tailwind (default when npm is available)** — define the palette tokens as CSS custom properties in a single stylesheet (`src/theme.css`) and reference them from Tailwind's `theme.extend.colors` in `tailwind.config.js`. Then everything in the renderer uses Tailwind utilities (`bg-base`, `text-primary`, `rounded-lg`, etc.) that map back to the tokens. `titleBarStyle` set in the main process; custom title bar rendered in the renderer with the same classes as the rest of the body.
-- **Tauri** — same CSS-variables-plus-Tailwind setup as Electron. `decorations: false` in `tauri.conf.json`.
+- **Native — SwiftUI on macOS (default)** — declare the palette as a `Color` extension keyed off the tokens below, then set `.background(Color.bgBase)` on the root view and `.toolbarBackground(.bgBase, for: .windowToolbar)` so the title bar matches. Use `.cornerRadius(12)` on cards, `.cornerRadius(8)` on buttons / inputs, and `Capsule()` for pills. The platform font and HiDPI rendering come for free.
+- **Native — WinUI / WinAppSDK on Windows (default)** — drop the palette into a `ThemeDictionary` (`Application.Resources["BgBase"]`, etc.) and reference the keys from XAML (`Background="{ThemeResource BgBase}"`). Set `AppWindow.TitleBar.BackgroundColor` and `ButtonBackgroundColor` to `bg.base`. Use `CornerRadius="12"` on `Border` / `Grid` cards, `8` on `Button` / `TextBox`.
+- **Native — GTK4 / Qt on Linux (default)** — supply the palette as a CSS file loaded via `Gtk.CssProvider` (GTK4) or as a QSS stylesheet on the `QApplication` (Qt). Theme the header bar from the same CSS so it picks up `bg.base`.
+- **Electron + Tailwind (only when npm is available)** — define the palette tokens as CSS custom properties in a single stylesheet (`src/theme.css`) and reference them from Tailwind's `theme.extend.colors` in `tailwind.config.js`. Then everything in the renderer uses Tailwind utilities (`bg-base`, `text-primary`, `rounded-lg`, etc.) that map back to the tokens. `titleBarStyle` set in the main process; custom title bar rendered in the renderer with the same classes as the rest of the body.
+- **Tauri (only when a Rust toolchain is available)** — same CSS-variables-plus-Tailwind setup as Electron. `decorations: false` in `tauri.conf.json`.
 - **PySide6 / PyQt** — write a QSS stylesheet using the palette tokens. Set it on the `QApplication` so it cascades. Use `Qt.FramelessWindowHint` plus a custom `QWidget` title bar.
 - **Tkinter** — use `ttk.Style().configure(...)` for the widget styles, and set background colors directly on `tk.Frame` / `tk.Toplevel`. Drop the Tk default theme (`style.theme_use('clam')` first — `clam` is the most themeable of the built-ins). Custom title bar via `overrideredirect(True)` as described above.
 

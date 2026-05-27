@@ -76,17 +76,31 @@ If the user wants startup launch, write the OS-specific glue (a `.plist` for lau
 
 Ask only if the trigger style includes GUI.
 
-Before you ask, check whether `npm` is on the `PATH` (e.g., `shutil.which("npm")` or a quick `subprocess.run(["npm", "--version"])`). The answer changes which option you recommend first:
+**The first option is always the OS-native framework**, and you recommend it. Native is the smallest binary, the lightest at run time, and the closest match for the Claude-Code-style look the theme is calibrated to. The cross-platform alternatives (Electron, Tauri) are *conditional* fallbacks — only offer them when their toolchains are already on the host, and quote a rough binary size next to each so the user can trade off explicitly. Don't lead with Electron just because `npm` happens to be installed.
 
-- **If `npm` is available** → recommend **Electron + Tailwind CSS** as the first option. This is the default GUI stack for workers and the closest match for the Claude-desktop look defined in `references/default-theme.md`. Phrase it as: *"I'd build the UI with Electron and Tailwind CSS — that gets us a Claude-desktop-style window with one stack. Sound good, or pick another?"*
-- **If `npm` is not available** → don't silently fall back to Tkinter. Ask explicitly: *"I'd usually build the UI with Electron + Tailwind, but npm isn't installed on this machine. Want me to walk you through installing Node/npm, or pick a different framework?"* If they don't want to install npm, suggest concrete alternatives — Tauri if they already have Rust toolchain, PySide6 if they want a Python-only stack, Tkinter as the always-available fallback. Record what they pick.
+Before you ask, detect what's available on the `PATH`:
 
-Options: Electron + Tailwind CSS (recommended when npm is present), Native GUI (Tkinter on every OS; SwiftUI on macOS if they prefer; WinUI on Windows if they prefer), OTHERS, USER_PROVIDE.
+- `shutil.which("npm")` → whether **Electron** is a realistic option (it needs Node).
+- `shutil.which("cargo")` or `shutil.which("rustc")` → whether **Tauri** is a realistic option (it needs the Rust toolchain).
+- The host OS itself tells you which native framework to suggest first (SwiftUI on macOS, WinUI / WinAppSDK on Windows, GTK4 or Qt on Linux).
 
-- **OTHERS** — try to detect what UI frameworks are already installed on the host machine (Tauri, PySide6, etc.) and present those as options. If you can't detect anything, fall back to Native GUI.
-- **USER_PROVIDE** — let the user name the framework. If it isn't installed, help them install it before you continue. Don't generate code against a framework the user doesn't have.
+Then phrase the question as: *"I'd build the UI as a native `<platform>` app (~5–15 MB) — smallest binary and the closest match for the look I have in mind. Want that, or one of the cross-platform options?"* and list the alternatives that the host actually supports, with bundle-size estimates inline.
 
-Whichever framework gets picked, the look-and-feel target is the same — see `references/default-theme.md`.
+Present the AskUserQuestion options in this order, with the native option **first** and **recommended**, and the size estimate visible in the option label so the user sees the trade-off without having to ask:
+
+1. **Native `<platform>` (recommended, ≈ 5–15 MB)** — SwiftUI on macOS, WinUI on Windows, GTK4 or Qt on Linux. Default unless the user has a reason to pick otherwise.
+2. **Electron + Tailwind CSS (≈ 80–150 MB)** — *show this option only if `npm` is on the `PATH`.* Heavy because it bundles Chromium, but the shortest path to a Tailwind-driven webview UI and the closest match for `references/default-theme.md` if the user wants a webview.
+3. **Tauri (≈ 5–20 MB)** — *show this option only if a Rust toolchain is on the `PATH`.* Uses the system webview, so it stays near-native-sized while still letting you style with Tailwind.
+4. **PySide6 / PyQt (≈ 40–80 MB)** — Python-only stack option for users who don't want to install Node or Rust.
+5. **Tkinter (≈ 10–30 MB)** — always-available fallback when nothing else fits.
+6. **OTHERS / USER_PROVIDE** — let the user name a framework. If it isn't installed, help them install it before you continue; don't generate code against a framework the user doesn't have.
+
+Two notes on the offer:
+
+- **Quote the size estimate inline in the option label**, not in a footnote. The estimate is what makes "native vs. Electron" a real decision instead of a coin flip; if the user only sees framework names, they'll pick whichever sounds familiar.
+- **Skip options whose toolchain isn't present.** Don't offer Electron on a host without `npm`, and don't offer Tauri on a host without `cargo` — offering a framework you can't actually build wastes the user's pick. If the user *wants* a framework you couldn't offer, USER_PROVIDE captures that and you help them install the toolchain before generating code.
+
+Whichever framework gets picked, the look-and-feel target is the same — see `references/default-theme.md`. The pick (and the size the user signed off on) lands in `<os>-specific.md`.
 
 ### Color theme
 

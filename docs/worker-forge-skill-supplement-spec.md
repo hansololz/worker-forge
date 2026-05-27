@@ -93,11 +93,20 @@ START OF PLAN
   issues.
 - Always use the display name for the built app distribution. Like `Manga Katana Watcher.exe` and not
   `manga-katana-watcher.exe`.
-- During building of the worker app, I want the GUI to look modern and slick. Something the claude doc Mac desktop app
+  ~~- During building of the worker app, I want the GUI to look modern and slick. Something the claude doc Mac desktop
+  app
   as inspiration, I want the worker app to look like that.
-  Try to use light theme. If the user has NPM installed, try to use electron and tailwind-css to build the app. 
+  Try to use light theme. If the user has NPM installed, try to use electron and tailwind-css to build the app.
   If NPM is not found, ask if the user want to install it or user another GUI framework.
-  Suggest a few frameworks to use.
+  Suggest a few frameworks to use.~~
+- During building of the worker app, I want the GUI to look modern and slick. Something like the Claude Code app on
+  macOS.
+- Update the default-theme to be light theme. Get inspiration from tailwind CSS I like the color theme, layout, and
+  corner radius and sizes. I also like the color theme from Claude Code on Mac Desktop app, also use that as
+  inspiration.
+- Suggest to user which framework to use. Also indicate how much would the worker app size be. First option should be
+  the option to use the native app. Like for Mac is would be native swift app. If NPM is available, offer to use
+  Election. If Rust is available, offer to use Tarui.
 - The top bar of the work app sometime is white while the color them is dark. Make sure that the top bar is the same
   color as the app body.
 - After the worker is created, create a short README.md in the workspace for the worker. It just needs a
@@ -105,17 +114,16 @@ START OF PLAN
     - one-two sentence description
     - a list of feature in bullet points ordered by most important bullet point
 - Always try to build the app for the user. Try to test it if you can and fix any issues.
-- If you can't build run the build script for the user, clearly state why you can't run it and print the command the 
+- If you can't build run the build script for the user, clearly state why you can't run it and print the command the
   user could use to run the build command.
 
 # Amendments
 
-- During building of the worker app, I want the GUI to look modern and slick. Something the claude doc Mac desktop app
-  as inspiration, I want the worker app to look like that.
-  Try to use light theme. If the user has NPM installed, try to use electron and tailwind-css to build the app. 
-  If NPM is not found, ask if the user want to install it or user another GUI framework.
-  Suggest a few frameworks to use.
-- During interview, remember to ask the user if they want to use their own icon or the default icon. 
-  Have the default icon show up first.
-- If you can't build run the build script for the user, clearly state why you can't run it and print the command the 
-  user could use to run the build command.
+- During building of the worker app, I want the GUI to look modern and slick. Something like the Claude Code app on
+  macOS.
+- Update the default-theme to be light theme. Get inspiration from tailwind CSS I like the color theme, layout, and
+  corner radius and sizes. I also like the color theme from Claude Code on Mac Desktop app, also use that as
+  inspiration.
+- Suggest to user which framework to use. Also indicate how much would the worker app size be. First option should be
+  the option to use the native app. Like for Mac is would be native swift app. If NPM is available, offer to use
+  Election. If Rust is available, offer to use Tarui.

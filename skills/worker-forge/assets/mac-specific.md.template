@@ -8,7 +8,7 @@ If the same worker is later built on a different OS, a sibling folder (`../windo
 
 - **Host OS at forge time:** macOS (record the version — `sw_vers -productVersion` — if it mattered for a decision).
 - **Chip:** Apple Silicon / Intel (matters for which Python wheels PyInstaller picks up).
-- **UI framework picked on macOS:** Electron + Tailwind / Tauri / PySide6 / SwiftUI bridge / Tkinter / other. Default is Electron + Tailwind when `npm` is on the `PATH` (it's the closest match for the Claude-desktop look). If the user picked something else, note why (no npm, hard dependency on a Python-only stack, etc.).
+- **UI framework picked on macOS:** SwiftUI / Electron + Tailwind / Tauri / PySide6 / Tkinter / other. Default and first-recommended is **native SwiftUI** (~5–15 MB binary — smallest deliverable and the closest match for the Claude-Code-style look). Offer Electron + Tailwind only if `npm` is on the `PATH` (~80–150 MB — bundles Chromium); offer Tauri only if a Rust toolchain is on the `PATH` (~5–20 MB — uses the system webview). Record the framework the user picked **and the size estimate they agreed to**; if they didn't take the native default, note why (wanted a webview UI, preferred a Python-only stack, etc.).
 - **Data location:** the actual path the worker writes to. Convention is `~/Library/Application Support/<worker-slug>/` for per-user state; deviate only when the user asked for it.
 - **Scheduler glue:** none / launchd `.plist` in `resources/` / Login Items entry / loops internally. If launchd, link to the `.plist` and note where the user should `cp` it (`~/Library/LaunchAgents/`).
 - **Local-model runtime:** Ollama (default) / Apple Foundation Models / MLX / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, `llava`, etc.).
