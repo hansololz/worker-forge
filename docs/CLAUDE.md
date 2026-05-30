@@ -7,7 +7,7 @@ ever in doubt about what this is supposed to sound like, go read that skill's `S
 The short version: write like you're talking to a smart colleague who's about to actually use what you're explaining.
 Not like you're shipping a spec.
 
-Be concise and cut out filler words and extraditions. **DO NOT** Try to add suspense in th writing.
+Be concise. Cut out filler words and extraditions. **DO NOT** Try to add suspense in the writing.
 
 Be human, don't write like people on LinkedIn.
 

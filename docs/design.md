@@ -56,7 +56,9 @@ For the tasks that do need a model at run time, local LLMs are now often good en
 - **Plain-language input.** A user describes a task and receive a runnable program.
 - **Local-first execution.** Programs run on the user's machine.
 - **Single-purpose programs.** Each program does exactly one thing.
-- **Cross-platform.** Programs can be built for Windows, macOS, and Linux.
+- **Native per-OS builds.** A worker is built for the OS the Forge is running on and ships as that platform's native
+  artifact. macOS and Windows are supported today; Linux is planned. There's no cross-compilation — putting the same
+  worker on a second OS means re-running the Forge on a machine of that OS (see "The target OS is the host OS").
 
 ## Non-Requirements
 
@@ -78,16 +80,28 @@ is the source of truth.
 
 ```
 root/workspaces/<worker-name>/
-├── AUTHORING.md   # original task description, interview notes, decisions
-├── WORKER.md      # plain-language spec: what it does, trigger, cascade plan
-├── resources/     # prompts, schemas, templates, sample inputs needed at run time
-├── build/         # build scripts and runtime for the target OS
-└── dist/          # built worker artifact (e.g., my-worker.exe)
+├── README.md             # front-door doc: blurb, ordered features, per-OS build + run commands
+├── AUTHORING.md          # interview transcript, decisions, discarded alternatives — OS-agnostic
+├── WORKER.md             # plain-language spec: name, description, cascade plan — OS-agnostic
+└── <os>/                 # windows/ or mac/ — the OS this forge ran on (linux/ is future work)
+    ├── <os>-specific.md  # interview answers tied to this OS (UI framework, data path, keychain)
+    ├── main.py           # worker task logic
+    ├── worker_runtime.py # the cascade runtime, copied unchanged
+    ├── requirements.txt
+    ├── build_<os>.{bat,sh}
+    ├── resources/        # prompts, schemas, icons, scheduler glue, sample inputs
+    └── dist/             # built artifact lands here, named with the display name
 ```
 
-`WORKER.md` is structured like a Claude skill: it starts with a `name` / `description` metadata block and reads as
-the worker's plain-language entry point. `AUTHORING.md` contains the interview transcript, decisions,
-and discarded alternatives. Worker forge skill uses the two file to reason about the worker program.
+The layout is split deliberately. `WORKER.md` and `AUTHORING.md` hold everything true of the worker *regardless of
+OS* — `WORKER.md` is structured like a Claude skill (a `name` / `description` metadata block up top, then what the
+worker does and its cascade plan, the clean spec the user reads), and `AUTHORING.md` is the interview transcript, the
+decisions, and the discarded alternatives. Anything tied to a specific OS — which UI framework, where data lives,
+which keychain, the scheduler glue, packaging caveats — drops one level down into `<os>/<os>-specific.md`. `README.md`
+is the short front-door blurb plus the copy-pasteable build-and-run commands. Because the OS-specific answers live in
+their own folder, building the same worker on a second OS later adds a sibling `<os>/` folder beside the first without
+touching it: the common files are read straight back and only the OS-specific handful gets re-asked (see Reforge). The
+Forge uses these files to reason about the worker, and the Workspace — not the binary — is the source of truth.
 
 **Worker Forge** is the agent that produces and edits Workspaces. On a new build it runs four phases:
 
@@ -99,8 +113,10 @@ and discarded alternatives. Worker forge skill uses the two file to reason about
    model called with the user's own API key). The cheaper tier is always faster, more available, and more predictable
    than the one above it, so escalating without cause makes the worker worse at run time. Examples: parsing a date out
    of a filename is CODE; classifying a document as "invoice" vs. "receipt" is LOCAL; summarizing a fifty-page
-   contract well is HOSTED. The chosen tier for each unit lands in `WORKER.md` so a later reforge can see what was
-   decided.
+   contract well is HOSTED. For a HOSTED unit the plan records a specific provider *and* model (the cheapest-tier-first
+   instinct keeps going inside HOSTED — balanced model by default, top tier only when the unit needs frontier
+   judgment), not just the word "HOSTED". The chosen tier for each unit lands in `WORKER.md` so a later reforge can see
+   what was decided.
 
    | Tier   | Mechanism                                 | Use for                                                   |
       |--------|-------------------------------------------|-----------------------------------------------------------|
@@ -108,16 +124,22 @@ and discarded alternatives. Worker forge skill uses the two file to reason about
    | LOCAL  | Local LLM via Ollama on the user's box    | Fuzzy classification, small summaries, simple extractions |
    | HOSTED | Hosted LLM with the user's API key        | Tasks that need frontier-model judgment                   |
 
-3. **Code generation.** Fill in the worker template, instantiate the runtime, wire the units together, and lay out the
-   Workspace under `root/workspaces/`.
-4. **Packaging.** Produce a build script for the target OS. The Forge tries to run the build itself first, after
-   asking the user for permission. If the host OS doesn't match the target, or the build fails, the Forge hands the
-   script to the user with instructions for running it on a matching machine. Either way the output is the worker
-   artifact in `dist/`.
+3. **Code generation.** Lay out the Workspace with the setup script — it auto-detects the host OS and creates the
+   matching `<os>/` folder — then fill in the spec files, instantiate the runtime, and wire the units together. A
+   worker with a GUI gets the default light theme and a native UI framework rather than bare Tkinter.
+4. **Packaging.** Build for the host OS — there is no target other than the host. The Forge does a final security pass
+   over the OS folder, writes the workspace `README.md`, then asks permission and runs `build_<os>.{bat,sh}` itself,
+   producing a single self-contained binary (PyInstaller `--onefile` or the py2app equivalent) so the recipient needs
+   no Python, and smoke-tests it before handing it over. If it can't run the build from inside the session — a missing
+   toolchain, a credential only the user has, an interactive prompt it can't satisfy — it doesn't go quiet: it hands
+   the user the exact command, the working directory, and where the artifact will land. The output is the artifact in
+   `<os>/dist/`, named with the display name.
 
-When the user comes back with a change, the Forge **reforges**: it reads `AUTHORING.md` and `WORKER.md`, modifies the
-affected unit, and rebuilds. Full regeneration is reserved for changes large enough that a patch would be messier than
-a redo.
+When the user comes back with a change, the Forge **reforges**: it reads `AUTHORING.md`, `WORKER.md`, and the relevant
+`<os>-specific.md`, modifies the affected unit, keeps the docs in sync, and rebuilds. A second, common flavor is
+building the same worker on a new OS — the behavior is already captured in the common files, so the Forge re-asks only
+the OS-specific questions and adds a sibling `<os>/` folder. Full regeneration is reserved for changes large enough
+that a patch would be messier than a redo.
 
 Five invariants hold for every worker. An artifact that breaks any one of them isn't a worker.
 
@@ -155,21 +177,23 @@ Worker Forge ── interview ──▶ cascade plan ──▶ code gen ──�
                                   │
                 ┌─────────────────┴─────────────────┐
                 ▼                                   ▼
-       yes, host OS matches              no, or host OS mismatch
-                │                                   │
-                ▼                                   ▼
-       Forge runs build script         Forge hands script to user
-                │                       with run instructions
-                │                                   │
+        build can run here              can't run here (missing
+        (host = target OS)              toolchain / credential /
+                │                       interactive prompt)
+                ▼                                   │
+       Forge runs build script                     ▼
+       + smoke-tests artifact          Forge hands user the exact
+                │                       command + working directory
                 └─────────────────┬─────────────────┘
                                   ▼
-                 dist/<worker>.<os-extension>  (the artifact)
+                <os>/dist/<Display Name>.<os-extension>  (the artifact)
 ```
 
 The interview and the cascade plan are the parts of the forge that actually matter; the code generation and build
-that follow are mostly mechanical once those two are right. The branch at the bottom — "does the build host's OS
-match the target?" — is the only place the initial forge can stall, and it stalls into a clean handoff rather than a
-failure: the user gets the build script and runs it on a machine that matches.
+that follow are mostly mechanical once those two are right. The Forge always builds for the host OS, so there's no
+cross-compilation branch; the only place the initial forge can stall is when the build can't be run from inside the
+session — a missing toolchain, a credential only the user has — and it stalls into a clean handoff rather than a
+failure: the user gets the exact command and the working directory and runs it themselves.
 
 #### Run
 
@@ -187,12 +211,14 @@ event     ──┘                       ▼
 ```
 
 The artifact is self-contained: no Python on the target machine, no separate runtime install, just the binary the
-user double-clicks or the scheduler invokes. The cascade runtime walks units in the order the Forge planned them,
-only falling back to a higher tier when the current one signals it can't satisfy the unit. When a deterministic
-CODE step can't solve a unit, the runtime tries an installed local model on the user's machine before
-considering a hosted call — so workers keep running offline whenever a local model is available and capable enough.
-The hosted tier prompts for the user's API key on first need and stores it in the OS keyring; the user can also
-provide keys ahead of time so the prompt never appears, and if the worker has no hosted units the prompt never
+user double-clicks or the scheduler invokes. The cascade runtime walks the units in the order the Forge planned them,
+and each unit runs at the tier the plan assigned it — the runtime does **not** silently escalate a struggling unit to
+a higher tier. Tier choice is a forge-time decision baked into the plan: if LOCAL wasn't good enough for a unit, that
+was caught and fixed when the worker was forged, not papered over at run time. The one exception is a unit whose input
+genuinely varies in shape (clean PDF vs. photo), which the Forge wires with an explicit, opt-in `fallback=` and names
+both paths in the plan. Because the tiers are pinned this way, a worker with no hosted unit keeps running fully
+offline. The hosted tier prompts for the user's API key on first need and stores it in the OS keyring; the user can
+also provide keys ahead of time so the prompt never appears, and if the worker has no hosted units the prompt never
 appears at all.
 
 #### Reforge
@@ -201,19 +227,21 @@ appears at all.
 user (change request) ──▶ Worker Forge
                               │
                               ▼
-                  reads AUTHORING.md + WORKER.md
+           reads AUTHORING.md + WORKER.md + <os>-specific.md
                               │
                               ▼
                  modifies affected cascade unit
                               │
                               ▼
-                  rebuilds artifact in dist/
+                rebuilds artifact in <os>/dist/
 ```
 
 Reforge is the common case after the first build, and it's the test the Workspace has to pass: if the Forge
-can't reconstruct enough context from `AUTHORING.md` and `WORKER.md` to make a confident change, the original
-interview failed. Most reforges touch one unit and rebuild. Full regeneration is reserved for changes large enough
-that a patch would be messier than a redo.
+can't reconstruct enough context from `AUTHORING.md`, `WORKER.md`, and the relevant `<os>-specific.md` to make a
+confident change, the original interview failed. Most reforges touch one unit and rebuild. A distinct flavor is
+building the same worker on a new OS, where the Forge re-asks only the OS-specific questions and adds a sibling
+`<os>/` folder beside the existing one. Full regeneration is reserved for changes large enough that a patch would be
+messier than a redo.
 
 ### Key design decisions
 
@@ -244,15 +272,19 @@ the spec the user actually reads.
 
 Each Workspace holds Python source alongside the built artifact. Three reasons: the Forge needs to read the source to
 reforge, the user needs to be able to audit what's running on their machine, and a worker without its Workspace is a
-black box the next maintainer can't reason about. The artifact in `dist/` is the distributable; the Workspace is the
-source of truth.
+black box the next maintainer can't reason about. The artifact in `<os>/dist/` is the distributable; the Workspace is
+the source of truth.
 
-#### Target OS is chosen at forge time
+#### The target OS is the host OS
 
-The Forge asks the user which OS the worker will run on and emits a build script for that OS specifically. No
-cross-compilation: a worker for Windows is built on Windows. This trades convenience for predictability —
-cross-compilation introduces a class of "works on my machine" bugs that are hard to catch and harder to debug from
-inside a Forge run.
+The Forge doesn't ask which OS to target — it detects the OS it's running on and builds for that one, full stop. A
+worker for Windows is built on Windows; a worker for macOS is built on a Mac. There's no cross-compilation. This
+trades convenience for predictability — cross-compilation introduces a class of "works on my machine" bugs that are
+hard to catch and harder to debug from inside a Forge run. When the user wants the same worker on a second OS, they
+re-run the Forge on a machine of that OS and it adds a sibling `<os>/` folder to the existing Workspace, reusing the
+common spec and re-asking only the OS-specific questions. macOS and Windows are supported today; Linux scaffolding
+(the `linux/` folder logic, `build_linux.sh`, the Linux templates) is present but the toolchain hasn't shipped, so a
+forge on a Linux host stops before the interview and tells the user Linux isn't supported yet.
 
 ### Failure modes
 
@@ -265,9 +297,12 @@ a bug worth investigating.
   HOSTED. The escalation is recorded in the cascade plan; it isn't a silent run-time fallback.
 - **The hosted API key is missing at run time.** The runtime prompts the user and stores the key in the OS keyring.
   If the worker has no hosted units, the prompt never appears.
-- **The build host's OS doesn't match the target.** The Forge doesn't attempt cross-compilation. It hands the build
-  script to the user with instructions for running it on a matching machine. This is a known branch of the initial
-  forge, not an error condition.
+- **The build can't run from inside the forge session.** The sandbox is missing a toolchain (`pyinstaller`, `npm`),
+  the build needs a credential only the user has, or it requires an interactive prompt the agent can't satisfy. The
+  Forge doesn't go quiet — it hands the user the exact command, the working directory, and where the artifact will
+  land. This is a known branch of the initial forge, not an error condition.
+- **The forge is running on Linux.** Linux isn't supported yet. The Forge stops before the interview and tells the
+  user they'd need a Mac or Windows machine to forge a worker today; Linux support is on the roadmap.
 - **The user declines the build prompt.** The Forge skips the build and leaves the source in the Workspace. The user
   can run the build script themselves later, or ask the Forge to retry the build at any point.
 - **A reforge would have to change too much.** When the requested change diverges from the original `AUTHORING.md`
@@ -279,24 +314,25 @@ a bug worth investigating.
 These aren't decided yet, mostly because the design doesn't have enough operational experience to commit. Each is
 real enough to bite us if we don't pick an answer before the first batch of workers ship.
 
-- **Scheduling across OSes.** Native schedulers — Windows Task Scheduler, launchd, cron — all work differently. Do we
-  ship a thin cross-platform scheduler with each worker, or generate native scheduler config at forge time?
 - **Worker updates.** A reforge today produces a new artifact the user has to redistribute by hand. Is there a
   lightweight update channel that doesn't require us to run a server?
 - **Artifact attestation.** A built `.exe` should be verifiable against the source in the Workspace. What's the
   minimum scheme that gives the recipient confidence without turning the build pipeline into a research project?
-- **Local model selection.** Different users have different Ollama models installed. Does the Forge pin a specific
-  model per worker, or query the host at run time and pick the best available?
+
+Two questions from the original design have since been settled by the skill and are no longer open: scheduling is
+generated as **native config at forge time** (launchd `.plist`, Task Scheduler XML, `.desktop` autostart written into
+`<os>/resources/`), and local-model selection **pins a specific model per worker** at forge time (`llama3.2:3b` by
+default, recorded in the cascade plan and `<os>-specific.md`), with the user free to override.
 
 ### Future work
 
 Out of scope for this design, listed here so they don't get re-litigated in review:
 
 - A workers marketplace.
-- Automated security scanning of generated workers.
+- Automated security scanning of generated workers. (The Forge already does a manual security pass at code-gen and
+  before handoff; automating it is the future-work item.)
 - Code-signing.
-- A CLI surface for workers.
-- An remote update channel.
+- A remote update channel.
 - A desktop UI for the Forge itself.
 - Auto-reforge on failure.
 - Artifact attestation.

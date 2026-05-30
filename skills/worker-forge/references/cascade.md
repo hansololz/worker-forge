@@ -73,7 +73,7 @@ The decision is usually obvious. When it isn't, work down this list:
 3. **Does the task need real reasoning or long-context understanding?** If yes, HOSTED.
 4. **Are you still unsure?** Default to the lower tier and test it. It's much easier to escalate a unit after seeing it fail than to drop one down after building around a model call.
 
-A note on the "obvious" CODE case: a lot of users will describe a task that sounds like it needs a model because that's the vocabulary they have. "Categorize my downloads" sounds like classification. "Find the dates in this file" sounds like extraction. Listen for the underlying shape — if a regex or a parser would do, propose that. The supplement spec specifically calls this out: when the user's ask seems to need LOCAL, try CODE alternatives first.
+A note on the "obvious" CODE case: a lot of users will describe a task that sounds like it needs a model because that's the vocabulary they have. "Categorize my downloads" sounds like classification. "Find the dates in this file" sounds like extraction. Listen for the underlying shape — if a regex or a parser would do, propose that. The skill spec specifically calls this out: when the user's ask seems to need LOCAL, try CODE alternatives first.
 
 ## Worked examples
 

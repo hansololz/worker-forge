@@ -80,6 +80,8 @@ Out of scope for v1, on the roadmap:
 
 - [`design.md`](docs/design.md) — what a worker is and isn't, the cascade as runtime contract, the Workspace layout, the
   forge / run / reforge lifecycles, key design decisions, and known failure modes.
+- [`spec.md`](docs/spec.md) — the worker-forge skill spec: what the skill must do in each phase (interview, cascade
+  design, code generation, packaging) and how it should behave. References `design.md` for the rationale.
 
 ## License
 

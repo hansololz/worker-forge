@@ -12,7 +12,7 @@
 
 ## Creating worker-forge-skill
 
-- Read the `docs/design.md` and `docs/worker-forge-skill-supplement-spec.md` doc to create the skill.
+- Read the `docs/design.md` (system design / rationale) and `docs/spec.md` (the skill spec) to create the skill.
 - Store the skill in `skill/` directory.
 
 # Creating worker-forge skill distribution
