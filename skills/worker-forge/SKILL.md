@@ -14,6 +14,15 @@ You're producing two things on a successful forge:
 
 A forge run only ever targets the OS the skill is running on — there's no cross-compilation, and no question to the user about which OS to target. If they want the worker on a second OS later, they run the forge again on that machine and the skill adds a new OS folder to the same Workspace (see Reforge below).
 
+## Platform support
+
+Right now the forge supports **macOS and Windows only.** Linux support is planned for a future release but isn't available yet. Because a forge always builds for the OS it's running on, this means:
+
+- On macOS or Windows, proceed normally.
+- On Linux, **stop before the interview** and tell the user plainly that Linux isn't supported yet — Linux is on the roadmap but the toolchain (the AppImage/build path, the native GTK/Qt UI, the keychain glue) hasn't shipped. Don't run the forge on a Linux host even though Linux scaffolding (`linux/` folders, `build_linux.sh`, the Linux templates) is present in the skill — that scaffolding is groundwork for the future release, not a signal that Linux is ready. If the user only has a Linux machine, let them know they'd need a Mac or Windows box to forge a worker today, and that Linux support is coming.
+
+The Linux references that remain throughout this skill and its reference files describe where Linux *will* slot in once it's supported; treat them as forward-looking, not as a current target.
+
 A few product principles to keep in your head the whole time:
 
 - **Cheapest tier first, every time.** The runtime walks CODE → LOCAL → HOSTED. Reaching for a model call where a regex would do is a bug. The cascade exists to make the lazy default uncomfortable at design time, not just cheap at run time.
@@ -30,7 +39,7 @@ A forge runs in four phases — interview, cascade design, code generation, pack
 
 ### Phase 1 — Interview
 
-This is the highest-leverage phase. Edge cases the user didn't surface here will fail at run time, and you'll be back to forge it again. Read `references/interview.md` for the full question set and the order to ask them in — it's organized around the questions from the supplement spec (worker name + display name, trigger style, icon, scheduling, UI framework, color theme, data storage, local/hosted models per subtask). The target OS is *not* a question — the skill builds for whatever OS it's running on and records that decision automatically.
+This is the highest-leverage phase. Edge cases the user didn't surface here will fail at run time, and you'll be back to forge it again. Read `references/interview.md` for the full question set and the order to ask them in — it's organized around the questions from the supplement spec (worker name + display name, trigger style, icon, scheduling, UI framework, color theme, data storage, local/hosted models per subtask). The target OS is *not* a question — the skill builds for whatever OS it's running on (currently macOS or Windows; see Platform support above) and records that decision automatically.
 
 Use the AskUserQuestion tool for the structured choices in the interview. It forces concrete answers and the multi-select form maps cleanly onto the supplement spec's "options are mutually inclusive when possible" rule (e.g., a user can want both "double-click" and "schedule on startup"; those aren't mutually exclusive). For every question, propose a concrete default the user can confirm with one tap — read the task description, infer the obvious pick, and present it as the first option. The skill earns its keep when the user is mostly saying "yes, that" instead of generating a spec from a blank menu.
 

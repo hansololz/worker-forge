@@ -2,7 +2,9 @@
 
 The packaging phase turns the Python source in `<os>/` into a native artifact the user can double-click. The artifact lands in `<os>/dist/`, named with the worker's **display name** — `Manga Katana Watcher.exe`, not `manga-katana-watcher.exe`. The slug is for filesystem paths and internal identifiers; the artifact is the thing the recipient sees in their downloads folder, so it gets the human-readable name. The build script templates already wire this up via `pyinstaller --name "{{WORKER_DISPLAY_NAME}}"` — leave it alone, don't substitute the slug back in.
 
-The skill only ever builds for the OS it's currently running on, so there's no cross-compilation to worry about and no "host doesn't match target" branch. The OS folder you're working in (`windows/`, `mac/`, or `linux/`) was created by the setup script after auto-detecting the host, and its `build_<os>.{bat,sh}` is the one you run. If the user wants the same worker on a different OS, that's a separate forge they kick off on that machine (see `reforge.md`).
+The skill only ever builds for the OS it's currently running on, so there's no cross-compilation to worry about and no "host doesn't match target" branch. The OS folder you're working in (`windows/` or `mac/`) was created by the setup script after auto-detecting the host, and its `build_<os>.{bat,sh}` is the one you run. If the user wants the same worker on a different OS, that's a separate forge they kick off on that machine (see `reforge.md`).
+
+**Linux packaging isn't supported yet.** macOS and Windows are the only platforms the forge builds for today; the Linux AppImage path below is documented as groundwork for a future release. If you're on a Linux host you shouldn't have reached this phase — see "Platform support" in `SKILL.md` and stop before the build.
 
 ## Distribute as a single binary
 
@@ -64,7 +66,9 @@ The script:
 
 Unsigned `.app` bundles trigger Gatekeeper on first launch ("can't open because Apple cannot check it for malicious software"). The user can right-click → Open the first time to bypass. Note this in `mac/mac-specific.md` (so the next reforge on this OS sees it) and in `WORKER.md`'s setup section (so recipients see it) — this looks like the worker is broken and it isn't.
 
-### Linux → AppImage or static binary
+### Linux → AppImage or static binary (not supported yet — future release)
+
+This section is forward-looking. Linux builds aren't supported today; the steps below describe the intended path for when Linux ships.
 
 Build script: `linux/build_linux.sh`.
 

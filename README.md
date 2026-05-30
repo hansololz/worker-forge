@@ -6,8 +6,11 @@ Make small, repetitive manual desktop tasks worth automating.
 
 Worker Forge is an agent that turns a plain-language task description into a small, single-purpose program that runs on
 your own machine. You describe what you want; the Forge interviews you about the details and produces a *worker* — a
-native artifact (`.exe` on Windows, `.app` on macOS, AppImage or static binary on Linux) that does one job, runs to
-completion, and exits. Trigger it with a double-click, a schedule, a cron entry, or an event.
+native artifact (`.exe` on Windows, `.app` on macOS) that does one job, runs to completion, and exits. Trigger it with a
+double-click, a schedule, a cron entry, or an event.
+
+**Platform support:** Worker Forge currently runs on **macOS and Windows**. Linux support is on the roadmap but not
+available yet — the Forge builds for the OS it runs on, so a worker is forged on a Mac or Windows machine today.
 
 ## The problem
 
@@ -54,6 +57,8 @@ calls.
 
 Out of scope for v1, on the roadmap:
 
+- **Linux support.** macOS and Windows are supported today; Linux is next — AppImage/static-binary packaging, a native
+  GTK4/Qt UI, and Secret Service keychain glue so a worker can be forged and run on a Linux box too.
 - **Workers marketplace.** Browse and install workers other people have forged.
 - **Code-signing.** Sign Windows and macOS artifacts so recipients don't see the first-run security warning.
 - **A remote update channel.** Push reforged versions of a worker to recipients without re-emailing the binary.

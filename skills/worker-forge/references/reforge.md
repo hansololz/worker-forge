@@ -18,7 +18,7 @@ The user wants to change behavior in a worker they already have on this OS. Pret
 
 ## Flavor 2 — build the same worker on a new OS
 
-The user already has the worker on, say, Windows, and now they're on a Mac (or a Linux box) asking for the same worker there. The Workspace already exists with a `windows/` folder; you're adding a sibling `mac/` (or `linux/`) without touching the original.
+The user already has the worker on, say, Windows, and now they're on a Mac asking for the same worker there. The Workspace already exists with a `windows/` folder; you're adding a sibling `mac/` without touching the original. (Only macOS and Windows are supported today — adding a `linux/` folder isn't possible yet; Linux is a future release. If the user is on a Linux box, tell them Linux isn't supported yet rather than starting this flow.)
 
 1. Read `WORKER.md` and `AUTHORING.md`. Everything in there carries over — the task description, the cascade plan, the data shape, the edge-case decisions, the trigger style, the schedule the user wants, the hosted-model picks, the worker's name. You don't re-ask any of it.
 2. Look at the existing `<other-os>/<other-os>-specific.md` files for context. They're not the right answers for the new OS, but they tell you what kind of questions need answers on this OS too. ("Last time on Windows we picked Tkinter and the Credential Manager — on Mac I should ask UI framework and confirm Keychain.")
