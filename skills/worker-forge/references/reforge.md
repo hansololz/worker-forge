@@ -14,7 +14,10 @@ The user wants to change behavior in a worker they already have on this OS. Pret
 4. Find the unit (or units) the change touches. Most reforges hit one unit. "Add a Slack notification when the digest is ready" probably adds a new unit, doesn't change anything existing. "Make the summary more concise" changes the prompt of an existing LOCAL unit. "Switch from Anthropic to OpenAI for the summary" changes the provider on a HOSTED unit.
 5. Make the change in `<os>/main.py` (and in any other OS folders that share the unit — same edit, applied to each). Update the cascade plan in `WORKER.md` if the change is structural (added unit, changed tier, swapped model).
 6. Append to `AUTHORING.md` (or to `<os>-specific.md`, whichever the change belongs in) — don't rewrite. The original transcript and decisions stay; you're adding a "reforge `<date>`" section that explains what the user asked for and what you changed.
-7. Rebuild. Same packaging step as the initial forge. If the user is OK with it, run `<os>/build_<os>.{bat,sh}`; otherwise leave the script in place.
+7. Update the workspace `README.md` if the change touched the feature list, the build commands, or the run commands. The README is part of the source of truth; don't leave its feature bullets or commands describing the old worker.
+8. Rebuild. Same packaging step as the initial forge. If the user is OK with it, run `<os>/build_<os>.{bat,sh}`; otherwise leave the script in place.
+
+You **must** keep the docs in sync with the worker whenever you modify it — `WORKER.md`, `AUTHORING.md`, the relevant `<os>-specific.md`, and `README.md`, each when the change affects it. A reforge that updates the code but leaves the docs stale isn't done. Record anything worth knowing for a future forge while you still have the context.
 
 ## Flavor 2 — build the same worker on a new OS
 
@@ -26,7 +29,8 @@ The user already has the worker on, say, Windows, and now they're on a Mac askin
 4. Use `setup_workspace.py --add-os` (see `scripts/setup_workspace.py`) to drop a new `<os>/` folder into the existing Workspace. The script refuses to clobber an existing OS folder; it only creates the new one.
 5. Fill in the new `<os>/<os>-specific.md` with the answers from step 3.
 6. Generate `<os>/main.py` from the cascade plan already in `WORKER.md`. This is the same code path as the initial forge, just sharing the spec; you're not re-deriving it.
-7. Offer to build, same as initial forge. Artifact lands in `<os>/dist/`.
+7. Add this OS's build and run commands to the workspace `README.md` so it covers every OS the worker now exists for.
+8. Offer to build, same as initial forge. Artifact lands in `<os>/dist/`.
 
 Don't re-run the cascade-design phase. The plan is the plan. If a unit happens to need a different model on this OS (say, the user wants `llama3.2:3b` on their Mac instead of `phi3` on Windows), that's a swap inside an existing unit, not a re-plan — record the per-OS model pick in `<os>-specific.md` and move on.
 

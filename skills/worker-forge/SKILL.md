@@ -122,7 +122,7 @@ Read `references/packaging.md` for the build details on the OS you're running on
 Three things to do before you offer to build:
 
 1. **Final security scan.** Re-read the OS folder as a whole — every script under `<os>/`, every file in `<os>/resources/`, the build script itself. The per-script reads during code-gen catch local issues; this pass catches the ones that only show up when units compose (a URL fetched by one unit getting used as a filename by another, leftover debug flags, `resources/` files the worker no longer uses). `references/packaging.md` has the checklist.
-2. **Write the workspace `README.md`.** Copy `assets/README.md.template` to `workspaces/<worker-name>/README.md` and fill in three things: the worker's display name as the heading, a one-or-two-sentence description of what it does, and a bulleted feature list ordered with the most important feature first. This is the "what is this folder" doc for anyone who opens the workspace; it isn't a duplicate of `WORKER.md` (which is the full spec) — it's the front-door blurb.
+2. **Write the workspace `README.md`.** Copy `assets/README.md.template` to `workspaces/<worker-name>/README.md` and fill in: the worker's display name as the heading, a one-or-two-sentence description of what it does, a bulleted feature list ordered with the most important feature first, the **build commands** for every OS folder that exists in the workspace, and the **run commands** for launching the built worker on each of those OSs. This is the "what is this folder" doc for anyone who opens the workspace; it isn't a duplicate of `WORKER.md` (which is the full spec) — it's the front-door blurb plus the copy-pasteable build-and-run commands. Match the run commands to the trigger style the user picked in the interview (double-click, CLI, GUI).
 3. **Offer to build, run it if the user agrees, and test the result.** The build needs the user's permission. If they say yes, run `<os>/build_<os>.{bat,sh}` and stream the output. **Then actually invoke the artifact** if it's safe to (CLI workers with `--help` or a dry-run flag, GUI workers via a short headless smoke test where the framework allows it). If it fails, read the error, patch the code or the build script, and rebuild. Don't ship a binary you haven't seen run at least once. If the user declines the build, leave the script in place with a short note in `WORKER.md` telling them how to run it themselves — that's a known branch, not a failure.
 
 If you literally can't run the build script from where you are (the sandbox is missing `pyinstaller` / `npm` / `appimagetool`, the build needs a credential only the user has, an interactive prompt the agent can't satisfy, etc.), **don't go quiet.** Tell the user in one short message: the specific blocker, the exact command to run with the working directory shown, and where the artifact will land when it succeeds. `references/packaging.md` → "When you can't run the build script yourself" has the format. A worker the user doesn't know how to finish building is a forge that produced nothing.
@@ -132,6 +132,8 @@ When the build succeeds and smoke-tests cleanly, the artifact lands in `<os>/dis
 ## Reforge
 
 When the user comes back with a change, read `references/reforge.md`. The short version: read `AUTHORING.md`, `WORKER.md`, and the relevant `<os>-specific.md`, find the unit the change touches, modify it, rebuild. Don't regenerate from scratch unless the diff would be messier than a redo.
+
+Whenever you modify a worker, you **must** update its docs to match before you finish: `WORKER.md` if behavior or the cascade plan moved, `AUTHORING.md` (append, don't rewrite) with what the user asked for and why you changed it, the relevant `<os>-specific.md` for any OS-shaped change, and the workspace `README.md` if the feature list, build commands, or run commands changed. The Workspace is the source of truth, so a code change that leaves the docs stale is an incomplete reforge — record anything worth knowing for a future forge now, while you still have the context.
 
 There's a second flavor of reforge worth calling out, because it shows up often once a user has a worker they like: **building the same worker on a new OS.** The user says something like "now build this for Mac too" while running the skill on their Mac. The Workspace already exists with, say, a `windows/` folder; the worker's behavior is captured in `AUTHORING.md` + `WORKER.md`. You don't redo the whole interview — read the common files for the task, the cascade, and the edge cases, then run only the OS-specific portion of the interview (UI framework, scheduler glue, data path, keychain backend, packaging caveats) and write those answers into the new `mac/mac-specific.md`. Add the `mac/` folder alongside the existing `windows/`, generate the code, and build. `references/reforge.md` has the step-by-step.
 
@@ -155,7 +157,7 @@ After a forge completes the user has a Workspace folder like:
 
 ```
 root/workspaces/my-worker/
-├── README.md                     # short front-door doc: name, blurb, ordered feature bullets
+├── README.md                     # front-door doc: name, blurb, ordered features, build + run commands
 ├── AUTHORING.md
 ├── WORKER.md
 └── windows/                      # or mac/, or linux/ — whichever OS this forge ran on
@@ -185,7 +187,7 @@ The Workspace is the source of truth. The artifact in `<os>/dist/` is the distri
 
 - `assets/WORKER.md.template` — the spec template (workspace root, OS-agnostic).
 - `assets/AUTHORING.md.template` — the rationale-layer template (workspace root, OS-agnostic).
-- `assets/README.md.template` — the short front-door blurb that lands at the workspace root after a successful forge.
+- `assets/README.md.template` — the front-door doc that lands at the workspace root after a successful forge: blurb, feature bullets, and per-OS build + run commands.
 - `assets/windows-specific.md.template`, `assets/mac-specific.md.template`, `assets/linux-specific.md.template` — OS-specific interview-answer templates. The setup script drops the right one inside the new `<os>/` folder.
 - `assets/worker_runtime.py` — the cascade runtime, copied unchanged into every OS folder.
 - `assets/build_windows.bat`, `assets/build_macos.sh`, `assets/build_linux.sh` — build scripts per OS. The setup script copies whichever one matches the current OS into the new `<os>/` folder.

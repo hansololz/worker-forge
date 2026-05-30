@@ -116,6 +116,8 @@ Offer Dark as a one-tap alternative (same set of rules, different palette — `d
 
 One question that's easy to forget but matters: the worker's title bar should be the same color as the body. The OS will happily draw a native title bar that doesn't match your Electron or Tkinter window if you don't override it, and that's the single thing that makes a worker look unfinished. `default-theme.md` has the per-framework recipe; don't ship a worker with a mismatched title bar.
 
+The other easy-to-forget tell — and it applies whatever theme the user picked, so it's worth noting here even if you skip `default-theme.md` for a dark or custom palette — is encoded text. Any text the worker pulls from a feed, a web page, or an API tends to arrive HTML-encoded, and rendering it raw makes the window show `Dave&#039;s &quot;news&quot;` where the user expects `Dave's "news"`. Decode entities once at the point the outside text enters the worker (Python: `html.unescape()`; webview: assign to `textContent`, not `innerHTML`) so the UI shows real characters, never the codes. `default-theme.md` ("Text from the outside world") has the per-framework detail.
+
 ### Data storage format
 
 > "How should the worker store its data?"

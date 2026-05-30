@@ -68,13 +68,74 @@ The progression matters. Bigger surfaces get bigger radii; small interactive bit
 
 What "top bar" means depends on the framework. In each case, the fix is to draw the title bar yourself or theme it to match the body:
 
-- **Native (the default — SwiftUI on macOS, WinUI on Windows, GTK4 / Qt on Linux)**: prefer the platform's title-bar-tint API rather than going frameless. SwiftUI: `.toolbarBackground(Color(hex: "#FAFAF7"), for: .windowToolbar)` plus `.windowStyle(.hiddenTitleBar)` if you want the chrome to dissolve into the body. WinUI: `AppWindow.TitleBar.BackgroundColor = ...` plus matching `ButtonBackgroundColor` and `InactiveBackgroundColor`. GTK4: set `gtk_header_bar_set_decoration_layout` and theme the header bar through CSS so it picks up `bg.base`.
+- **Native (the default — SwiftUI on macOS, WinUI on Windows, GTK4 / Qt on Linux)**: prefer the platform's title-bar-tint API rather than going frameless. SwiftUI: `.windowStyle(.hiddenTitleBar)` so SwiftUI content paints the whole window, plus the CALayer fix below (`.toolbarBackground(...)` and `.background(Color)` alone are *not* enough on macOS — see the SwiftUI subsection). WinUI: `AppWindow.TitleBar.BackgroundColor = ...` plus matching `ButtonBackgroundColor` and `InactiveBackgroundColor`. GTK4: set `gtk_header_bar_set_decoration_layout` and theme the header bar through CSS so it picks up `bg.base`.
 - **Electron (only when npm is available)**: set `titleBarStyle: 'hiddenInset'` on macOS and `titleBarStyle: 'hidden'` with `titleBarOverlay` configured to use `bg.base` on Windows/Linux. Render the title text and any window controls inside the renderer process with Tailwind classes so the bar matches the body exactly. The macOS traffic-light buttons stay native; that's fine and expected. For Linux, render your own close/minimize/maximize controls or use a library like `custom-electron-titlebar`.
 - **Tauri (only when a Rust toolchain is available)**: set `decorations: false` in `tauri.conf.json` and render the title bar in the webview using the same Tailwind classes you'd use in Electron. Wire up window-drag with `data-tauri-drag-region` on the bar.
 - **PySide6 / PyQt**: set `Qt.FramelessWindowHint` and draw a custom title bar widget at the top of the central widget, styled with `bg.base`. Add window-drag handling on the custom bar so the window remains movable.
 - **Tkinter**: by default, the window title bar is the OS chrome — never matching `bg.base`. Options: (a) call `root.overrideredirect(True)` and draw your own title bar as the first row in the window using `bg.base` for the background, with a label for the title and a close button. (b) on Windows 10+, use `pywinstyles` or set `DWMWA_CAPTION_COLOR` via `ctypes` so the native title bar follows the app's theme. (a) is the more reliable fix; (b) is less code if you only target Windows.
 
 Whichever path you take, the title bar's background must be exactly `bg.base` (or one shade lighter/darker if you want a subtle separator) — *not* the OS default, *not* a slightly-different-shade that catches the eye.
+
+### SwiftUI on macOS: the title-bar strip goes white when the window loses focus
+
+This one bites every SwiftUI worker and the obvious fix doesn't hold, so it's worth doing right the first time. With `.hiddenTitleBar` and `.background(WindowChrome.bg)` the window looks correct while it's focused, then the top strip flashes white the moment another app takes focus. The cause: AppKit applies an *inactive* appearance to the window's content when focus is lost, and SwiftUI's `.background(Color)` is composed into that content layer, so AppKit re-tints it. `.toolbarBackground(...)` has the same problem. The clean native fix, `containerBackground(_:for:.window)`, only exists on macOS 15+, so a worker targeting macOS 13–14 can't use it.
+
+The fix that works on macOS 13+ is to bake the color into the content view's `CALayer`. A layer's `backgroundColor` is a raw `CGColor` that AppKit's focus-state appearance does not touch, and it paints behind SwiftUI's whole view tree — so any region SwiftUI doesn't paint opaquely (including the title-bar strip under `.fullSizeContentView`, which `.hiddenTitleBar` implies) shows the same color whether the window is focused or not. Reach for the AppDelegate because SwiftUI builds the `NSWindow` asynchronously, so you wait a tick (and retry a few times) before grabbing it.
+
+```swift
+import SwiftUI
+import AppKit
+
+// Your bg.base color, as both Color (SwiftUI) and NSColor (AppKit).
+enum WindowChrome {
+    static let bg   = Color(red: 0.969, green: 0.961, blue: 0.949)
+    static let bgNS = NSColor(srgbRed: 0.969, green: 0.961, blue: 0.949, alpha: 1.0)
+}
+
+@main
+struct MyApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    var body: some Scene {
+        Window("My App", id: "main") {
+            ContentView()
+                .background(WindowChrome.bg.ignoresSafeArea())   // SwiftUI body fallback
+        }
+        .windowStyle(.hiddenTitleBar)   // SwiftUI content paints the whole window
+    }
+}
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in self?.applyWindowChrome() }   // window isn't ready on the first tick
+    }
+
+    private func applyWindowChrome(retry: Int = 0) {
+        guard let win = NSApp.windows.first(where: { $0.identifier?.rawValue.contains("main") == true }) else {
+            if retry < 20 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                    self?.applyWindowChrome(retry: retry + 1)
+                }
+            }
+            return
+        }
+        win.backgroundColor = WindowChrome.bgNS                  // first-frame fallback, before SwiftUI paints
+        if let content = win.contentView {
+            content.wantsLayer = true
+            content.layer?.backgroundColor = WindowChrome.bgNS.cgColor   // the actual focus-state fix
+        }
+    }
+}
+```
+
+Each piece earns its place: `.hiddenTitleBar` lets SwiftUI own the whole window instead of AppKit drawing its own title-bar background; `.background(...)` covers the body region; `win.backgroundColor` paints the very first frame before SwiftUI's tree exists (otherwise it flashes default white on launch); and the `contentView.layer.backgroundColor` is the line that survives focus loss.
+
+A few non-obvious traps that re-introduce the white strip — avoid all of them:
+
+- Don't set `win.appearance = NSAppearance(named: .aqua)` — it forces a light-aqua material on the title bar that overrides your color.
+- Don't combine `win.isOpaque = true` with `titlebarAppearsTransparent = true` — opaque mode composites the title bar against the system background instead of your color.
+- Don't use SwiftUI `.alert(...)` for confirmations — on macOS it presents as a window-modal sheet whose lifecycle drops the transparent-title-bar settings when it dismisses, leaving the strip white afterward. Render confirmation dialogs as in-tree SwiftUI overlays instead.
+- If you can require macOS 15+, `.containerBackground(WindowChrome.bg, for: .window)` replaces nearly all of the above in one line — use it only when dropping macOS 13–14 support is acceptable.
 
 ## Typography
 
@@ -122,11 +183,23 @@ When the worker is doing something, show it. A 2-px-tall progress bar at the top
 
 When there's nothing to show (no items yet, no results), don't leave a blank panel. Two lines of `text.secondary`-colored copy in the center: a one-liner about what would normally be here, and a one-liner about how to make something happen. This is the difference between a worker that feels broken on first run and one that feels considered.
 
+### Text from the outside world — decode it before it hits the screen
+
+Any text a worker pulls from an RSS feed, an HTML page, a JSON API, or model output is liable to arrive HTML- or URL-encoded, and showing it raw is a quiet but glaring polish bug. A headline that reads `Dave&#039;s Q3 take: &quot;don&rsquo;t panic&quot; &amp; hold` in the worker's window should read `Dave's Q3 take: "don't panic" & hold` — the user sees the characters, never the codes. This is the same class of problem as the title-bar tell: the worker still *works*, but the raw `&#039;`, `&amp;`, `&nbsp;`, `&#8217;` litter makes it look broken and unfinished.
+
+The fix is to decode entities once, at the boundary where outside text enters the worker, before it's stored or rendered — not to sprinkle replacements at each label. Whichever framework drew the UI:
+
+- **Python workers (Tkinter, PySide6/PyQt, or any backend feeding a webview)**: run incoming strings through `html.unescape()` (stdlib — handles named entities like `&amp;`, decimal `&#039;`, and hex `&#x27;` alike). If the source is a URL-encoded field, `urllib.parse.unquote` first. Decode at ingest, in the CODE unit that fetches or parses the data, so everything downstream holds clean text.
+- **Electron / Tauri (webview)**: set text via `element.textContent = value`, never `innerHTML = value`. Assigning to `textContent` shows exactly the characters in the string, so if the string still contains literal `&#039;` you must decode it first (e.g. a tiny helper that writes to a detached element's `innerHTML` and reads back `textContent`, or a library like `he.decode`). The trap is the inverse too: dropping already-decoded text into `innerHTML` re-interprets `<`, `&`, etc. as markup. Keep data in `textContent`.
+- **Native (SwiftUI / WinUI / GTK)**: these render plain strings literally, so decode at ingest in the data layer (Swift: `NSAttributedString` with `.html`, or a small entity map for the common cases; the simplest reliable path is to decode in whatever fetch/parse code produces the string, same as the Python advice).
+
+A good gut-check before shipping: feed the worker a sample item whose source text contains an apostrophe, a quote, an ampersand, and a non-breaking space, and confirm the window shows `' " &` and a normal space — not their encoded forms. Entity litter is exactly the kind of thing the author stops seeing after staring at it, but the recipient notices immediately.
+
 ## Applying it
 
 How you actually wire this into a framework depends on what the user picked in the interview:
 
-- **Native — SwiftUI on macOS (default)** — declare the palette as a `Color` extension keyed off the tokens below, then set `.background(Color.bgBase)` on the root view and `.toolbarBackground(.bgBase, for: .windowToolbar)` so the title bar matches. Use `.cornerRadius(12)` on cards, `.cornerRadius(8)` on buttons / inputs, and `Capsule()` for pills. The platform font and HiDPI rendering come for free.
+- **Native — SwiftUI on macOS (default)** — declare the palette as a `Color` extension keyed off the tokens below, then set `.background(Color.bgBase)` on the root view and `.windowStyle(.hiddenTitleBar)`. Crucially, also apply the CALayer title-bar fix from the "SwiftUI on macOS" subsection above — `.background` / `.toolbarBackground` alone leave the title-bar strip white when the window loses focus. Use `.cornerRadius(12)` on cards, `.cornerRadius(8)` on buttons / inputs, and `Capsule()` for pills. The platform font and HiDPI rendering come for free.
 - **Native — WinUI / WinAppSDK on Windows (default)** — drop the palette into a `ThemeDictionary` (`Application.Resources["BgBase"]`, etc.) and reference the keys from XAML (`Background="{ThemeResource BgBase}"`). Set `AppWindow.TitleBar.BackgroundColor` and `ButtonBackgroundColor` to `bg.base`. Use `CornerRadius="12"` on `Border` / `Grid` cards, `8` on `Button` / `TextBox`.
 - **Native — GTK4 / Qt on Linux (default)** — supply the palette as a CSS file loaded via `Gtk.CssProvider` (GTK4) or as a QSS stylesheet on the `QApplication` (Qt). Theme the header bar from the same CSS so it picks up `bg.base`.
 - **Electron + Tailwind (only when npm is available)** — define the palette tokens as CSS custom properties in a single stylesheet (`src/theme.css`) and reference them from Tailwind's `theme.extend.colors` in `tailwind.config.js`. Then everything in the renderer uses Tailwind utilities (`bg-base`, `text-primary`, `rounded-lg`, etc.) that map back to the tokens. `titleBarStyle` set in the main process; custom title bar rendered in the renderer with the same classes as the rest of the body.

@@ -9,3 +9,35 @@ One- or two-sentence description of what this worker does and when it runs. Keep
 - Smaller features and conveniences, ordered by how often they'll matter at run time.
 
 Order matters: the most important bullet comes first, the least important last. If a feature isn't worth a bullet, drop it — `WORKER.md` is the place for completeness, this file is the place for the headline.
+
+## Build
+
+Commands to build the artifact, one block per OS this worker has been forged for. Show only the OS folders that actually exist in the workspace; leave the rest out.
+
+```bash
+# macOS
+cd mac && bash build_macos.sh
+```
+
+```bat
+:: Windows
+cd windows && build_windows.bat
+```
+
+The artifact lands in `<os>/dist/` under the worker's display name.
+
+## Run
+
+Commands to run the built worker, per OS. Match these to the trigger style chosen during the interview (double-click, CLI, GUI). Keep them copy-pasteable.
+
+```bash
+# macOS — open the built app
+open "mac/dist/{{WORKER_DISPLAY_NAME}}.app"
+```
+
+```bat
+:: Windows — run the built executable
+"windows\dist\{{WORKER_DISPLAY_NAME}}.exe"
+```
+
+If the worker takes CLI arguments or has a dry-run flag, show the most useful invocation here (e.g. `"{{WORKER_DISPLAY_NAME}}.exe" --help`).
