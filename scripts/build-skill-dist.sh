@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# build.sh — build the worker-forge.skill distributable.
+# build-skill-dist.sh — build the worker-forge.skill distributable.
 #
 # A .skill file is a zip archive of a skill directory, with SKILL.md at the
 # archive root. This script zips skills/worker-forge/ into dist/worker-forge.skill,
 # replacing any existing build.
 #
 # Usage:
-#   ./scripts/build.sh        (from the repo root)
-#   ./build.sh                (from inside scripts/)
+#   ./scripts/build-skill-dist.sh        (from the repo root)
+#   ./build-skill-dist.sh                (from inside scripts/)
 
 set -euo pipefail
 

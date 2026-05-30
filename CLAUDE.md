@@ -15,6 +15,12 @@
 - Read the `docs/design.md` (system design / rationale) and `docs/spec.md` (the skill spec) to create the skill.
 - Store the skill in `skill/` directory.
 
+## Making implementation changes
+
+- When an implementation change is made, first reflect that change in `docs/spec.md`.
+- If applicable, update `docs/design.md` as well.
+- Then use `docs/spec.md` and `docs/design.md`, together with the initial change request, to update the skill via the `skill-creator` skill.
+
 # Creating worker-forge skill distribution
 
 - The skill is located in `skills/worker-forge/` directory.
