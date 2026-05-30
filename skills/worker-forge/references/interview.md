@@ -160,11 +160,23 @@ If yes, generate a small script that checks for Ollama, runs `ollama pull <model
 
 Ask only if any unit in the planned cascade is HOSTED.
 
-> "Which hosted model should the worker use for `<subtask>`?"
+> "Which hosted provider should the worker use for `<subtask>`?"
 
 Options: ANTHROPIC, OPEN_AI, GEMINI, USER_PROVIDED.
 
 Ask once per HOSTED unit. Different units can use different providers.
+
+**Then pick the model, not just the provider.** Picking a provider isn't enough — the cascade plan and `WORKER.md` both record `<provider>/<model>`, and the runtime needs a concrete model string to call. Just as LOCAL units get a concrete default (`llama3.2:3b`), every HOSTED unit needs a concrete model. So propose one the same way you propose everything else: read the unit and suggest the cheapest model that can do it well, then let the user confirm or trade up.
+
+The same cheapest-tier-first instinct that picks CODE over LOCAL applies *inside* HOSTED. Frontier providers ship a lineup that trades capability against cost and latency, roughly three rungs:
+
+- **Top tier** (e.g. Anthropic's Opus line, OpenAI's flagship, Gemini Pro) — reserve for units that genuinely need frontier judgment: long-context reasoning, multi-step plans, a fifty-page contract. This is where you'd reach for the newest Opus.
+- **Balanced tier** (e.g. Anthropic's Sonnet line, OpenAI's mid model, Gemini Flash) — the sane default for most HOSTED units: drafting an email, a structured extraction the local model couldn't quite handle, a moderate summary. Fast and a fraction of the cost of the top tier.
+- **Fast/cheap tier** (e.g. Anthropic's Haiku line, the provider's smallest hosted model) — for high-volume or latency-sensitive HOSTED units where the judgment bar is low but a local model still wasn't reliable enough.
+
+Default a HOSTED unit to the **balanced tier** and only step up to the top tier when the unit's description tells you it needs frontier judgment. A worker that calls the biggest, slowest, priciest model to rewrite a subject line is the HOSTED-tier version of using an LLM where a regex would do — it costs the recipient real money on every run.
+
+**Confirm the exact model identifier before you write it down.** Hosted model strings change often — new versions ship, old ones get deprecated, and the design doc calls this out as a first-class risk ("Providers shut down and deprecate models on their own schedule"). Don't trust a string from memory. Name the tier you want, then confirm the current identifier with the user or by checking the provider's current model list, and record the verified string in the cascade plan in `WORKER.md` (it's OS-agnostic, so it belongs there and in `AUTHORING.md`, not in `<os>-specific.md`). A worker pinned to a model name that no longer exists fails on its first hosted call.
 
 If the worker uses any HOSTED unit, also ask how the user wants the worker to authenticate with the provider — first-run prompt that stores the key in the OS keyring, environment variable, config file in the data directory. Make a suggestion (keyring is the right default for most users — secure, no key in plaintext, no env shenanigans) and confirm.
 

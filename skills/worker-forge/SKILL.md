@@ -57,6 +57,8 @@ Read `references/cascade.md` for the tier rules. Decompose the task into units o
 | LOCAL  | Local LLM via Ollama on the user's box    | Fuzzy classification, small summaries, simple extractions |
 | HOSTED | Hosted LLM with the user's API key        | Tasks that need frontier-model judgment                   |
 
+A HOSTED unit is a provider *and* a model, not just a provider — the cascade plan records `<provider>/<model>`, and the cheapest-tier-first rule keeps going inside HOSTED. Default a hosted unit to the balanced model (Sonnet-class) and only reach for the top tier (newest Opus, the flagship) when the unit genuinely needs frontier judgment — a fifty-page contract, multi-step reasoning. Calling the biggest model to rewrite a subject line costs the recipient money on every run for nothing. Model identifiers churn, so confirm the current string before pinning it rather than trusting one from memory; `references/cascade.md` has the tiering and the worked examples.
+
 The supplement spec asks for an explicit plan-readback step before any code gets written: a step-by-step list of the units, each tagged CODE / LOCAL / HOSTED, and the worker's name shown clearly. The reason is that a tier disagreement caught here is a one-minute conversation; the same disagreement caught after the code is written is a rewrite. So write the plan, show the user the units, show them the name, and wait for them to confirm before moving on. If they want to swap a unit to a different tier ("I'd rather you call Claude for the summary"), that's the moment to do it.
 
 Two presentation rules the user notices when they're missing: open the plan with a banner the user can't scroll past, and end with a confirmation prompt that's visually unmistakable. Something like:
@@ -178,7 +180,7 @@ The Workspace is the source of truth. The artifact in `<os>/dist/` is the distri
 ## Reference files
 
 - `references/interview.md` — the full question set for the interview phase, with options and notes on which combinations are mutually exclusive.
-- `references/cascade.md` — how to pick CODE vs. LOCAL vs. HOSTED for each unit, with worked examples.
+- `references/cascade.md` — how to pick CODE vs. LOCAL vs. HOSTED for each unit, including which hosted model tier (Opus / Sonnet / Haiku-class) to pick within HOSTED and how to confirm the current identifier, with worked examples.
 - `references/default-theme.md` — the default look-and-feel for workers with a GUI (Tailwind-CSS-inspired light theme calibrated to the Claude Code app on macOS — rounded corners, unified title bar). Framework order: native first (SwiftUI / WinUI / GTK, smallest binaries), Electron + Tailwind when `npm` is available, Tauri when Rust is, with PySide6 / Tkinter as Python fallbacks. Bundle-size estimates live in that file. Apply verbatim unless the user explicitly asked for something else.
 - `references/packaging.md` — OS-specific build details, binary-distribution rules, minimum-network-fetch rules, the per-script and final security review, and what to do when the host OS doesn't match the target.
 - `references/reforge.md` — how to apply a change to an existing Workspace without regenerating.

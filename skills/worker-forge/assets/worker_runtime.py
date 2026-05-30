@@ -87,18 +87,32 @@ class Worker:
             ) from exc
         return body.get("response", "")
 
-    def call_hosted(self, provider: str, model: str, prompt: str) -> str:
+    def call_hosted(
+        self, provider: str, model: str, prompt: str, *, max_tokens: int = 4096
+    ) -> str:
         """Call a hosted model. The API key is read from the OS keyring on
         first need. Currently a thin shim — the worker is expected to override
         with the provider SDK at code-gen time if it needs richer features.
+
+        `model` is a provider-specific identifier (e.g. an Anthropic Opus /
+        Sonnet / Haiku string) chosen at forge time. Match the model to what
+        the unit actually needs — a top-tier model for frontier judgment, a
+        balanced one for everyday hosted work — and note that these identifiers
+        change as providers ship and deprecate versions, so the forge confirms
+        the current string rather than hard-coding one that may have retired.
+
+        `max_tokens` caps the response length. The default (4096) is generous
+        enough for summaries and drafts; raise it for a unit that produces a
+        long document (e.g. a multi-page contract brief) so the output isn't
+        silently truncated.
         """
         key = _get_api_key(provider)
         if provider == "anthropic":
-            return _anthropic_completion(key, model, prompt)
+            return _anthropic_completion(key, model, prompt, max_tokens)
         if provider in ("openai", "open_ai"):
-            return _openai_completion(key, model, prompt)
+            return _openai_completion(key, model, prompt, max_tokens)
         if provider == "gemini":
-            return _gemini_completion(key, model, prompt)
+            return _gemini_completion(key, model, prompt, max_tokens)
         raise ValueError(f"Unknown hosted provider: {provider}")
 
     # --- cascade execution ----------------------------------------------------
@@ -209,13 +223,13 @@ def _prompt_for_key(provider: str) -> str:
 # anything beyond a single completion should swap in the official SDK at
 # code-gen time.
 
-def _anthropic_completion(key: str, model: str, prompt: str) -> str:
+def _anthropic_completion(key: str, model: str, prompt: str, max_tokens: int = 4096) -> str:
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages",
         data=json.dumps(
             {
                 "model": model,
-                "max_tokens": 1024,
+                "max_tokens": max_tokens,
                 "messages": [{"role": "user", "content": prompt}],
             }
         ).encode("utf-8"),
@@ -230,12 +244,13 @@ def _anthropic_completion(key: str, model: str, prompt: str) -> str:
     return body["content"][0]["text"]
 
 
-def _openai_completion(key: str, model: str, prompt: str) -> str:
+def _openai_completion(key: str, model: str, prompt: str, max_tokens: int = 4096) -> str:
     req = urllib.request.Request(
         "https://api.openai.com/v1/chat/completions",
         data=json.dumps(
             {
                 "model": model,
+                "max_tokens": max_tokens,
                 "messages": [{"role": "user", "content": prompt}],
             }
         ).encode("utf-8"),
@@ -246,14 +261,19 @@ def _openai_completion(key: str, model: str, prompt: str) -> str:
     return body["choices"][0]["message"]["content"]
 
 
-def _gemini_completion(key: str, model: str, prompt: str) -> str:
+def _gemini_completion(key: str, model: str, prompt: str, max_tokens: int = 4096) -> str:
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         f"?key={key}"
     )
     req = urllib.request.Request(
         url,
-        data=json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode("utf-8"),
+        data=json.dumps(
+            {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": max_tokens},
+            }
+        ).encode("utf-8"),
         headers={"Content-Type": "application/json"},
     )
     with urllib.request.urlopen(req, timeout=60) as resp:
