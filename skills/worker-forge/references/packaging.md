@@ -12,7 +12,7 @@ The default deliverable is one self-contained binary the recipient can run witho
 
 The only external dependencies that are generally OK to require are the ones that *can't* be bundled and are intrinsic to the worker's purpose:
 
-- A local-model runtime (Ollama, the platform's built-in inference) when the cascade has a LOCAL unit.
+- A local-model runtime — whichever the user picked for the LOCAL unit (Ollama, Hugging Face `transformers`, LM Studio, llama.cpp, MLX, or the platform's built-in inference) — when the cascade has a LOCAL unit. For a Hugging Face unit, the `transformers`/`torch` stack is the intrinsic dependency; note it in the recipient-facing setup so first run isn't a surprise.
 - The hosted provider's API endpoint when the cascade has a HOSTED unit.
 
 Anything else — system Python, a database server the worker drives, a CLI tool the worker shells out to — is a yellow flag. Either pull it into the binary, replace it with something that can be bundled, or surface it to the user during the interview as a "this worker requires X on the machine" decision they explicitly signed off on. Don't quietly ship a worker that needs a dependency the recipient doesn't know about.

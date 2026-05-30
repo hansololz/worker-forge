@@ -125,10 +125,20 @@ in the skill has the full phrasing for each.
   the boring-but-correct default; "same directory" breaks the moment the user moves the binary.
 - **UI description** (GUI only, free text). What windows exist, what controls each has, what happens when each is
   touched, what error states the UI handles.
-- **Local model selection** (only if a unit is LOCAL). OLLAMA, OS MODELS (Apple Foundation Models / Windows Copilot
-  Runtime where available), or USER_PROVIDE. Ask once per LOCAL unit if different units want different models; default
-  to `llama3.2:3b` for small tasks, `llama3.1:8b` for more headroom, `llava` for vision. Also ask whether to bundle a
-  first-run setup script that `ollama pull`s the models.
+- **Local model selection** (only if a unit is LOCAL). Two questions, asked **in this order** — the model first, then
+  the runtime that runs it. **(1) The model.** Model popularity churns as fast as hosted identifiers do, so don't pin a
+  model from memory: check what's currently popular for the unit's job (the Ollama library's trending / most-pulled
+  list, or a quick search) and propose the most popular fitting model as the recommended default, with a couple of
+  alternatives alongside it (a small text model for low latency, a larger one for headroom, a vision model for image
+  units) and USER_PROVIDE. For a GUI worker, also offer **"let the user pick the model in the worker's settings"** —
+  instead of pinning one model at forge time, the GUI exposes a model-picker setting the recipient changes at run time.
+  Ask once per LOCAL unit if different units want different models. **(2) The runtime/tool.** After the model is
+  decided, ask what the worker should use to run it: OLLAMA, HUGGING FACE, or USER_PROVIDE, plus any other strong option
+  a quick search surfaces (LM Studio, llama.cpp, MLX on Apple Silicon, the platform's built-in inference). Recommend
+  OLLAMA as the top pick **only when the chosen model is actually in the Ollama library** — if the model is only on
+  Hugging Face, don't lead with Ollama; recommend Hugging Face (or whichever runtime hosts that model) instead. Confirm
+  availability with a quick search rather than assuming. Finally, ask whether to bundle a first-run setup script that
+  fetches the model — an `ollama pull` for Ollama, an `hf download` / `huggingface-cli download` for Hugging Face.
 - **Hosted model selection** (only if a unit is HOSTED). First the provider — ANTHROPIC, OPEN_AI, GEMINI, or
   USER_PROVIDE — and **then the model**, because picking a provider isn't enough: the cascade plan records
   `<provider>/<model>` and the runtime needs a concrete string. See the next section for how to pick the model tier.
@@ -154,7 +164,7 @@ has the worked examples.
 | Tier   | Mechanism                                  | Use for                                                   |
 |--------|--------------------------------------------|-----------------------------------------------------------|
 | CODE   | Deterministic logic (regex, parser, HTTP)  | Anything expressible as a precise rule                    |
-| LOCAL  | Local LLM via Ollama on the user's machine | Fuzzy classification, small summaries, simple extractions |
+| LOCAL  | Local LLM on the user's machine (Ollama, Hugging Face, …) | Fuzzy classification, small summaries, simple extractions |
 | HOSTED | Hosted LLM with the user's API key         | Tasks that need frontier-model judgment                   |
 
 Tier choice is a *forge-time* decision and it stays one: the tier you tag a unit with is written into the cascade plan,

@@ -109,7 +109,7 @@ Forge uses these files to reason about the worker, and the Workspace — not the
    is the highest-leverage phase — edge cases not surfaced here will fail at run time.
 2. **Cascade design.** Decompose the task into units of work. For each unit, the Forge tries CODE first — a regex,
    parser, or HTTP call that does the job deterministically. Only if no deterministic option fits does it fall back to
-   LOCAL (a local LLM via Ollama). Only if LOCAL can't reliably handle the unit does it escalate to HOSTED (a frontier
+   LOCAL (a local LLM run via Ollama, Hugging Face, or another local runtime the user picks). Only if LOCAL can't reliably handle the unit does it escalate to HOSTED (a frontier
    model called with the user's own API key). The cheaper tier is always faster, more available, and more predictable
    than the one above it, so escalating without cause makes the worker worse at run time. Examples: parsing a date out
    of a filename is CODE; classifying a document as "invoice" vs. "receipt" is LOCAL; summarizing a fifty-page
@@ -121,7 +121,7 @@ Forge uses these files to reason about the worker, and the Workspace — not the
    | Tier   | Mechanism                                 | Use for                                                   |
       |--------|-------------------------------------------|-----------------------------------------------------------|
    | CODE   | Deterministic logic (regex, parser, HTTP) | Anything expressible as a precise rule                    |
-   | LOCAL  | Local LLM via Ollama on the user's box    | Fuzzy classification, small summaries, simple extractions |
+   | LOCAL  | Local LLM on the user's box (Ollama, Hugging Face, …) | Fuzzy classification, small summaries, simple extractions |
    | HOSTED | Hosted LLM with the user's API key        | Tasks that need frontier-model judgment                   |
 
 3. **Code generation.** Lay out the Workspace with the setup script — it auto-detects the host OS and creates the
@@ -321,8 +321,13 @@ real enough to bite us if we don't pick an answer before the first batch of work
 
 Two questions from the original design have since been settled by the skill and are no longer open: scheduling is
 generated as **native config at forge time** (launchd `.plist`, Task Scheduler XML, `.desktop` autostart written into
-`<os>/resources/`), and local-model selection **pins a specific model per worker** at forge time (`llama3.2:3b` by
-default, recorded in the cascade plan and `<os>-specific.md`), with the user free to override.
+`<os>/resources/`), and local-model selection is a **two-step, model-first choice** made at forge time: the Forge
+picks the model first — proposing the currently-most-popular fitting model rather than a memorized string, since model
+popularity churns as fast as hosted identifiers do — and only then picks the runtime that runs it (Ollama, Hugging
+Face, or another local tool), recommending Ollama only when the chosen model is actually in the Ollama library. The
+default is still to **pin a specific model per worker** (recorded in the cascade plan and `<os>-specific.md`), but a GUI
+worker can instead expose a model-picker in its settings so the recipient chooses at run time. The runtime/tool is
+recorded in `<os>-specific.md`.
 
 ### Future work
 

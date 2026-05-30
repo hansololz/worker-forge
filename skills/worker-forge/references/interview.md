@@ -142,19 +142,50 @@ Free text. You want to come away knowing: what windows or screens exist, what co
 
 ### Local model selection
 
-Ask only if any unit in the planned cascade is LOCAL.
+Ask only if any unit in the planned cascade is LOCAL. This is **two questions asked in order — the model first, then the tool that runs it.** The order matters: which model the unit needs is the real decision, and it constrains the runtime (some models live only on Hugging Face, some only ship as Ollama-library tags), so picking the model first means the runtime question can be answered honestly instead of defaulting to whatever's familiar.
 
-> "Which local model should the worker use for `<subtask>`?"
+Ask the pair once per LOCAL unit if different units need different models — a classifier and a summarizer often want different ones.
 
-Options: OLLAMA, OS MODELS (the platform's built-in inference — Apple Foundation Models, Windows Copilot Runtime — where available), USER_PROVIDE.
+#### Step 1 — the model
 
-Ask this once per LOCAL unit if different units need different models (a classifier and a summarizer often want different models). For OLLAMA, default to `llama3.2:3b` for small tasks and `llama3.1:8b` for anything that needs more headroom; the user can override.
+> "For `<subtask>`, I'd reach for `<currently-popular-model>` — want that, or something else?"
+
+Don't pin a model from memory. Local-model popularity churns about as fast as hosted model identifiers do — new releases land, old tags fall out of favor — and the design doc flags exactly this kind of drift as a first-class risk. So before you ask, **check what's currently popular for the unit's job**: skim the Ollama library's trending / most-pulled list (`https://ollama.com/library`) or do a quick search ("best local model for `<task>` `<year>`"). Then propose the most popular model that fits as the recommended default, with a couple of alternatives so the trade-off is visible.
+
+Present the options roughly like this, recommended pick first:
+
+1. **`<most-popular-fitting-model>` (recommended)** — the current go-to for this kind of work. A small text model (≈3–4B) is the right default for low-latency classification and short summaries; reach for a larger one (≈7–8B+) only when the unit needs more headroom; pick a vision-capable model when the unit reads images.
+2. **A larger / smaller alternative** — name the one a size up or down, so the user can trade latency for quality with one tap.
+3. **Let the user pick in the worker's settings** — *GUI workers only.* Instead of pinning one model at forge time, the worker's settings screen exposes a model picker the recipient sets at run time. Offer this when the user wants to experiment, or when they'll run the worker on machines with different amounts of memory. When they choose this, the worker stores the selected model in its config rather than hard-coding it, and the settings UI lists the models the chosen runtime has available.
+4. **USER_PROVIDE** — they name a specific model.
+
+#### Step 2 — the runtime/tool
+
+Once the model is settled, ask what the worker should use to run it:
+
+> "And to run `<model>`, I'd use `<recommended-runtime>` — sound good?"
+
+Options: **OLLAMA**, **HUGGING FACE**, USER_PROVIDE — plus any other strong option a quick search surfaces (LM Studio, llama.cpp, MLX on Apple Silicon, the platform's built-in inference like Apple Foundation Models or Windows Copilot Runtime).
+
+The recommendation is **conditional on the model you just picked**:
+
+- **If the chosen model is in the Ollama library, recommend OLLAMA first.** It's the smoothest path for a worker — one `ollama pull`, a local HTTP endpoint the runtime already knows how to call, no Python ML stack to bundle.
+- **If the model is *not* on Ollama** (it's a Hugging Face–only checkpoint, say), **don't lead with Ollama.** Recommend Hugging Face — pulling the weights via `huggingface_hub` and running through `transformers` — or whichever runtime actually hosts that model. Recommending a tool that can't run the chosen model just wastes the user's pick.
+
+So confirm availability rather than assuming: a quick check of the Ollama library tells you whether Ollama is the honest default or whether Hugging Face (or LM Studio, llama.cpp, MLX) is the better lead. Record the runtime in `<os>-specific.md` (it's OS-shaped — MLX is Apple-only, the platform's built-in inference is OS-specific) and the model in the cascade plan in `WORKER.md` (it's OS-agnostic).
+
+#### Bundling a first-run setup script
 
 If the worker uses any LOCAL unit, also ask:
 
-> "Want me to bundle a setup script that installs the model on first run?"
+> "Want me to bundle a setup script that fetches the model on first run?"
 
-If yes, generate a small script that checks for Ollama, runs `ollama pull <model>` for each model the worker uses, and lands it in `resources/setup_local_models.sh` (or `.bat`). The runtime calls this on first run if the model isn't present.
+If yes, generate a small script that lands in `resources/setup_local_models.{sh,bat}`, matched to the runtime the user picked:
+
+- **Ollama** — check for the `ollama` binary, then `ollama pull <model>` for each model the worker uses.
+- **Hugging Face** — check for `huggingface_hub`, then `hf download <repo-id>` (older CLIs: `huggingface-cli download`) for each model, into the local cache the runtime reads from.
+
+The runtime calls this on first run if a model isn't present yet.
 
 ### Hosted model selection
 
@@ -198,6 +229,7 @@ Two files take the interview transcript: `AUTHORING.md` at the workspace root fo
 - Data storage **format** (SQLite, JSON, text, etc.).
 - UI description (what the windows do, in words — not which framework draws them).
 - Hosted model picks per HOSTED unit.
+- Local model picks per LOCAL unit (the model identifier, and whether it's pinned or user-selectable in a GUI setting — the *runtime* that runs it is OS-shaped and goes in `<os>-specific.md`).
 - Cascade plan, edge cases, partial-failure behavior, idempotency rules.
 - Decisions and rejected alternatives — "I considered storing this in SQLite but the user only needs to read it once per run, so JSON is simpler." This is the part future-you will thank you for during reforge.
 
@@ -207,7 +239,7 @@ Two files take the interview transcript: `AUTHORING.md` at the workspace root fo
 - UI framework picked on this OS (Tkinter / SwiftUI / WinUI / Electron / whatever).
 - Data **location** on this OS (the actual path — `~/.<worker>/`, `%LOCALAPPDATA%\<worker>\`, `$XDG_DATA_HOME/<worker>/`).
 - Scheduler glue picked on this OS (launchd `.plist`, Windows Task Scheduler XML, systemd user unit, `.desktop` autostart).
-- Local model picks per LOCAL unit on this OS (e.g., Ollama vs. Apple Foundation Models vs. Windows Copilot Runtime).
+- Local **runtime/tool** per LOCAL unit on this OS (Ollama, Hugging Face / `transformers`, LM Studio, llama.cpp, MLX, Apple Foundation Models, Windows Copilot Runtime), and whether the model is pinned or chosen at run time via a GUI setting. (The model *identifier* itself is OS-agnostic and goes in the cascade plan in `WORKER.md`; the runtime that hosts it is what's OS-shaped.)
 - Keychain backend (Keychain on macOS, Credential Manager on Windows, Secret Service on Linux).
 - Packaging caveats specific to this OS (Gatekeeper bypass step on macOS, SmartScreen warning on Windows, AppImage tooling on Linux).
 

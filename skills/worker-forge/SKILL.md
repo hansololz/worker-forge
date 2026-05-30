@@ -54,10 +54,12 @@ Read `references/cascade.md` for the tier rules. Decompose the task into units o
 | Tier   | Mechanism                                 | Use for                                                   |
 |--------|-------------------------------------------|-----------------------------------------------------------|
 | CODE   | Deterministic logic (regex, parser, HTTP) | Anything expressible as a precise rule                    |
-| LOCAL  | Local LLM via Ollama on the user's box    | Fuzzy classification, small summaries, simple extractions |
+| LOCAL  | Local LLM on the user's box (Ollama, Hugging Face, …) | Fuzzy classification, small summaries, simple extractions |
 | HOSTED | Hosted LLM with the user's API key        | Tasks that need frontier-model judgment                   |
 
 A HOSTED unit is a provider *and* a model, not just a provider — the cascade plan records `<provider>/<model>`, and the cheapest-tier-first rule keeps going inside HOSTED. Default a hosted unit to the balanced model (Sonnet-class) and only reach for the top tier (newest Opus, the flagship) when the unit genuinely needs frontier judgment — a fifty-page contract, multi-step reasoning. Calling the biggest model to rewrite a subject line costs the recipient money on every run for nothing. Model identifiers churn, so confirm the current string before pinning it rather than trusting one from memory; `references/cascade.md` has the tiering and the worked examples.
+
+A LOCAL unit is two choices made **in order — the model first, then the tool that runs it** — and the don't-trust-a-memorized-string discipline applies here too, because local-model popularity churns just as fast. Propose the model that's *currently* most popular for the unit's job (check the Ollama library or a quick search), then pick the runtime: recommend **Ollama** when that model is in the Ollama library, but if it's a Hugging Face–only checkpoint, recommend **Hugging Face** (or LM Studio / llama.cpp / MLX) instead — recommending a tool that can't run the chosen model wastes the user's pick. For a GUI worker the user can also defer the model choice to a run-time settings menu instead of pinning one. `references/interview.md` → "Local model selection" has the full two-step flow.
 
 The skill spec asks for an explicit plan-readback step before any code gets written: a step-by-step list of the units, each tagged CODE / LOCAL / HOSTED, and the worker's name shown clearly. The reason is that a tier disagreement caught here is a one-minute conversation; the same disagreement caught after the code is written is a rewrite. So write the plan, show the user the units, show them the name, and wait for them to confirm before moving on. If they want to swap a unit to a different tier ("I'd rather you call Claude for the summary"), that's the moment to do it.
 
@@ -104,7 +106,7 @@ After the script runs, fill in:
 - `WORKER.md` — copy `assets/WORKER.md.template` into place and fill it in. Keep the `name` / `description` frontmatter block at the top (this is what makes the file readable both by a future reforge and by anyone auditing what the worker does). The cascade plan, failure modes, and "what it does" all live here, OS-independent.
 - `AUTHORING.md` — copy `assets/AUTHORING.md.template` and paste in the interview transcript, the decisions you made, and any alternatives you considered and rejected. Keep this strictly to answers that hold for every OS; the OS-specific stuff goes one level down. This is what makes the worker reforgeable later.
 - `<os>/<os>-specific.md` — copy `assets/<os>-specific.md.template` and record the OS-specific answers from the interview (UI framework, scheduler glue, data path conventions, keychain backend, packaging caveats like Gatekeeper). When the user later runs the forge on a new OS, the new `<os>-specific.md` is the only place you have to fill from a fresh interview.
-- `<os>/main.py` — the worker's task logic. Import `worker_runtime` (copied unchanged from `assets/worker_runtime.py`), instantiate a `Worker` with the cascade plan, and wire the units together. The runtime handles first-run setup — Ollama check, API key prompt, keyring storage — so don't reinvent it.
+- `<os>/main.py` — the worker's task logic. Import `worker_runtime` (copied unchanged from `assets/worker_runtime.py`), instantiate a `Worker` with the cascade plan, and wire the units together. The runtime handles first-run setup — local-model check (Ollama or Hugging Face, per the unit's chosen runtime), API key prompt, keyring storage — so don't reinvent it.
 - `<os>/requirements.txt` — Python dependencies.
 - `<os>/build_<os>.{bat,sh}` — the build script. The setup script already copied the right one for the current OS.
 - `<os>/resources/` — anything the worker needs at run time that isn't code: prompts, schemas, sample inputs. If the user provided an icon during the interview, drop it here as `icon.<ext>` and the build script will wire it in.
@@ -193,7 +195,7 @@ The Workspace is the source of truth. The artifact in `<os>/dist/` is the distri
 - `assets/windows-specific.md.template`, `assets/mac-specific.md.template`, `assets/linux-specific.md.template` — OS-specific interview-answer templates. The setup script drops the right one inside the new `<os>/` folder.
 - `assets/worker_runtime.py` — the cascade runtime, copied unchanged into every OS folder.
 - `assets/build_windows.bat`, `assets/build_macos.sh`, `assets/build_linux.sh` — build scripts per OS. The setup script copies whichever one matches the current OS into the new `<os>/` folder.
-- `assets/setup_local_models.sh`, `assets/setup_local_models.bat` — Ollama-installer/pull script. Drop into `<os>/resources/` if the user agreed to bundle one during the interview.
+- `assets/setup_local_models.sh`, `assets/setup_local_models.bat` — first-run model-fetch script for the chosen LOCAL runtime (`ollama pull` for Ollama, `hf download` for Hugging Face). Drop into `<os>/resources/` if the user agreed to bundle one during the interview.
 - `assets/requirements.txt` — minimal Python dependencies for the worker.
 
 Good luck. The interview is where this skill is won or lost — take the time on it.

@@ -13,7 +13,7 @@ The point isn't only that the cascade is cheap. It's that the cascade forces you
 | Tier   | Mechanism                                  | Use for                                                   |
 |--------|--------------------------------------------|-----------------------------------------------------------|
 | CODE   | Deterministic logic (regex, parser, HTTP)  | Anything expressible as a precise rule                    |
-| LOCAL  | Local LLM via Ollama on the user's machine | Fuzzy classification, small summaries, simple extractions |
+| LOCAL  | Local LLM on the user's machine (Ollama, Hugging Face, …) | Fuzzy classification, small summaries, simple extractions |
 | HOSTED | Hosted LLM with the user's API key         | Tasks that need frontier-model judgment                   |
 
 ### CODE
@@ -30,16 +30,16 @@ The temptation is to use a model because it's faster *to write*. Resist. The mod
 
 ### LOCAL
 
-A small instruction-tuned model running on the user's machine via Ollama (or the platform's built-in inference, if the user picked OS MODELS in the interview). Good for tasks that are fuzzy but small:
+A small instruction-tuned model running on the user's machine. The runtime that runs it is the user's pick from the interview — Ollama, Hugging Face (`transformers`), LM Studio, llama.cpp, MLX, or the platform's built-in inference — chosen *after* the model, because which runtime is the honest default depends on where the chosen model actually lives (see `interview.md` → "Local model selection"). Good for tasks that are fuzzy but small:
 
 - Classifying a document as "invoice" or "receipt" given the text.
 - Generating a one-line summary of a short article.
 - Extracting structured fields from semi-structured text where regex would be too brittle.
 - Categorizing a screenshot as "restaurant receipt", "ride receipt", "hotel folio" (vision-capable local model).
 
-LOCAL is the right call when the task is genuinely fuzzy but the input is small and the user doesn't need frontier-model judgment. Default models: `llama3.2:3b` for text-only at low latency, `llama3.1:8b` for slightly bigger tasks, `llava` for vision. The user can override in the interview.
+LOCAL is the right call when the task is genuinely fuzzy but the input is small and the user doesn't need frontier-model judgment. **Don't pin a model from memory** — local-model popularity churns about as fast as hosted identifiers do, so propose the model that's *currently* most popular for the unit's job (skim `https://ollama.com/library` or do a quick search) rather than a string you half-remember. As of writing, a small text model (≈3–4B) is the sane default for low-latency classification and short summaries, a larger one (≈7–8B+) when the unit needs more headroom, and a vision-capable model when it reads images — but verify the specific tag is current before pinning it, the same discipline HOSTED model strings get. The user can override in the interview, or (GUI workers) defer the pick to a run-time settings menu.
 
-LOCAL units add a setup step (the model has to be installed on the user's machine). The runtime handles this — it checks for the model on first run, pulls it via `ollama pull` if missing, and logs a clear message. If the user agreed to a bundled setup script in the interview, ship it in `resources/setup_local_models.{sh,bat}`.
+LOCAL units add a setup step (the model has to be present on the user's machine). The runtime handles this — it checks for the model on first run, fetches it via the chosen tool (`ollama pull` for Ollama, an `hf download` for Hugging Face) if missing, and logs a clear message. If the user agreed to a bundled setup script in the interview, ship it in `resources/setup_local_models.{sh,bat}`, matched to the runtime they picked.
 
 ### HOSTED
 

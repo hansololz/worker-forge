@@ -73,8 +73,10 @@ Out of scope for v1, on the roadmap:
   differently. A thin cross-platform scheduler shipped with each worker could remove that step.
 - **Artifact attestation.** A built binary should be verifiable against the source in the Workspace, so a recipient
   knows what they're running.
-- **Smarter local-model selection.** Different machines have different Ollama models installed. The runtime could query
-  the host and pick the best available rather than pin one at forge time.
+- **Smarter local-model selection.** The Forge already proposes the currently-popular model, picks the runtime to match
+  it (Ollama, Hugging Face, …), and can let a GUI worker choose the model at run time. The remaining step is fully
+  automatic selection — the runtime querying the host for installed models and hardware and picking the best available
+  on its own, rather than the user deciding.
 
 ## Learn more
 

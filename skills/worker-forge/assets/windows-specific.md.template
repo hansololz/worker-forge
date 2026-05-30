@@ -10,7 +10,7 @@ If the same worker is later built on a different OS, a sibling folder (`../mac/`
 - **UI framework picked on Windows:** WinUI 3 / WinAppSDK / Electron + Tailwind / Tauri / PySide6 / Tkinter / other. Default and first-recommended is **native WinUI / WinAppSDK** (~5–15 MB binary — smallest deliverable and the closest match for the Claude-Code-style look). Offer Electron + Tailwind only if `npm` is on the `PATH` (~80–150 MB — bundles Chromium); offer Tauri only if a Rust toolchain is on the `PATH` (~5–20 MB — uses the system webview / WebView2). Record the framework the user picked **and the size estimate they agreed to**; if they didn't take the native default, note why (wanted a webview UI, preferred a Python-only stack, etc.).
 - **Data location:** the actual path the worker writes to on Windows. Convention is `%LOCALAPPDATA%\<worker-slug>\` for per-user state; deviate only when the user asked for it.
 - **Scheduler glue:** none / Task Scheduler XML in `resources/` / autostart shortcut in `shell:startup` / loops internally. If Task Scheduler, link to the `.xml` file.
-- **Local-model runtime:** Ollama (default) / Windows Copilot Runtime / other. Note the models pulled for each LOCAL unit (`llama3.2:3b`, etc.).
+- **Local-model runtime:** Ollama (default when the chosen model is in the Ollama library) / Hugging Face `transformers` (for Hub-only checkpoints) / LM Studio / llama.cpp / Windows Copilot Runtime / other. Note the runtime *and* the model per LOCAL unit, and whether the model is pinned at forge time or user-selectable via a GUI setting.
 - **Keychain backend:** Windows Credential Manager via `keyring`. Default — record an alternative only if the user explicitly asked for one.
 
 ## Packaging notes

@@ -129,14 +129,19 @@ def example_code_unit(worker):
 
 
 def example_local_unit(worker):
-    """LOCAL unit. Calls Ollama via the runtime helper.
+    """LOCAL unit. Runs a local model via the runtime helper.
+
+    `runtime` is the tool picked in the interview — "ollama" (default) or
+    "huggingface". Set the model to the one chosen for this unit; for Ollama
+    it's a library tag (e.g. "llama3.2:3b"), for Hugging Face a Hub repo id.
 
     Raise CascadeEscalate if the LOCAL tier can't satisfy the work and a
     HOSTED fallback should fire.
     """
     response = worker.call_local(
-        model="llama3.2:3b",
+        model="REPLACE_WITH_CHOSEN_MODEL",
         prompt="Reply with the word 'ok'.",
+        runtime="ollama",
     )
     worker.context["local_reply"] = response
 

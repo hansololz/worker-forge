@@ -4,8 +4,8 @@ worker_runtime — the cascade runtime every worker imports unchanged.
 This is the boilerplate. It gives the worker:
 
 - A `Worker` class to register cascade units (CODE, LOCAL, HOSTED).
-- Helpers to call a local model via Ollama or a hosted model with an API key
-  pulled from the OS keyring.
+- Helpers to call a local model — via Ollama (the default) or Hugging Face
+  `transformers` — or a hosted model with an API key pulled from the OS keyring.
 - A `run_worker` entry point that walks the cascade in order and writes a
   small status line to stdout per unit.
 
@@ -64,12 +64,29 @@ class Worker:
 
     # --- inference helpers ----------------------------------------------------
 
-    def call_local(self, model: str, prompt: str, *, timeout: float = 60.0) -> str:
-        """Call a local Ollama model. Returns the response string.
+    def call_local(
+        self, model: str, prompt: str, *, runtime: str = "ollama", timeout: float = 60.0
+    ) -> str:
+        """Call a local model and return the response string.
 
-        Raises RuntimeError if Ollama isn't reachable so the caller can fall
-        back to a higher tier explicitly.
+        `runtime` selects how the model is run — it's the tool the user picked
+        in the interview (recorded in `<os>-specific.md`), chosen *after* the
+        model because not every model lives in every runtime:
+
+        - "ollama" (default) — talk to a local Ollama server over HTTP. The
+          right pick when the model is in the Ollama library; cheapest to
+          bundle (no Python ML stack).
+        - "huggingface" / "transformers" — load the model with the Hugging Face
+          `transformers` library from the local cache. The pick when the model
+          is a Hugging Face–only checkpoint that Ollama can't serve.
+
+        Raises RuntimeError if the runtime isn't reachable/installed so the
+        caller can fall back to a higher tier explicitly.
         """
+        if runtime in ("huggingface", "transformers", "hf"):
+            return self._call_huggingface(model, prompt, timeout=timeout)
+        if runtime != "ollama":
+            raise ValueError(f"Unknown local runtime: {runtime}")
         payload = json.dumps({"model": model, "prompt": prompt, "stream": False}).encode("utf-8")
         req = urllib.request.Request(
             "http://localhost:11434/api/generate",
@@ -86,6 +103,37 @@ class Worker:
                 f"{model}` once before running this worker."
             ) from exc
         return body.get("response", "")
+
+    def _call_huggingface(self, model: str, prompt: str, *, timeout: float = 60.0) -> str:
+        """Run `model` locally through Hugging Face `transformers`.
+
+        Lazy-imports `transformers` so a worker that only uses Ollama never
+        pays for the dependency. The pipeline is cached on the worker so the
+        model is loaded once per process, not once per call. `model` is a Hub
+        repo id (e.g. "meta-llama/Llama-3.2-3B-Instruct"); weights come from
+        the local cache, populated by the first-run setup script or an earlier
+        run. `timeout` is accepted for signature parity with the Ollama path;
+        local generation isn't interruptible the same way, so it's advisory.
+        """
+        try:
+            from transformers import pipeline  # type: ignore[import-not-found]
+        except ImportError as exc:
+            raise RuntimeError(
+                "This worker runs its local model through Hugging Face transformers, "
+                "which isn't installed. Run `pip install transformers` (plus a backend "
+                "like torch), or run the bundled setup_local_models script, then retry."
+            ) from exc
+
+        cache = self.context.setdefault("_hf_pipelines", {})
+        gen = cache.get(model)
+        if gen is None:
+            gen = pipeline("text-generation", model=model)
+            cache[model] = gen
+        out = gen(prompt, return_full_text=False)
+        # transformers returns a list of dicts; pull the generated text out.
+        if isinstance(out, list) and out and isinstance(out[0], dict):
+            return out[0].get("generated_text", "")
+        return str(out)
 
     def call_hosted(
         self, provider: str, model: str, prompt: str, *, max_tokens: int = 4096
