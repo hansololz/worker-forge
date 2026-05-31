@@ -116,7 +116,8 @@ in the skill has the full phrasing for each.
   with Electron just because npm happens to be installed. The pick lands in `<os>-specific.md`.
 - **Color theme** (GUI only). LIGHT (recommended), Dark, or USER_PROVIDE. The default is light — the skill ships a
   Claude-desktop-style light theme in `references/default-theme.md` (warm off-white canvas, soft borders, terracotta
-  accent, unified title bar) and "LIGHT" applies the whole package, not just a background color. (This resolves an old
+  accent, a unified title bar that extends into a continuous "header band" with the header/table-header row, and a thin
+  footer attribution strip) and "LIGHT" applies the whole package, not just a background color. (This resolves an old
   ambiguity in the source notes, which once defaulted to dark; the skill is light-first now, calibrated to look at home
   next to the Claude desktop app the user probably has open.)
 - **Data storage format.** SQLite, text file, JSON, or USER_PROVIDE — pick whatever fits the data shape (SQLite for
@@ -258,7 +259,9 @@ plaintext on disk. Fixing the regex while you're looking at it is cheaper than c
 **The GUI default is a real theme, not bare Tkinter.** If the worker has a GUI, apply `references/default-theme.md`: a
 clean light palette modeled on Tailwind tokens and the Claude Code app on macOS, rounded corners on every container and
 control, a single system font, and — the rule that breaks most often — **a title bar painted the same color as the
-body**, never the OS-default chrome strip. "Modern desktop app" is the bar users expect now; a worker that doesn't
+body**, never the OS-default chrome strip. Take it one step further where the worker has a header row: paint the title
+bar, header, and table-header as one continuous "header band" (`bg.band`) so they read as a single piece of chrome, and
+for menu-bar workers reapply the window chrome on every reopen (the activation-policy toggle drops it otherwise). "Modern desktop app" is the bar users expect now; a worker that doesn't
 clear it reads as broken even when it works. Also decode HTML entities at the point outside text enters the worker
 (`html.unescape()` in Python, `textContent` not `innerHTML` in a webview) so the UI shows `Dave's "news"` and not
 `Dave&#039;s &quot;news&quot;`. Deviate from the theme only when the user asked for something else and you recorded it
