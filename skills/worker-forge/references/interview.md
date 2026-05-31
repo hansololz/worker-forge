@@ -6,6 +6,12 @@ Use the AskUserQuestion tool for structured choices. It forces concrete answers 
 
 **Suggest a concrete default for every question.** Don't just present a blank menu — read what the user already told you and propose the pick you'd make if it were up to you, then let them confirm or override. "JSON file in your home directory sounds right for a worker that just keeps a last-seen timestamp — want that, or pick another?" beats "How should the worker store its data?" by a mile, because the user's job is to react to a guess instead of generating a spec from scratch. The same goes for the worker name, the model picks, even the icon — the skill is more useful when the user mostly has to say "yes" or "no, do this other thing instead." If you genuinely can't infer a default, say so and ask, but treat that as the exception.
 
+**Always recommend, and exemplify every option in one line.** The default-suggesting habit above has two halves, and both have to be present on every structured question for the interview to feel like confirming a plan instead of filling out a form:
+
+- *Always make a recommendation, and put it first marked `(recommended)`.* Mark the option you'd pick as recommended, lead with it, and say so — even when the choice feels obvious. Order isn't cosmetic: the user reads top-down, so the recommended pick should be the first thing they see, and the rest of the list reads as "or, if not that, here's why you'd deviate." A question with no recommended pick hands the decision back to the user, which is the work they came to the forge to avoid. The recommendations in this file are starting points; sharpen them against what the user actually described (a worker that keeps one timestamp doesn't need SQLite no matter what the generic default says).
+- *Keep the list short — five options at most.* When a question has more candidates than that (frameworks, model runtimes, providers), don't list them all — show only the handful that fit *this* worker and fold the long tail into a single USER_PROVIDE escape hatch. A menu of ten options is the same decision fatigue as a blank one; the user is here so you can narrow the field for them, not hand it back wider.
+- *Give every option a concise one-line rationale.* Each choice in the AskUserQuestion carries a short "when you'd pick this" — the option descriptions throughout this file are written that way on purpose, e.g. `SQLite` → *"queryable or relational data you'll filter later"*, `JSON` → *"small structured state like a last-seen timestamp"*, `text file` → *"append-only logs, one line per run"*. Keep it to a single clause; the point is that the user can tell the options apart at a glance, not read a tutorial. A bare menu of labels (`SQLite / JSON / text`) forces the user to either already know the trade-off or stop and ask — both defeat the interview. Carry the same shape into questions whose options aren't pre-written below, like the model and runtime picks.
+
 **Don't ask about the target OS.** The skill builds for whichever OS it's currently running on; that's the only OS it will ever target in a single run. Detect the host OS (`platform.system()`) and write that down, but don't ask the user to pick. If they later want to ship to a second OS, they re-run the skill on that machine and it adds a sibling folder to the existing Workspace — see `reforge.md` for the flow.
 
 **The interview splits across two files.** Anything that's true of the worker regardless of OS — what it does, the cascade plan, edge cases, partial-failure behavior, the data shape — goes into `AUTHORING.md` at the workspace root. Anything tied to a specific OS — which UI framework on this OS, which scheduler glue, where data conventionally lives on this OS, which keychain backend — goes into `<os>/<os>-specific.md`. This split is what lets a later "now build this for Linux" reforge skip the common questions and only ask the OS-specific ones. When in doubt about where a piece belongs, ask yourself: "would this answer change if we ran this same worker on a different OS?" If yes, OS-specific. If no, common.
@@ -39,7 +45,12 @@ The two often differ only in capitalization and spaces; don't make the user thin
 
 > "How do you want to start the worker?"
 
-Options: DOUBLE_CLICK_ONLY_NO_GUI, CLI, GUI, USER_PROVIDE.
+Options, each with its one-line rationale in the description:
+
+- **DOUBLE_CLICK_ONLY_NO_GUI** — *"fire-and-forget: double-click and it runs, no window."* Right for a worker that just does its job and writes a file.
+- **CLI** — *"you'll run it from a terminal or a script, with flags."* Right when it'll be driven by cron, another script, or a power user.
+- **GUI** — *"opens a window the recipient clicks around in."* Right when someone needs to see output or push buttons.
+- **USER_PROVIDE** — *"none of these — describe how you want to launch it."*
 
 DOUBLE_CLICK_ONLY_NO_GUI and GUI are mutually exclusive — a worker either pops a window or it doesn't, you can't half-do it. CLI can be combined with either of the other two (a GUI worker can still accept command-line flags, a no-GUI worker can take CLI args too).
 
@@ -49,7 +60,10 @@ If they pick GUI, ask the UI framework question next. If they pick CLI or DOUBLE
 
 > "Want me to use the default worker-forge icon, or do you have one to ship with this worker?"
 
-Options: **Default icon (recommended)**, USER_PROVIDE.
+Options, recommended first, each with its one-line rationale:
+
+- **Default icon (recommended)** — *"ship now; the bundled icon looks finished."*
+- **USER_PROVIDE** — *"you have your own art ready to drop in."*
 
 Always present the default icon as the **first** option and the recommended pick. Most users don't have a custom icon ready, and the bundled `assets/icon.{png,ico,svg}` is good enough to ship — making them produce one before they see their worker run is the wrong tradeoff. Offer "default" first and let them confirm with a single tap.
 
@@ -108,7 +122,11 @@ Ask only if the trigger style includes GUI.
 
 > "Light theme or dark theme for the UI?"
 
-Options: LIGHT (recommended), Dark, USER_PROVIDE.
+Options, recommended first, each with its one-line rationale:
+
+- **LIGHT (recommended)** — *"warm, finished, at home next to the Claude desktop app."*
+- **Dark** — *"same theme, dark palette — for a worker that lives on a dark desktop."*
+- **USER_PROVIDE** — *"you have a specific palette, e.g. your company's brand colors."*
 
 Default to light. The skill ships a Claude-desktop-style light theme in `references/default-theme.md` — warm off-white canvas, soft borders, terracotta accent, unified title bar, generous spacing. That's what "LIGHT" applies, top to bottom: palette, rounded corners, typography, spacing, components. Don't make the user pick hex codes or component-by-component styling; "light" is the whole package, and it's calibrated to look at home next to the Claude desktop app the user probably already has open.
 
@@ -122,17 +140,25 @@ The other easy-to-forget tell — and it applies whatever theme the user picked,
 
 > "How should the worker store its data?"
 
-Options: SQLite, text file, JSON file, USER_PROVIDE.
+Options, each carrying the one-line rationale that tells them apart:
 
-Pick whatever fits the data shape. SQLite for anything queryable or relational; JSON for structured but small state (config, last-seen timestamps, small lists); text file for log-style append-only output. USER_PROVIDE if the user has an existing data store (a spreadsheet they update, a Notion database, a Postgres they own).
+- **SQLite** — *"queryable or relational data you'll filter or join later."* A searchable history of every receipt filed.
+- **JSON file** — *"small structured state."* Config, a last-seen timestamp, a short list.
+- **text file** — *"append-only, log-style output."* One line per run.
+- **USER_PROVIDE** — *"you already have a store to write into."* A spreadsheet you update, a Notion database, a Postgres you own.
+
+Recommend whatever fits the data shape, and say which and why — don't reach for SQLite when the worker only keeps one timestamp.
 
 ### Data location
 
 > "Where should the worker keep its files?"
 
-Options: Same directory as the worker, the user's home directory, a mounted drive, USER_PROVIDE.
+Options, each with its one-line rationale; lead with home directory as the recommended default:
 
-"Same directory" works for self-contained workers but breaks if the user moves the binary. "Home directory" (use `~/.<worker-name>/` on Unix, `%LOCALAPPDATA%\<worker-name>\` on Windows) is the boring-but-correct default. Mounted drive when the user is explicitly shuttling output to a NAS or external disk. USER_PROVIDE for everything else.
+- **Home directory (recommended)** — *"survives the binary moving."* `~/.<worker-name>/` on Unix, `%LOCALAPPDATA%\<worker-name>\` on Windows — the boring-but-correct default.
+- **Same directory as the worker** — *"self-contained, but breaks if the binary moves."* Fine for a worker that never leaves its folder.
+- **A mounted drive** — *"output belongs on a NAS or external disk."* When the user is explicitly shuttling files off-machine.
+- **USER_PROVIDE** — *"somewhere specific you have in mind."*
 
 ### UI description (if GUI)
 
@@ -193,7 +219,12 @@ Ask only if any unit in the planned cascade is HOSTED.
 
 > "Which hosted provider should the worker use for `<subtask>`?"
 
-Options: ANTHROPIC, OPEN_AI, GEMINI, USER_PROVIDED.
+Options, each with a one-line rationale; recommend the provider the user is likeliest to already have a key for and say why:
+
+- **ANTHROPIC** — *"Claude models; strong long-context reasoning."*
+- **OPEN_AI** — *"GPT models; broad ecosystem and tooling."*
+- **GEMINI** — *"Google's models; competitive pricing on the fast tiers."*
+- **USER_PROVIDE** — *"another provider, or a key you already pay for."*
 
 Ask once per HOSTED unit. Different units can use different providers.
 

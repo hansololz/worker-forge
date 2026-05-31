@@ -26,6 +26,38 @@ Two of the four phases are where the skill is won or lost — the interview and 
 down and the tiers right, and code-gen and packaging are mostly mechanical. Rush the interview and you'll be back
 forging the same worker again next week. Spend your attention accordingly.
 
+### The progress checklist
+
+A forge is a multi-step process that can run long, and a user who's lost track of where they are in it can't tell
+whether the skill is stuck, waiting on them, or nearly done. So the skill keeps a **forge progress checklist** visible
+in chat for the whole run. Post it once near the top, right after the task is restated, and re-post the updated copy at
+each phase boundary with finished items checked and the current one marked in progress — the user should always be able
+to glance at the latest copy and see what's done, what's happening now, and what's left. The checklist is a companion,
+not a gate; it never blocks, it just orients. Keep it to the milestones that actually matter to the user (not every
+internal step), in the order a forge hits them:
+
+```
+Forge progress
+- [x] Task restated and confirmed
+- [x] CODE-first shapes explored before LOCAL/HOSTED
+- [ ] Interview decisions captured        ← in progress
+- [ ] Cascade plan signed off
+- [ ] Workspace scaffolded and spec docs written
+- [ ] Code generated and security-read
+- [ ] Final security scan + README written
+- [ ] Built (or build commands handed off) + smoke-tested
+- [ ] Artifact handed over
+```
+
+The items map onto the four phases (interview → cascade → code-gen → packaging), with the two highest-leverage
+interview habits surfaced as their own lines because they're the ones most worth showing the user you didn't skip.
+Phase 4 is deliberately three lines, not one: the **final whole-folder security scan** is a distinct step from the
+per-script reads during code-gen, the workspace **README** (build + run commands) is a required deliverable, and the
+build line names the documented branch where the build can't run in-session — you hand the user the exact commands
+instead of going quiet, which should read as progress, not a stall. The plan sign-off and the build still have their
+own explicit confirmation steps (see the relevant phases); the checklist sits above them as the running map, it doesn't
+replace them. A reforge runs a shorter version of the same idea — drop the scaffolding line, keep the rest.
+
 The five invariants from `design.md` ("Solution" → the invariants list) hold for every worker the skill produces, and
 they're the quickest gut-check that a forge went right: single responsibility, local-first execution, the recipient is
 not the author, cheapest tier first, and reforgeable. If something the skill is about to produce breaks one of these,
@@ -56,6 +88,23 @@ pick you'd make, and present it as the thing to confirm. "JSON in your home dire
 just keeps a last-seen timestamp — want that, or something else?" beats a blank menu every time, because the user's job
 becomes reacting to a guess instead of generating a spec from scratch. The skill earns its keep when the user is mostly
 saying "yes, that."
+
+This habit has two halves, and the interview is weaker if either is missing. **Always make a recommendation** — every
+structured question names the option you'd pick and marks it recommended, even the ones where the answer feels obvious;
+a question with no recommended pick hands the user back the work they came here to offload. And **give every option a
+concise one-line rationale** — a short "when you'd pick this" sitting on each choice (`SQLite` → *"queryable or
+relational data — a searchable history you'll filter later"*; `JSON` → *"small structured state like a last-seen
+timestamp"*; `text file` → *"append-only logs, one line per run"*) so the user can tell the options apart at a glance
+instead of decoding bare labels or asking what each one means. Keep the rationale to a single clause — the goal is fast
+recognition, not a tutorial. Together these two halves are what make the interview feel like confirming a plan rather
+than filling out a form: the user sees a clear recommendation and, next to it, just enough on each alternative to know
+whether to override.
+
+Two presentation rules go with this. **Keep the option list short — five at most**, and if a question naturally has
+more candidates than that, show only the handful worth considering for *this* worker and fold the rest into a single
+USER_PROVIDE escape hatch; a wall of options is the same decision fatigue a blank menu causes. And **put the best option
+at the top, marked `(recommended)`** — order isn't cosmetic, the user reads top-down and the recommended pick should be
+the first thing they see, so the rest of the list reads as "or, if not that, here's why you'd deviate."
 
 The second habit, called out specifically because it's high-leverage: **if the task as described seems to need a local
 model, look for a CODE-only shape first.** A user who says "categorize my downloads" usually means "look at the
@@ -89,9 +138,10 @@ polished; `WORKER.md` is the clean version.
 
 ### Questions to ask
 
-Ask these in order, skip the ones that don't apply, and lead each with your proposed default. Where two options are
-mutually exclusive the question is single-select; otherwise let the user pick more than one. `references/interview.md`
-in the skill has the full phrasing for each.
+Ask these in order, skip the ones that don't apply, and lead each with your proposed default and a one-line rationale
+on every option (per the recommend-and-exemplify habit above). Where two options are mutually exclusive the question is
+single-select; otherwise let the user pick more than one. `references/interview.md` in the skill has the full phrasing
+and the per-option rationales for each.
 
 - **Worker name and display name.** A kebab-case slug (drives the folder, `WORKER.md`'s `name:`, anything that has to
   be filesystem-safe) and a human-readable display name (window titles, headings, and the artifact filename —

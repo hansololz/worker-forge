@@ -37,11 +37,34 @@ If the user asks for something that breaks any of these — a multi-screen UI, a
 
 A forge runs in four phases — interview, cascade design, code generation, packaging. Don't skip phases; each one feeds the next. The interview and the cascade plan are the parts that actually matter. The code generation and the build that follow are mostly mechanical once those two are right.
 
+**Keep a progress checklist visible in chat the whole way through.** A forge runs long and across several back-and-forths, and a user who's lost the thread can't tell whether you're stuck, waiting on them, or nearly done. So post this checklist once near the top — right after you've restated the task — and re-post the updated copy at each phase boundary, with finished items checked (`[x]`) and the current one flagged. It's a companion that orients the user, not a gate that blocks them; the plan sign-off and the build keep their own explicit confirmation steps, and this sits above them as the running map.
+
+```
+Forge progress
+- [ ] Task restated and confirmed
+- [ ] CODE-first shapes explored before LOCAL/HOSTED
+- [ ] Interview decisions captured
+- [ ] Cascade plan signed off
+- [ ] Workspace scaffolded and spec docs written
+- [ ] Code generated and security-read
+- [ ] Final security scan + README written
+- [ ] Built (or build commands handed off) + smoke-tested
+- [ ] Artifact handed over
+```
+
+The lines track the four phases, with the two highest-leverage interview habits (restate-and-confirm, CODE-first) pulled out as their own items because they're the ones most worth showing the user you didn't skip. Phase 4 is three lines on purpose: the final whole-folder security scan is distinct from the per-script reads during code-gen; the workspace README (build + run commands) is a real deliverable; and the build line covers the documented branch where you can't build in-session and hand off the exact commands instead — that's progress, not a stall, so check it rather than leaving the user wondering. Only show milestones that mean something to the user — don't narrate every internal step. On a reforge, run a trimmed version: drop "Workspace scaffolded" and keep the rest.
+
 ### Phase 1 — Interview
 
 This is the highest-leverage phase. Edge cases the user didn't surface here will fail at run time, and you'll be back to forge it again. Read `references/interview.md` for the full question set and the order to ask them in — it's organized around the questions from the skill spec (worker name + display name, trigger style, icon, scheduling, UI framework, color theme, data storage, local/hosted models per subtask). The target OS is *not* a question — the skill builds for whatever OS it's running on (currently macOS or Windows; see Platform support above) and records that decision automatically.
 
 Use the AskUserQuestion tool for the structured choices in the interview. It forces concrete answers and the multi-select form maps cleanly onto the skill spec's "options are mutually inclusive when possible" rule (e.g., a user can want both "double-click" and "schedule on startup"; those aren't mutually exclusive). For every question, propose a concrete default the user can confirm with one tap — read the task description, infer the obvious pick, and present it as the first option. The skill earns its keep when the user is mostly saying "yes, that" instead of generating a spec from a blank menu.
+
+Three rules make those choices easy, and they apply to every structured question without exception — `references/interview.md` carries the per-question rationales, but hold the shape in your head as you go:
+
+- **Always make a recommendation, and put it first marked `(recommended)`.** Name the option you'd pick, mark it recommended, and lead with it — the user reads top-down, so the recommended pick should be the first thing they see and the rest of the list reads as "or, if not that, here's why you'd deviate." A question that hands back a blank menu hands the user the decision work they came here to offload — the whole point is that they're reacting to a guess, not generating a spec.
+- **Keep the list short — five options at most.** If a question has more candidates than that, show only the handful worth considering for *this* worker and fold the rest into one USER_PROVIDE escape hatch. A wall of options causes the same decision fatigue as a blank menu.
+- **Give every option a one-line rationale.** Each choice in an AskUserQuestion carries a short "when you'd pick this" so the user can tell the options apart at a glance — `SQLite` → *"queryable or relational data you'll filter later"*, `JSON` → *"small structured state like a last-seen timestamp"*, `text file` → *"append-only logs, one line per run"*. One clause, not a tutorial; the goal is fast recognition. Bare labels like "SQLite / JSON / text file" force the user to either already know the trade-off or stop and ask — both of which defeat the purpose of the interview.
 
 One habit during the interview that's easy to forget: if the task as described needs a local model, try to find a simpler CODE-only shape first. A user who says "categorize my downloads by type" probably means "look at the extension and the filename" — that's regex, not LLM. The reason this matters is that the cheaper tier is always faster, more available, and more predictable than the one above it, so a model call where a rule would do makes the worker worse for everyone who runs it later. Suggest the deterministic version, see if it satisfies the user, and escalate only if it doesn't. The skill spec calls this out specifically and it's the single highest-impact habit during the interview.
 
