@@ -1,0 +1,10 @@
+.idea
+node_modules/
+out/
+dist/
+backend/.venv/
+backend/build/
+backend/dist/
+**/__pycache__/
+*.pyc
+.DS_Store
