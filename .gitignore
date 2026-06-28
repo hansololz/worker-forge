@@ -8,3 +8,12 @@ backend/dist/
 **/__pycache__/
 *.pyc
 .DS_Store
+
+# Tests
+backend/.venv-test/
+**/.pytest_cache/
+**/.mypy_cache/
+.coverage
+coverage/
+playwright-report/
+test-results/

@@ -1,0 +1,40 @@
+# Orchestrates the three test layers in Docker.
+#
+#   docker compose -f docker/docker-compose.test.yml run --rm backend-tests
+#   docker compose -f docker/docker-compose.test.yml run --rm frontend-tests
+#   docker compose -f docker/docker-compose.test.yml run --rm e2e
+#   docker compose -f docker/docker-compose.test.yml up --abort-on-container-exit
+#
+# Build context is the repo root so the Dockerfiles can COPY the whole project.
+services:
+  backend-tests:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    init: true
+
+  frontend-tests:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    init: true
+
+  # FE↔BE contract: api.js driven against a live backend. Optional layer; the
+  # in-process pytest integration suite already covers the API contract.
+  fe-integration:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    init: true
+    command: >-
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8765"
+    ports:
+      - "8765"
+
+  e2e:
+    build:
+      context: ..
+      dockerfile: docker/e2e.Dockerfile
+    init: true
+    # xvfb + Chromium occasionally need a larger shm than the 64MB default.
+    shm_size: "1gb"

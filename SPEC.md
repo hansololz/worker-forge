@@ -1031,3 +1031,85 @@ Notable points where the UI layout and the normative model (§1–§8) were reco
   (incl. ad-hoc "added" keys) and sends them keyed by slot index — never flattened.
 - **Execution detail** is rendered from real backend execution YAML (stages → tasks →
   attempts → steps → logs), and the run page polls while a run is `running`.
+
+## 12. Testing
+
+Three layers: **unit** (logic in isolation), **integration** (API contract + real runs against
+the live app), **E2E** (the whole Electron app driven end-to-end). All three run in Docker for
+reproducibility; backend + frontend-unit also run natively.
+
+### Tooling
+
+| Layer | Stack |
+| --- | --- |
+| Backend unit + integration | `pytest`, `pytest-cov`, `freezegun`, FastAPI `TestClient` (httpx) |
+| Frontend unit | `vitest` + `@testing-library/react` + `jsdom` |
+| FE↔BE integration | `vitest` (node env) driving `src/api.js` against a live backend |
+| E2E | `@playwright/test` Electron driver, under `xvfb` in Docker |
+
+Backend dev deps are pinned in `backend/requirements-test.txt`; frontend test deps + scripts live in
+`package.json`. Pytest config sits in `backend/pyproject.toml` (`[tool.pytest.ini_options]`); vitest in
+`vitest.config.ts`; playwright in `playwright.config.ts`.
+
+### Isolation
+
+Every backend test runs in a throwaway data + config dir. `paths.py` re-reads `$WORKER_FORGE_HOME`
+and `_config_dir()` on every call (no caching), so a per-test `monkeypatch` (the `sandbox` autouse
+fixture in `backend/tests/conftest.py`) fully isolates the YAML tree, the SQLite index, and the
+on-disk config — the developer's real Worker Forge data is never touched. The E2E fixture points
+`WORKER_FORGE_HOME` at a fresh temp dir per run. Timezone-dependent assertions pin `TZ=UTC`.
+
+### Layout
+
+```
+backend/tests/
+  conftest.py             # sandbox fixture, TestClient, make_task/make_workflow, poll_execution
+  unit/                   # models, paths, storage, db, scheduler (cron), runner (_resolve_params)
+  integration/            # health, workflows/tasks/triggers/settings APIs, real run, crash recovery
+tests/                    # frontend + e2e (Node side)
+  setup/                  # vitest.setup.js, backend-server.js (local boot helper)
+  unit/                   # cron-preview (nextCronRun), format helpers, api.js, ConfirmModal
+  integration/            # api-contract.test.js — api.js vs a live backend (skips w/o WF_BACKEND_URL)
+  e2e/                    # electron.fixture.js, smoke.spec.js, run-execution.spec.js
+docker/
+  backend.Dockerfile      # python:3.12-slim → pytest
+  frontend.Dockerfile     # node:20-slim → vitest unit
+  e2e.Dockerfile          # node + python + Electron libs + xvfb → playwright
+  docker-compose.test.yml # services: backend-tests, frontend-tests, fe-integration, e2e
+scripts/test.sh           # one entry: [backend|frontend|integration|e2e|all] [--docker]
+.github/workflows/test.yml# 3 CI jobs (backend, frontend native; e2e via docker)
+```
+
+### What each layer proves
+
+- **Backend unit** — cron next-fire math (time-injected), layered param resolution, YAML roundtrip +
+  immutable versioning, index reconcile, model/vocab validation, data-dir resolution.
+- **Backend integration** — every §6 endpoint's contract, a real workflow launched and run to
+  `succeeded`/`failed` via actual bash subprocess steps with per-step logs, and crash recovery
+  (`running` orphan → `interrupted` on boot, §6/§7).
+- **Frontend unit** — `nextCronRun` preview, display formatters, the `api.js` request/response/error
+  contract (mocked `fetch`), and `ConfirmModal` behavior.
+- **FE↔BE integration** — `api.js` against a live backend, catching drift the mocked unit tests can't.
+- **E2E** — the packaged renderer + spawned backend boot, the shell paints, and a workflow launched
+  through the renderer's own bridge runs to success.
+
+### Running
+
+One script per test *type* (each spans backend + frontend where applicable); `scripts/lib-test.sh`
+holds the shared venv / free-port / health-wait helpers and auto-bootstraps `backend/.venv`:
+
+- `scripts/test-unit.sh [backend|frontend|all]` — logic in isolation (pytest + vitest). Fast, no
+  servers, no display.
+- `scripts/test-integration.sh [backend|frontend|all]` — backend API contract + real runs
+  (in-process TestClient), and `api.js` driven against a backend this script boots on a free port
+  (sandboxed `WORKER_FORGE_HOME`, torn down on exit).
+- `scripts/test-e2e.sh [--no-build]` — builds the bundles and runs Playwright against the Electron app.
+
+`scripts/test.sh [unit|integration|e2e|all] [--docker]` is the umbrella that dispatches to those
+scripts, or to the Docker layers (`docker/docker-compose.test.yml`) when `--docker` is passed (matches
+CI). Direct equivalents also exist as npm scripts: `npm run test:unit` / `test:integration` /
+`test:e2e`, and `cd backend && pytest`.
+
+E2E is Linux-only (Electron under `xvfb`); the real ship target stays macOS. It requires a prior
+`npm run build` and a runnable backend (`backend/.venv` or `python3` on PATH) — the `e2e.Dockerfile`
+provisions both.

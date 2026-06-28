@@ -11,18 +11,31 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
     "pack:mac": "electron-builder --mac --publish never",
-    "clean": "bash scripts/clean.sh"
+    "clean": "bash scripts/clean.sh",
+    "test": "npm run test:unit",
+    "test:unit": "TZ=UTC vitest run tests/unit",
+    "test:watch": "TZ=UTC vitest tests/unit",
+    "test:coverage": "TZ=UTC vitest run tests/unit --coverage",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^22.7.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^2.1.8",
     "electron": "^33.0.0",
     "electron-builder": "^25.0.0",
     "electron-vite": "^2.3.0",
+    "jsdom": "^25.0.1",
     "typescript": "^5.6.0",
-    "vite": "^5.4.0"
+    "vite": "^5.4.0",
+    "vitest": "^2.1.8"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.1.0",
