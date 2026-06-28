@@ -36,21 +36,21 @@
   --st-ok:    oklch(0.78 0.16 152);   /* success — green */
   --st-fail:  oklch(0.68 0.19 25);    /* failed — red */
   --st-warn:  oklch(0.81 0.14 80);    /* queued — amber */
-  --st-cancel: oklch(0.66 0.03 262);   /* cancelled — mid neutral gray, solid (a deliberate stop happened) */
+  --st-cancel: oklch(0.85 0.16 100);  /* cancelled — yellow */
   --st-interrupt: oklch(0.70 0.15 310); /* interrupted — crash mid-run (magenta) */
   --st-cont:  oklch(0.72 0.17 52);    /* continued (tolerated fail) — orange */
   --st-queued:  oklch(0.70 0.035 248);  /* queued — will run (cool slate) */
-  --st-skip:  oklch(0.50 0.012 264);  /* skipped/idle — dim gray, most recessive */
+  --st-skip:  oklch(0.62 0.012 264);  /* skipped/idle — gray */
 
   --run-dim:  oklch(0.74 0.14 220 / 0.15);
   --ok-dim:   oklch(0.78 0.16 152 / 0.15);
   --fail-dim: oklch(0.68 0.19 25 / 0.15);
   --warn-dim: oklch(0.81 0.14 80 / 0.15);
-  --cancel-dim: oklch(0.66 0.03 262 / 0.2);
+  --cancel-dim: oklch(0.85 0.16 100 / 0.15);
   --interrupt-dim: oklch(0.70 0.15 310 / 0.15);
   --cont-dim: oklch(0.72 0.17 52 / 0.15);
   --queued-dim: oklch(0.70 0.035 248 / 0.16);
-  --skip-dim: oklch(0.50 0.012 264 / 0.16);
+  --skip-dim: oklch(0.62 0.012 264 / 0.15);
 
   --radius:   9px;
   --radius-sm: 6px;

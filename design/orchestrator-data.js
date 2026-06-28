@@ -50,6 +50,7 @@ export const STATUS = {
   failed:    { color: "var(--st-fail)",   fill: "var(--fail-dim)",   label: "failed" },
   succeeded: { color: "var(--st-ok)",     fill: "var(--ok-dim)",     label: "succeeded" },
   cancelled: { color: "var(--st-cancel)", fill: "var(--cancel-dim)", label: "cancelled" },
+  interrupted: { color: "var(--st-interrupt)", fill: "var(--interrupt-dim)", label: "interrupted" },
   skipped:   { color: "var(--tx-lo)",     fill: "var(--skip-dim)",   label: "skipped" },
   ok:        { color: "var(--st-ok)",     fill: "var(--ok-dim)",     label: "success" },
   fail:      { color: "var(--st-fail)",   fill: "var(--fail-dim)",   label: "failed" },
