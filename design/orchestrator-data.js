@@ -271,6 +271,7 @@ function buildRuns() {
     { wf: "wf_metrics_rollup", status: "succeeded", started: "1h ago", degraded: { failed: [1], skipped: [] } },
     { wf: "wf_web_release", status: "succeeded", started: "1h ago" },
     { wf: "wf_web_release", status: "failed", started: "2h ago", stopAt: 7 },
+    { wf: "wf_api_deploy", status: "interrupted", started: "2h ago", stopAt: 4 },
     { wf: "wf_nightly_e2e", status: "succeeded", started: "2h ago" },
   ];
   const TOTAL = 140;
@@ -300,7 +301,7 @@ function buildRuns() {
       }
     }
     if (status === "running") stopAt = Math.min(n - 1, Math.max(1, Math.floor(n / 2)));
-    else if (status === "failed" || status === "cancelled") stopAt = spec && typeof spec.stopAt === "number" ? spec.stopAt : Math.floor(rnd() * n);
+    else if (status === "failed" || status === "cancelled" || status === "interrupted") stopAt = spec && typeof spec.stopAt === "number" ? spec.stopAt : Math.floor(rnd() * n);
     const run = { id: uuid(), wf, trigger, actor, started, dur: status === "queued" ? "\u2014" : fmtDur(dur), status };
     if (stopAt != null) run.stopAt = stopAt;
     if (degraded && (degraded.failed.length || degraded.skipped.length)) run.degraded = degraded;
@@ -413,8 +414,8 @@ export function runTasksFor(w, run) {
     let status;
     if (stop >= 0) {
       if (i < stop) status = "succeeded";
-      else if (i === stop) status = rs === "failed" ? "failed" : rs === "cancelled" ? "cancelled" : rs === "running" ? "running" : "succeeded";
-      else status = rs === "running" || rs === "failed" ? "queued" : "skipped";
+      else if (i === stop) status = rs === "failed" ? "failed" : rs === "cancelled" ? "cancelled" : rs === "interrupted" ? "interrupted" : rs === "running" ? "running" : "succeeded";
+      else status = rs === "running" || rs === "failed" || rs === "interrupted" ? "queued" : "skipped";
     } else if (rs === "queued") {
       status = "queued";
     } else {

@@ -158,31 +158,13 @@
 
   /* ---------- ABOUT ---------- */
   function About({ ctx }) {
-    const { Icon, Btn } = window.UI;
-    const VERSION = "1.4.0";
-    const BUILD = "2026.06.1";
-    const [checking, setChecking] = useState(false);
-    const [checked, setChecked] = useState(false);
-    function checkUpdates() {
-      setChecking(true); setChecked(false);
-      setTimeout(() => { setChecking(false); setChecked(true); ctx && ctx.toast && ctx.toast("You're on the latest version"); }, 900);
-    }
+    const { Icon } = window.UI;
     const links = [
       { label: "View on GitHub", icon: "github", href: "https://github.com/hansololz/worker-forge" },
-      { label: "Release notes", icon: "history", href: "#" },
-      { label: "Report an issue", icon: "alert", href: "#" },
     ];
     return e(Card, { title: "About" },
-      // meta rows
-      e(Row, { title: "Version", desc: "Build " + BUILD + " \u00b7 stable channel" },
-        e("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-          checked && e("span", { style: { fontSize: 12, color: "var(--tx-lo)", display: "inline-flex", alignItems: "center", gap: 5 } },
-            e(Icon, { name: "check", size: 13, style: { color: "var(--accent)" } }), "Up to date"),
-          e(Btn, { variant: "ghost", size: "sm", icon: "sync", onClick: checkUpdates, disabled: checking },
-            checking ? "Checking\u2026" : "Check for updates"))),
-
       // links
-      e("div", { style: { display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 16 } },
+      e("div", { style: { display: "flex", flexWrap: "wrap", gap: 8, paddingTop: 14 } },
         links.map(l => e("a", { key: l.label, href: l.href, target: "_blank", rel: "noreferrer",
           style: { display: "inline-flex", alignItems: "center", gap: 7, height: 30, padding: "0 12px",
             border: "1px solid var(--line-soft)", borderRadius: 8, background: "var(--bg-2)",
