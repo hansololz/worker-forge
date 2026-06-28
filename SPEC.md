@@ -1076,7 +1076,11 @@ docker/
   frontend.Dockerfile     # node:20-slim → vitest unit
   e2e.Dockerfile          # node + python + Electron libs + xvfb → playwright
   docker-compose.test.yml # services: backend-tests, frontend-tests, fe-integration, e2e
-scripts/test.sh           # one entry: [backend|frontend|integration|e2e|all] [--docker]
+scripts/test/
+  engine.sh               # engine pytest only: [unit|integration|all]
+  app.sh                  # app only: [unit|integration|e2e|all] (vitest/playwright)
+  test.sh                 # umbrella by component: [engine|app|all] [--docker]
+  lib-test.sh             # shared venv / free-port / health-wait helpers (sourced)
 .github/workflows/test.yml# 3 CI jobs (backend, frontend native; e2e via docker)
 ```
 
@@ -1095,17 +1099,18 @@ scripts/test.sh           # one entry: [backend|frontend|integration|e2e|all] [-
 
 ### Running
 
-One script per test *type* (each spans backend + frontend where applicable); `scripts/lib-test.sh`
-holds the shared venv / free-port / health-wait helpers and auto-bootstraps `engine/.venv`:
+Scripts are split **by component** — the engine (pytest) and app (vitest/playwright) suites never run
+from the same script. `scripts/test/lib-test.sh` holds the shared venv / free-port / health-wait
+helpers and auto-bootstraps `engine/.venv`:
 
-- `scripts/test-unit.sh [backend|frontend|all]` — logic in isolation (pytest + vitest). Fast, no
-  servers, no display.
-- `scripts/test-integration.sh [backend|frontend|all]` — backend API contract + real runs
-  (in-process TestClient), and `api.js` driven against a backend this script boots on a free port
-  (sandboxed `WORKER_FORGE_HOME`, torn down on exit).
-- `scripts/test-e2e.sh [--no-build]` — builds the bundles and runs Playwright against the Electron app.
+- `scripts/test/engine.sh [unit|integration|all]` — engine pytest only. `unit` is pure logic;
+  `integration` is the in-process TestClient + real bash-subprocess runs. No Node/app tooling.
+- `scripts/test/app.sh [unit|integration|e2e|all]` — app only. `unit` is vitest (mocked `fetch`);
+  `integration` drives `api.js` against an engine this script boots on a free port as a black-box
+  fixture (sandboxed `WORKER_FORGE_HOME`, torn down on exit); `e2e [--no-build]` runs Playwright
+  against the built Electron app.
 
-`scripts/test.sh [unit|integration|e2e|all] [--docker]` is the umbrella that dispatches to those
+`scripts/test/test.sh [engine|app|all] [--docker]` is the umbrella that fans out to the two component
 scripts, or to the Docker layers (`docker/docker-compose.test.yml`) when `--docker` is passed (matches
 CI). Direct equivalents also exist as npm scripts: `npm run test:unit` / `test:integration` /
 `test:e2e`, and `cd engine && pytest`.
