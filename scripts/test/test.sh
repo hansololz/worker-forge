@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Umbrella test runner — dispatches by component, or to Docker. The engine
-# (pytest) and app (vitest/playwright) suites are separate scripts; this just
-# fans out to them.
+# Umbrella test runner — fans out to the per-(component,type) scripts, or to
+# Docker. Each script runs exactly one component + one type; this is the only
+# place that runs several together.
 #
 #   scripts/test/test.sh [engine|app|all] [--docker]
 #
-# Local (default): runs scripts/test/engine.sh and/or scripts/test/app.sh.
+# Local (default): runs the matching scripts/test/<component>-<type>.sh scripts.
 # --docker: runs the same suites in containers (docker/docker-compose.test.yml).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
