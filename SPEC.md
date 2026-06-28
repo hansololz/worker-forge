@@ -867,15 +867,11 @@ Top-level views:
    header + "Separate location" toggle pattern as execution history, with its own muted/live field and OS
    picker. Fourth row = a read-only callout (info icon) noting app config is
    stored per-user outside the data directory, with the config.json path. General card: Time zone select,
-   Launch on startup toggle, Keep running in background toggle. About card (last in the column): a
-   **Version** `.set-row` (description `Worker Forge v<version> · stable channel`, version read from
-   `window.backend.appVersion()`) whose control is a ghost **Check for updates** button — there is no
-   update server yet, so it simulates: shows "Checking…", then an accent-check **Up to date** marker and a
-   toast "You're on the latest version". Below the row, a wrap of pill **link buttons** (30px tall, `--bg-2`
-   fill, `--line-soft` border, 8px radius, icon + label) — **Visit website** (`https://workerforge.ai`),
-   **View on GitHub** (`https://github.com/hansololz/worker-forge`, GitHub brand icon),
-   **Release notes** (`/releases`), **Report an issue** (`/issues`) — each opens in the default browser
-   via `window.backend.openExternal(url)`.
+   Launch on startup toggle, Keep running in background toggle. About card (last in the column): a wrap
+   of pill **link buttons** (30px tall, `--bg-2` fill, `--line-soft` border, 8px radius, icon + label) —
+   currently just **View on GitHub** (`https://github.com/hansololz/worker-forge`, GitHub brand icon),
+   opening in the default browser via `window.backend.openExternal(url)`. The card has no `.set-row`s, so
+   the link row carries a `14px` top padding for vertical rhythm.
    A muted footer (top border, `11.5px` `--tx-dim`) carries the copyright (`© 2026 Worker Forge.
    All rights reserved.`).
 

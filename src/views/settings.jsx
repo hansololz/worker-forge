@@ -58,42 +58,21 @@ function Toggle({ on, onClick }) {
 }
 function Select(props) { return e(UISelect, Object.assign({ block: true }, props)) }
 
-// About card — version, check-for-updates, outbound links, footer credit.
+// About card — outbound link + footer credit.
 const REPO_URL = 'https://github.com/hansololz/worker-forge'
-const SITE_URL = 'https://workerforge.ai'
-function About({ ctx }) {
-  const [version, setVersion] = useState('')
-  const [checking, setChecking] = useState(false)
-  const [checked, setChecked] = useState(false)
-  useEffect(() => {
-    if (window.backend && window.backend.appVersion) window.backend.appVersion().then(setVersion).catch(() => {})
-  }, [])
-  // No update server yet — the check is simulated, matching the design.
-  function checkUpdates() {
-    setChecking(true); setChecked(false)
-    setTimeout(() => { setChecking(false); setChecked(true); ctx.toast && ctx.toast("You're on the latest version") }, 900)
-  }
+function About() {
   function openLink(ev, href) {
     ev.preventDefault()
     if (window.backend && window.backend.openExternal) window.backend.openExternal(href)
     else window.open(href, '_blank', 'noreferrer')
   }
   const links = [
-    { label: 'Visit website', icon: 'link', href: SITE_URL },
     { label: 'View on GitHub', icon: 'github', href: REPO_URL },
-    { label: 'Release notes', icon: 'history', href: REPO_URL + '/releases' },
-    { label: 'Report an issue', icon: 'alert', href: REPO_URL + '/issues' },
   ]
   return e(Card, { title: 'About' },
-    // Version row + check-for-updates control.
-    e(Row, { title: 'Version', desc: 'Worker Forge ' + (version ? 'v' + version : '—') + ' · stable channel' },
-      e('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-        checked && e('span', { style: { fontSize: 12, color: 'var(--tx-lo)', display: 'inline-flex', alignItems: 'center', gap: 5 } },
-          e(Icon, { name: 'check', size: 13, style: { color: 'var(--accent)' } }), 'Up to date'),
-        e(Btn, { variant: 'ghost', size: 'sm', icon: 'sync', onClick: checkUpdates, disabled: checking },
-          checking ? 'Checking…' : 'Check for updates'))),
-    // Outbound link buttons.
-    e('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 16 } },
+    // Outbound link buttons. paddingTop gives the row top breathing room since
+    // this card has no .set-rows to carry vertical rhythm.
+    e('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 14 } },
       links.map(l => e('a', { key: l.label, href: l.href, onClick: ev => openLink(ev, l.href),
         style: { display: 'inline-flex', alignItems: 'center', gap: 7, height: 30, padding: '0 12px',
           border: '1px solid var(--line-soft)', borderRadius: 8, background: 'var(--bg-2)',
@@ -247,5 +226,5 @@ export function SettingsView({ ctx }) {
           e(Toggle, { on: s.keep_running_in_background, onClick: () => patch({ keep_running_in_background: !s.keep_running_in_background }) }))),
 
       // About card (design)
-      e(About, { ctx })))
+      e(About)))
 }
