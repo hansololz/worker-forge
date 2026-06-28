@@ -3,7 +3,7 @@
 # Run worker-forge in development.
 # Bootstraps the backend virtualenv + node deps, then launches electron-vite
 # with hot reload. Electron's main process spawns the backend automatically
-# (from backend/.venv), picking a free loopback port.
+# (from engine/.venv), picking a free loopback port.
 #
 set -euo pipefail
 
@@ -17,11 +17,11 @@ if ! command -v "$PY" >/dev/null 2>&1; then
 fi
 
 echo "==> Backend virtualenv (using $PY)"
-if [ ! -d backend/.venv ]; then
-  "$PY" -m venv backend/.venv
+if [ ! -d engine/.venv ]; then
+  "$PY" -m venv engine/.venv
 fi
-backend/.venv/bin/python -m pip install --quiet --upgrade pip
-backend/.venv/bin/python -m pip install --quiet -r backend/requirements.txt
+engine/.venv/bin/python -m pip install --quiet --upgrade pip
+engine/.venv/bin/python -m pip install --quiet -r engine/requirements.txt
 
 echo "==> Node dependencies"
 if [ ! -d node_modules ]; then

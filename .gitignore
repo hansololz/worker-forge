@@ -2,15 +2,15 @@
 node_modules/
 out/
 dist/
-backend/.venv/
-backend/build/
-backend/dist/
+engine/.venv/
+engine/build/
+engine/dist/
 **/__pycache__/
 *.pyc
 .DS_Store
 
 # Tests
-backend/.venv-test/
+engine/.venv-test/
 **/.pytest_cache/
 **/.mypy_cache/
 .coverage

@@ -16,15 +16,15 @@ if ! command -v "$PY" >/dev/null 2>&1; then
 fi
 
 echo "==> [1/4] Backend virtualenv + deps (using $PY)"
-if [ ! -d backend/.venv ]; then
-  "$PY" -m venv backend/.venv
+if [ ! -d engine/.venv ]; then
+  "$PY" -m venv engine/.venv
 fi
-backend/.venv/bin/python -m pip install --quiet --upgrade pip
-backend/.venv/bin/python -m pip install --quiet \
-  -r backend/requirements.txt -r backend/requirements-dev.txt
+engine/.venv/bin/python -m pip install --quiet --upgrade pip
+engine/.venv/bin/python -m pip install --quiet \
+  -r engine/requirements.txt -r engine/requirements-dev.txt
 
 echo "==> [2/4] Freezing backend with PyInstaller"
-rm -rf backend/build backend/dist
+rm -rf engine/build engine/dist
 ( cd backend && .venv/bin/pyinstaller --noconfirm --clean worker-forge-backend.spec )
 
 echo "==> [3/4] Node deps + electron-vite build"

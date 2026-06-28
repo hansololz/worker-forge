@@ -9,7 +9,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-PY=backend/.venv/bin/python
+PY=engine/.venv/bin/python
 [ -x "$PY" ] || PY=python3
 
 mkdir -p build-assets

@@ -5,7 +5,7 @@
 #
 # Linux CI runs this under xvfb inside docker/e2e.Dockerfile. On macOS it runs
 # against the host display. Either way it needs a runnable backend
-# (backend/.venv or python3 on PATH) — ensured below.
+# (engine/.venv or python3 on PATH) — ensured below.
 #
 #   scripts/test-e2e.sh             # build + run
 #   scripts/test-e2e.sh --no-build  # skip the bundle build (reuse out/)

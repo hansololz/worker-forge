@@ -973,9 +973,9 @@ src/
   model.js            # maps backend payloads -> view-model shapes; mutation actions
   App.jsx             # sidebar + topbar + hand-rolled router + ctx actions
   views/              # workflows, tasks, runs (execution detail), triggers, settings
-backend/app/          # FastAPI: paths, models, storage (YAML), db (SQLite index),
+engine/app/           # FastAPI: paths, models, storage (YAML), db (SQLite index),
                       #   runner, scheduler, routes/* — see §3–§7
-backend/run.py        # uvicorn entry (127.0.0.1, --port)
+engine/run.py         # uvicorn entry (127.0.0.1, --port)
 scripts/dev.sh        # bootstrap venv + node deps, launch electron-vite dev
 scripts/build.sh      # PyInstaller-freeze backend -> electron-vite build -> dmg/zip
 scripts/clean.sh      # wipe build/dist artifacts, then delegate app-data removal to remove-data.sh
@@ -985,14 +985,14 @@ scripts/import-design.sh # import ~/Desktop/workflow.zip into design/ (flattens 
 
 ### Running
 
-- **Dev:** `bash scripts/dev.sh` — creates `backend/.venv` (Python 3.12+), installs deps,
+- **Dev:** `bash scripts/dev.sh` — creates `engine/.venv` (Python 3.12+), installs deps,
   `npm install`, then `npm run dev`. Electron's main process spawns the backend itself on
   a random loopback port and injects it into the renderer via the preload.
 - **Build (macOS):** `bash scripts/build.sh` — freezes the backend to a single binary,
   builds the bundles, and packages a `.dmg`/`.zip` into `dist/` (signing/notarization turn
   on automatically when the relevant env vars are present; see `electron-builder.cjs`).
 - **Clean:** `bash scripts/clean.sh` (or `npm run clean`) — removes build/dist artifacts (`out/`,
-  `dist/`, `backend/build/`, `backend/dist/`), then delegates app-data removal to `remove-data.sh`.
+  `dist/`, `engine/build/`, `engine/dist/`), then delegates app-data removal to `remove-data.sh`.
   Prompts before deleting app data; `-y` skips the prompt, `--dist` cleans only build artifacts and
   never touches app data.
 - **Remove app data:** `bash scripts/remove-data.sh` — deletes the per-user config dir resolved like
@@ -1047,22 +1047,22 @@ reproducibility; backend + frontend-unit also run natively.
 | FE↔BE integration | `vitest` (node env) driving `src/api.js` against a live backend |
 | E2E | `@playwright/test` Electron driver, under `xvfb` in Docker |
 
-Backend dev deps are pinned in `backend/requirements-test.txt`; frontend test deps + scripts live in
-`package.json`. Pytest config sits in `backend/pyproject.toml` (`[tool.pytest.ini_options]`); vitest in
+Backend dev deps are pinned in `engine/requirements-test.txt`; frontend test deps + scripts live in
+`package.json`. Pytest config sits in `engine/pyproject.toml` (`[tool.pytest.ini_options]`); vitest in
 `vitest.config.ts`; playwright in `playwright.config.ts`.
 
 ### Isolation
 
 Every backend test runs in a throwaway data + config dir. `paths.py` re-reads `$WORKER_FORGE_HOME`
 and `_config_dir()` on every call (no caching), so a per-test `monkeypatch` (the `sandbox` autouse
-fixture in `backend/tests/conftest.py`) fully isolates the YAML tree, the SQLite index, and the
+fixture in `engine/tests/conftest.py`) fully isolates the YAML tree, the SQLite index, and the
 on-disk config — the developer's real Worker Forge data is never touched. The E2E fixture points
 `WORKER_FORGE_HOME` at a fresh temp dir per run. Timezone-dependent assertions pin `TZ=UTC`.
 
 ### Layout
 
 ```
-backend/tests/
+engine/tests/
   conftest.py             # sandbox fixture, TestClient, make_task/make_workflow, poll_execution
   unit/                   # models, paths, storage, db, scheduler (cron), runner (_resolve_params)
   integration/            # health, workflows/tasks/triggers/settings APIs, real run, crash recovery
@@ -1096,7 +1096,7 @@ scripts/test.sh           # one entry: [backend|frontend|integration|e2e|all] [-
 ### Running
 
 One script per test *type* (each spans backend + frontend where applicable); `scripts/lib-test.sh`
-holds the shared venv / free-port / health-wait helpers and auto-bootstraps `backend/.venv`:
+holds the shared venv / free-port / health-wait helpers and auto-bootstraps `engine/.venv`:
 
 - `scripts/test-unit.sh [backend|frontend|all]` — logic in isolation (pytest + vitest). Fast, no
   servers, no display.
@@ -1108,8 +1108,8 @@ holds the shared venv / free-port / health-wait helpers and auto-bootstraps `bac
 `scripts/test.sh [unit|integration|e2e|all] [--docker]` is the umbrella that dispatches to those
 scripts, or to the Docker layers (`docker/docker-compose.test.yml`) when `--docker` is passed (matches
 CI). Direct equivalents also exist as npm scripts: `npm run test:unit` / `test:integration` /
-`test:e2e`, and `cd backend && pytest`.
+`test:e2e`, and `cd engine && pytest`.
 
 E2E is Linux-only (Electron under `xvfb`); the real ship target stays macOS. It requires a prior
-`npm run build` and a runnable backend (`backend/.venv` or `python3` on PATH) — the `e2e.Dockerfile`
+`npm run build` and a runnable backend (`engine/.venv` or `python3` on PATH) — the `e2e.Dockerfile`
 provisions both.

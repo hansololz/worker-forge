@@ -23,10 +23,10 @@ COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
 
 # Python backend deps into the venv main.ts looks for in dev mode
-# (backend/.venv/bin/python).
-COPY backend/ ./backend/
-RUN python3 -m venv backend/.venv \
-    && backend/.venv/bin/pip install --no-cache-dir -r backend/requirements.txt
+# (engine/.venv/bin/python).
+COPY engine/ ./engine/
+RUN python3 -m venv engine/.venv \
+    && engine/.venv/bin/pip install --no-cache-dir -r engine/requirements.txt
 
 # App + tests, then build the renderer/main bundles the e2e fixture launches.
 COPY . .

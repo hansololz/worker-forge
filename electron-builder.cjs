@@ -37,7 +37,7 @@ const config = {
   },
   files: ['out/**/*', 'package.json'],
   extraResources: [
-    { from: 'backend/dist/worker-forge-backend', to: 'backend/worker-forge-backend' },
+    { from: 'engine/dist/worker-forge-backend', to: 'engine/worker-forge-backend' },
   ],
   asar: true,
   mac: {

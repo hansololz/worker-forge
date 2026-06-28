@@ -3,10 +3,10 @@ node_modules
 out
 dist
 build
-backend/.venv
-backend/.venv-test
-backend/build
-backend/dist
+engine/.venv
+engine/.venv-test
+engine/build
+engine/dist
 **/__pycache__
 **/.pytest_cache
 **/.mypy_cache

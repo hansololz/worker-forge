@@ -2,7 +2,7 @@
 #
 # Remove worker-forge's local app data.
 #   * Per-user config dir (config.json, agent.db, the default data/ YAML tree),
-#     resolved exactly like backend/app/paths.py:_config_dir().
+#     resolved exactly like engine/app/paths.py:_config_dir().
 #   * The $WORKER_FORGE_HOME data directory, when set.
 #
 # Usage:

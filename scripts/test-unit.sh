@@ -15,7 +15,7 @@ TARGET="${1:-all}"
 run_backend() {
   echo "== unit · backend (pytest tests/unit) =="
   ensure_backend_venv
-  ( cd backend && .venv/bin/python -m pytest tests/unit )
+  ( cd engine && .venv/bin/python -m pytest tests/unit )
 }
 
 run_frontend() {

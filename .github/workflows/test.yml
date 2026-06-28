@@ -15,10 +15,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install deps
-        working-directory: backend
+        working-directory: engine
         run: pip install -r requirements-test.txt
       - name: Run tests
-        working-directory: backend
+        working-directory: engine
         run: pytest --cov=app --cov-report=term-missing
 
   frontend:

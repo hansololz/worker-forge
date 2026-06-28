@@ -17,7 +17,7 @@ TARGET="${1:-all}"
 run_backend() {
   echo "== integration · backend (pytest tests/integration) =="
   ensure_backend_venv
-  ( cd backend && .venv/bin/python -m pytest tests/integration )
+  ( cd engine && .venv/bin/python -m pytest tests/integration )
 }
 
 run_frontend() {
@@ -31,7 +31,7 @@ run_frontend() {
   url="http://127.0.0.1:${port}/api"
 
   echo "-- booting backend on :$port (WORKER_FORGE_HOME=$home) --"
-  ( cd backend && WORKER_FORGE_HOME="$home" .venv/bin/python run.py --host 127.0.0.1 --port "$port" ) &
+  ( cd engine && WORKER_FORGE_HOME="$home" .venv/bin/python run.py --host 127.0.0.1 --port "$port" ) &
   pid=$!
   # Always clean up the backend + temp dir, however we exit. `wait` reaps the
   # killed process quietly so the shell doesn't print "Terminated".

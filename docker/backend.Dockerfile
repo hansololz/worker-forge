@@ -3,13 +3,13 @@
 # subprocess steps, so no separate services are needed.
 FROM python:3.12-slim
 
-WORKDIR /app/backend
+WORKDIR /app/engine
 
 # Install deps first for layer caching.
-COPY backend/requirements.txt backend/requirements-test.txt ./
+COPY engine/requirements.txt engine/requirements-test.txt ./
 RUN pip install --no-cache-dir -r requirements-test.txt
 
-COPY backend/ ./
+COPY engine/ ./
 
 # Sandbox the data dir away from any mounted volumes.
 ENV WORKER_FORGE_HOME=/tmp/wf-data

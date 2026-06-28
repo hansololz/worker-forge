@@ -6,7 +6,7 @@ Remove legacy code from this project. **Assume a fresh install**: there is no ol
 deployed version to stay compatible with, so backward-compatibility and data migration are unnecessary.
 
 Optional scope: `$ARGUMENTS` (a subsystem, file, term, or removed feature to focus on). If empty, sweep
-the whole real source tree (`backend/app`, `src`, `electron`, `scripts`) — never `node_modules` or `.venv`.
+the whole real source tree (`engine/app`, `src`, `electron`, `scripts`) — never `node_modules` or `.venv`.
 
 **Never modify the `design/` directory or `scripts/import-design.sh`** — these are an upstream-owned
 design reference and its import script; leave them untouched regardless of scope.
@@ -30,7 +30,7 @@ design reference and its import script; leave them untouched regardless of scope
 4. **Keep `SPEC.md` in sync.** `SPEC.md` is the source of truth and must still describe a buildable app.
    Repoint or drop any spec prose that referenced what you removed.
 
-5. **Verify.** Backend: `python -c "import app.main"` from `backend/` (venv active) + `ruff check app` —
+5. **Verify.** Backend: `python -c "import app.main"` from `engine/` (venv active) + `ruff check app` —
    confirm no NEW errors vs. baseline. Frontend: `node --check` a `.js` copy of any edited `.jsx`
    (this codebase uses `e(...)` hyperscript, not JSX tags). Confirm no leftover references remain.
 

@@ -3,8 +3,8 @@
 
 # Resolve a Python 3.12+ interpreter, preferring the backend venv.
 resolve_py() {
-  if [ -x backend/.venv/bin/python ]; then
-    echo "$(pwd)/backend/.venv/bin/python"
+  if [ -x engine/.venv/bin/python ]; then
+    echo "$(pwd)/engine/.venv/bin/python"
     return 0
   fi
   for c in python3.12 python3.13 python3; do
@@ -19,18 +19,18 @@ resolve_py() {
   return 1
 }
 
-# Ensure backend/.venv exists with test deps installed (idempotent).
+# Ensure engine/.venv exists with test deps installed (idempotent).
 ensure_backend_venv() {
-  if [ ! -x backend/.venv/bin/python ]; then
+  if [ ! -x engine/.venv/bin/python ]; then
     local py
     py="$(resolve_py)" || { echo "ERROR: need Python 3.12+ on PATH" >&2; return 1; }
-    echo "-- creating backend/.venv ($py) --"
-    "$py" -m venv backend/.venv
+    echo "-- creating engine/.venv ($py) --"
+    "$py" -m venv engine/.venv
   fi
-  if ! backend/.venv/bin/python -c 'import pytest' 2>/dev/null; then
+  if ! engine/.venv/bin/python -c 'import pytest' 2>/dev/null; then
     echo "-- installing backend test deps --"
-    backend/.venv/bin/pip install -q --upgrade pip
-    backend/.venv/bin/pip install -q -r backend/requirements-test.txt
+    engine/.venv/bin/pip install -q --upgrade pip
+    engine/.venv/bin/pip install -q -r engine/requirements-test.txt
   fi
 }
 

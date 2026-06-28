@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Wipe worker-forge's build/dist artifacts (out/, dist/, backend/build/, backend/dist/),
+# Wipe worker-forge's build/dist artifacts (out/, dist/, engine/build/, engine/dist/),
 # then remove dev app data by delegating to remove-data.sh (unless --dist).
 #
 # Usage:
@@ -36,8 +36,8 @@ rm_path() {  # rm_path <label> <path>
 echo "==> Build/dist artifacts"
 rm_path "electron bundles" "out"
 rm_path "packaged app"     "dist"
-rm_path "backend build"    "backend/build"
-rm_path "backend binary"   "backend/dist"
+rm_path "backend build"    "engine/build"
+rm_path "backend binary"   "engine/dist"
 
 [ "$DIST_ONLY" -eq 1 ] && { echo "Done (dist only)."; exit 0; }
 

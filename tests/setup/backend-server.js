@@ -36,10 +36,10 @@ async function waitHealthy(url, timeoutMs = 30_000) {
 // Returns { url, stop() }. `home` sandboxes WORKER_FORGE_HOME.
 export async function startBackend({ home } = {}) {
   const port = await freePort()
-  const venvPy = join(ROOT, 'backend', '.venv', 'bin', 'python')
+  const venvPy = join(ROOT, 'engine', '.venv', 'bin', 'python')
   const cmd = existsSync(venvPy) ? venvPy : 'python3'
   const proc = spawn(cmd, ['run.py', '--host', '127.0.0.1', '--port', String(port)], {
-    cwd: join(ROOT, 'backend'),
+    cwd: join(ROOT, 'engine'),
     env: { ...process.env, ...(home ? { WORKER_FORGE_HOME: home } : {}) },
     stdio: 'inherit',
   })

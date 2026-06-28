@@ -25,16 +25,16 @@ function getFreePort(): Promise<number> {
 function resolveBackend(): { cmd: string; args: string[]; cwd?: string } {
   const portArgs = ['--host', '127.0.0.1', '--port', String(backendPort)]
   if (app.isPackaged) {
-    const bin = join(process.resourcesPath, 'backend', 'worker-forge-backend')
+    const bin = join(process.resourcesPath, 'engine', 'worker-forge-backend')
     return { cmd: bin, args: portArgs }
   }
   // Dev: run the backend from its virtualenv so deps are available.
   const root = join(__dirname, '..', '..')
-  const venvPython = join(root, 'backend', '.venv', 'bin', 'python')
+  const venvPython = join(root, 'engine', '.venv', 'bin', 'python')
   return {
     cmd: existsSync(venvPython) ? venvPython : 'python3',
     args: ['run.py', ...portArgs],
-    cwd: join(root, 'backend'),
+    cwd: join(root, 'engine'),
   }
 }
 
