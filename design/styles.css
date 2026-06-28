@@ -877,3 +877,68 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; appe
 :root[data-density="roomy"] .node { padding: 15px 16px; }
 :root[data-density="roomy"] .pipe-wrap { padding: 38px 34px; }
 :root[data-density="roomy"] .section-title { margin: 32px 0 16px; }
+
+/* ============================================================
+   Initial-load splash (#boot) — painted before React mounts
+   ============================================================ */
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(120% 90% at 50% 38%, var(--bg-1), var(--bg-0) 70%);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+#boot.boot-out { opacity: 0; }
+.boot-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  animation: boot-rise 0.5s ease both;
+}
+.boot-mark {
+  width: 60px; height: 60px;
+  border-radius: 15px;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 1px var(--accent-line), 0 14px 40px -10px var(--accent-dim);
+  animation: boot-pulse 2s ease-in-out infinite;
+}
+.boot-name {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+  color: var(--tx-hi);
+}
+.boot-name b { color: var(--accent); font-weight: 600; }
+.boot-msg {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  color: var(--tx-lo);
+  margin-top: 2px;
+}
+.boot-spinner {
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--line-hi);
+  border-top-color: var(--accent);
+  animation: boot-spin 0.7s linear infinite;
+}
+@keyframes boot-spin { to { transform: rotate(360deg); } }
+@keyframes boot-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes boot-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--accent-line), 0 14px 40px -10px var(--accent-dim); }
+  50%      { box-shadow: 0 0 0 1px var(--accent-line), 0 14px 52px -6px var(--accent-dim); transform: translateY(-1px); }
+}

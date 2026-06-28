@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Worker Forge — orchestrator</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <!-- Window chrome / title-bar color: matches --bg-0 so the OS toolbar (traffic
        lights) follows the app's dark surface instead of defaulting to white. -->
   <meta name="theme-color" content="#0d0e12" />
@@ -22,6 +23,46 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <!-- Initial-load splash: painted instantly from inline CSS, before React/Babel
+       compile. Fades out and is removed the moment the app mounts into #root. -->
+  <div id="boot" aria-label="Loading Worker Forge">
+    <div class="boot-stack">
+      <div class="boot-mark">
+        <svg viewBox="0 0 576 512" width="30" height="30" aria-hidden="true">
+          <path fill="currentColor" d="M571.31 193.94l-22.63-22.63c-6.25-6.25-16.38-6.25-22.63 0l-11.31 11.31-28.9-28.9c5.63-21.31.36-44.9-16.35-61.61l-45.25-45.25c-62.48-62.48-163.79-62.48-226.28 0l90.51 45.25v18.75c0 16.97 6.74 33.25 18.75 45.25l49.14 49.14c16.71 16.71 40.3 21.98 61.61 16.35l28.9 28.9-11.31 11.31c-6.25 6.25-6.25 16.38 0 22.63l22.63 22.63c6.25 6.25 16.38 6.25 22.63 0l90.51-90.51c6.25-6.25 6.25-16.38 0-22.62zM4.69 421.66c-6.25 6.25-6.25 16.38 0 22.63l45.25 45.25c6.25 6.25 16.38 6.25 22.63 0l185.04-185.04-67.88-67.88L4.69 421.66z"></path>
+        </svg>
+      </div>
+      <div class="boot-name">Worker <b>Forge</b></div>
+      <div class="boot-msg">
+        <span class="boot-spinner" aria-hidden="true"></span>
+        <span>Starting orchestrator&hellip;</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Remove the splash as soon as React paints its first node into #root.
+    (function () {
+      var root = document.getElementById("root");
+      var boot = document.getElementById("boot");
+      if (!root || !boot) return;
+      var done = false;
+      function clear() {
+        if (done) return;
+        done = true;
+        boot.classList.add("boot-out");
+        setTimeout(function () { boot.remove(); }, 420);
+      }
+      var obs = new MutationObserver(function () {
+        if (root.childElementCount > 0) { obs.disconnect(); clear(); }
+      });
+      obs.observe(root, { childList: true });
+      // safety net in case the app is already mounted / observer misses
+      window.addEventListener("load", function () {
+        setTimeout(function () { if (root.childElementCount > 0) clear(); }, 200);
+      });
+    })();
+  </script>
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
