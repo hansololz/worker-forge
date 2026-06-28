@@ -397,7 +397,7 @@
       e("aside", { className: "sidebar" },
         e("div", { className: "brand" },
           e("div", { className: "brand-mark" }, e(Icon, { name: "hammer", size: 16 })),
-          e("div", { className: "brand-name" }, "Agent ", e("b", null, "Dave")),
+          e("div", { className: "brand-name" }, "Worker ", e("b", null, "Forge")),
           e(NavToggle, { collapsed: false, onClick: toggleNav })),
         e("nav", { className: "nav", style: { flex: 1 } },
           NAV_GROUPS.map((g, gi) => e("div", { key: gi, className: "nav-group", style: g.foot ? { marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--line-soft)" } : null },

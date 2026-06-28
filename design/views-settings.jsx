@@ -51,11 +51,11 @@
 
   function SettingsView({ ctx }) {
     const [s, setS] = useState({
-      dataDir: "/Users/dave/data",
+      dataDir: "/Users/forge/data",
       execSeparate: false,
-      execPath: "/Users/dave/data",
+      execPath: "/Users/forge/data",
       wsSeparate: false,
-      wsPath: "/Users/dave/data",
+      wsPath: "/Users/forge/data",
       launchOnBoot: true,
       runInBackground: true,
     });
@@ -76,7 +76,7 @@
   /* ---------- DATA DIRECTORY ---------- */
   function DataDirectory({ s, set }) {
     // app config lives OUTSIDE the data directory — per-user OS config dir
-    const configPath = "~/Library/Application Support/Agent Dave/config.json";
+    const configPath = "~/Library/Application Support/Worker Forge/config.json";
     // The shipped app disables the active "Change" buttons (label "Working…") while an
     // async folder pick / path set is in flight; the prototype simulates that briefly.
     const [busy, setBusy] = useState(false);
@@ -150,7 +150,7 @@
       e(Card, { title: "General" },
         e(Row, { title: "Time zone", desc: "Schedules and timestamps are displayed in this zone." },
           e(Select, { value: ctx.timezone, onChange: v => ctx.setTimezone(v), options: tzOptions, search: true, searchPlaceholder: "Search time zone…" })),
-        e(Row, { title: "Launch on startup", desc: "Open Agent Dave automatically when this computer boots.", toggle: true },
+        e(Row, { title: "Launch on startup", desc: "Open Worker Forge automatically when this computer boots.", toggle: true },
           e(Toggle, { on: s.launchOnBoot, onClick: () => set({ launchOnBoot: !s.launchOnBoot }) })),
         e(Row, { title: "Keep running in background", desc: "Keep running scheduled workflows after the window closes.", toggle: true },
           e(Toggle, { on: s.runInBackground, onClick: () => set({ runInBackground: !s.runInBackground }) }))));
@@ -168,7 +168,7 @@
       setTimeout(() => { setChecking(false); setChecked(true); ctx && ctx.toast && ctx.toast("You're on the latest version"); }, 900);
     }
     const links = [
-      { label: "View on GitHub", icon: "github", href: "https://github.com/hansololz/agent-dave" },
+      { label: "View on GitHub", icon: "github", href: "https://github.com/hansololz/worker-forge" },
       { label: "Release notes", icon: "history", href: "#" },
       { label: "Report an issue", icon: "alert", href: "#" },
     ];

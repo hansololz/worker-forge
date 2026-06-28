@@ -100,7 +100,6 @@
     failed:    { cls: "st-fail",   label: "failed",    dot: "st-fail" },
     succeeded: { cls: "st-ok",     label: "succeeded", dot: "st-ok" },
     cancelled: { cls: "st-cancel", label: "cancelled", dot: "st-cancel" },
-    interrupted: { cls: "st-interrupt", label: "interrupted", dot: "st-interrupt" },
     skipped:   { cls: "st-skip",   label: "skipped",   dot: "st-skip" },
     queued:    { cls: "st-queued", label: "queued",    dot: "st-queued" },
     // --- run-level + misc aliases ---

@@ -1,7 +1,7 @@
-# Handoff: Agent Dave — Workflow Orchestrator
+# Handoff: Worker Forge — Workflow Orchestrator
 
 ## Overview
-**Agent Dave** is a desktop-style **workflow orchestrator** — a tool for defining, scheduling, running, and inspecting automated CI/CD-style pipelines. Users assemble reusable **Tasks** (each a set of bash/python steps) into staged **Workflows**, attach **Triggers** (manual or cron), launch **Executions**, and drill into a per-run **Execution page** with stage rails, per-attempt retries, and live terminal logs.
+**Worker Forge** is a desktop-style **workflow orchestrator** — a tool for defining, scheduling, running, and inspecting automated CI/CD-style pipelines. Users assemble reusable **Tasks** (each a set of bash/python steps) into staged **Workflows**, attach **Triggers** (manual or cron), launch **Executions**, and drill into a per-run **Execution page** with stage rails, per-attempt retries, and live terminal logs.
 
 The aesthetic is a **dark, technical "developer tool"** look — cool near-black surfaces, a single warm-orange accent, IBM Plex Sans + IBM Plex Mono, and a strict status-color system.
 
@@ -61,15 +61,14 @@ All colors are authored in **OKLCH**. Hex equivalents are approximate sRGB conve
 | `--st-ok` | `oklch(0.78 0.16 152)` | **success / succeeded** — green |
 | `--st-fail` | `oklch(0.68 0.19 25)` | **failed** — red |
 | `--st-warn` | `oklch(0.81 0.14 80)` | **queued** — amber |
-| `--st-cancel` | `oklch(0.66 0.03 262)` | **cancelled** — mid neutral gray, solid (a deliberate stop happened) |
-| `--st-interrupt` | `oklch(0.70 0.15 310)` | **interrupted** — crash mid-run (magenta) |
+| `--st-cancel` | `oklch(0.85 0.16 100)` | **cancelled** — yellow |
 | `--st-cont` | `oklch(0.72 0.17 52)` | **continued** (tolerated failure) — orange |
 | `--st-queued` | `oklch(0.70 0.035 248)` | **queued** (will run) — cool slate, rendered as a **hollow ring** dot |
-| `--st-skip` | `oklch(0.50 0.012 264)` | **skipped / idle** — dim gray, most recessive |
+| `--st-skip` | `oklch(0.62 0.012 264)` | **skipped / idle** — gray |
 
-Each status has a `*-dim` variant at `/0.15`–`/0.2` alpha for badge/pill backgrounds (e.g. `--fail-dim`, `--ok-dim`, `--cont-dim`, `--queued-dim`, `--interrupt-dim`). Badges render as `color: <status>; background: <status>-dim`. Dots render as a solid `7px` circle of the status color — **except queued**, which is a transparent circle with `inset 0 0 0 1.6px` ring.
+Each status has a `*-dim` variant at `/0.15`–`/0.16` alpha for badge/pill backgrounds (e.g. `--fail-dim`, `--ok-dim`, `--cont-dim`, `--queued-dim`). Badges render as `color: <status>; background: <status>-dim`. Dots render as a solid `7px` circle of the status color — **except queued**, which is a transparent circle with `inset 0 0 0 1.6px` ring.
 
-> **Status vocabulary** (canonical, matches the app): run statuses are `queued · running · succeeded · failed · cancelled · interrupted`; stage / task statuses add `skipped` (and `interrupted`); step statuses `running · succeeded · failed · skipped`; attempt statuses `running · succeeded · failed · cancelled`. **`interrupted`** is the terminal state for a run (and its in-flight stage/task) that an abrupt backend shutdown left mid-flight — rendered magenta (`--st-interrupt`); the open attempt/step instead become `failed` (those nodes have no `interrupted` value), with a `system` log line "Backend stopped — process terminated". A **tolerated failure** (continue-on-failure where the run still succeeds) is the run `succeeded` with `degraded: true`, and the offending task carries a `continued: true` flag rendered with the orange `--st-cont` badge/dot — `continued` is a per-task flag, **not** a status value.
+> **Status vocabulary** (canonical, matches the app): run / stage / task statuses are `queued · running · succeeded · failed · cancelled · skipped`; step statuses `running · succeeded · failed · skipped`; attempt statuses `running · succeeded · failed · cancelled`. A **tolerated failure** (continue-on-failure where the run still succeeds) is the run `succeeded` with `degraded: true`, and the offending task carries a `continued: true` flag rendered with the orange `--st-cont` badge/dot — `continued` is a per-task flag, **not** a status value.
 
 ### Radii
 `--radius: 9px` · `--radius-sm: 6px` · `--radius-lg: 13px`. Badges/dropdown rows `6–7px`, buttons/inputs `8px`, cards `13px`, modal `14px`.
@@ -99,7 +98,7 @@ Each status has a `*-dim` variant at `/0.15`–`/0.2` alpha for badge/pill backg
 ## Navigation & Shell
 
 **Sidebar** (`--bg-1`, right border `--line-soft`):
-- Brand block: `26px` rounded-`7px` orange mark with a `hammer` icon + wordmark "Agent **Dave**" (the "Dave" in accent). Top padding `56px` clears macOS traffic lights (this is framed as a desktop app under `titleBarStyle: hiddenInset`; `-webkit-app-region: drag` on the brand + empty topbar makes them window-drag handles).
+- Brand block: `26px` rounded-`7px` orange mark with a `hammer` icon + wordmark "Worker **Forge**" (the "Forge" in accent). Top padding `56px` clears macOS traffic lights (this is framed as a desktop app under `titleBarStyle: hiddenInset`; `-webkit-app-region: drag` on the brand + empty topbar makes them window-drag handles).
 - Nav group **Orchestration**: Workflows, Tasks, Executions. Each item has an icon, label, and a mono **count pill** (Workflows → workflow count, Tasks → task count).
 - Footer group (pinned to bottom, top border): **Settings**.
 - Item states: default `--tx-mid`; hover `--bg-2`/`--tx`; active `--bg-3`/`--tx-hi` with the **icon tinted accent**.
@@ -178,7 +177,7 @@ Each status has a `*-dim` variant at `/0.15`–`/0.2` alpha for badge/pill backg
 ### 11. Settings (`view: "settings"`)
 - **Purpose:** app preferences.
 - **Layout:** `.settings-col` (max `760px`) of cards. `.set-row` = label/description on the left, control on the right (`300px`, or right-aligned toggle). Includes **timezone** selection (real IANA zones, persisted to `localStorage` as `ad_timezone`, drives all schedule/timestamp formatting), **data directory** fields (`.ws-field` mono path rows with browse — data directory, plus optional separate-location toggles for execution history and `$WORKSPACE`), a read-only **config-location** callout (`.cfg-note`), **launch-on-startup**, and **keep-running-in-background**.
-- **About card** (last card in the column): a `.set-row` **Version** row showing the build label as its description and a ghost **Check for updates** button (simulated async — shows "Checking…" then a "Up to date" check + toast "You're on the latest version"); a row of outbound **link buttons** (pill-style: `30px` tall, `--bg-2`, `--line-soft`, `8px` radius, icon + label, `target="_blank"`) — **View on GitHub** (`https://github.com/hansololz/agent-dave`, GitHub brand icon), **Release notes**, **Report an issue**; and a muted footer block (top border, `11.5px` `--tx-dim`) with copyright + team credit. The link row and footer are separated from the Version row by that row's own `.set-row` bottom border (don't add an extra divider — a duplicate hairline is wrong).
+- **About card** (last card in the column): a `.set-row` **Version** row showing the build label as its description and a ghost **Check for updates** button (simulated async — shows "Checking…" then a "Up to date" check + toast "You're on the latest version"); a row of outbound **link buttons** (pill-style: `30px` tall, `--bg-2`, `--line-soft`, `8px` radius, icon + label, `target="_blank"`) — **View on GitHub** (`https://github.com/worker-forge/worker-forge`, GitHub brand icon), **Release notes**, **Report an issue**; and a muted footer block (top border, `11.5px` `--tx-dim`) with copyright + team credit. The link row and footer are separated from the Version row by that row's own `.set-row` bottom border (don't add an extra divider — a duplicate hairline is wrong).
 
 ---
 
@@ -199,7 +198,7 @@ Recreate with the target's idiomatic store. The prototype keeps:
 - `state` — current route `{ view, workflowId, runId, taskId, editTab? }`.
 - `workflows` — list (each with `stages` (array of stage arrays of task IDs), `triggers`, `schedule` (incl. `nextAt`), `params`/`wfParams`/`exec` (per-task `{continueOnFailure, version, enabled}`), `version`, `verHistory`, `lastStatus`, …).
 - `tasks` — reusable task library (each with `steps`, `env`, `interpreter`, `timeout`, `retries`, `usedBy`, `version`, `history`).
-- `runs` — execution history (each with `id`, `wf`, `trigger`, `actor`, `started`, `dur`, `status` (`queued`/`running`/`succeeded`/`failed`/`cancelled`/`interrupted`), `workflow_version`, a `degraded` boolean, and `params`). *(The prototype additionally fabricates per-task outcomes from a `stopAt` index + a `degraded` index-map shim, since it has no backend execution graph.)*
+- `runs` — execution history (each with `id`, `wf`, `trigger`, `actor`, `started`, `dur`, `status` (`queued`/`running`/`succeeded`/`failed`/`cancelled`), `workflow_version`, a `degraded` boolean, and `params`). *(The prototype additionally fabricates per-task outcomes from a `stopAt` index + a `degraded` index-map shim, since it has no backend execution graph.)*
 - `timezone`, `toast`, `confirm` (modal descriptor).
 - Derived helpers in `data.js`: `runTasksFor(wf, run)` computes per-task status from a run's `stopAt`/`degraded`/`retries`; `stepStatuses(...)` does the same per step; seeded RNG keeps mock data stable.
 
