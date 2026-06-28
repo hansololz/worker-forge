@@ -43,6 +43,17 @@ Three-process desktop app:
   flash. With no title bar, the sidebar brand row and the empty topbar act as window-drag regions
   (`-webkit-app-region: drag`), with interactive children opting back out (`no-drag`). Renderer origin
   is a random localhost port (CORS is open to `*` on the backend, which only listens on loopback).
+  On launch the Shell shows a **branded splash window** the instant the app starts, so the user never
+  faces a bouncing dock icon while the backend boots. Startup order: `whenReady` → create the splash
+  (a 460×300 frameless, transparent, always-on-top window, painted from an inlined `data:` URL with no
+  bundler/file-copy dependency — a rounded `--accent` square with the `hammer` glyph + "Worker Forge"
+  wordmark, an indeterminate progress bar, and "Starting workspace…", all on `--bg-0`) → spawn and
+  await the backend health check (§ backend boot) → create the main window with `show: false`. The
+  splash stays up across **both** startup gaps (backend boot, then the renderer's first `loadAll()`).
+  The renderer signals completion via a `window.backend.appReady()` IPC (`app:ready`) fired when its
+  initial load settles (success **or** error); the Shell then reveals the main window and closes the
+  splash in one swap (no white flash — the main window background is `--bg-0`). A 15s safety timeout in
+  the Shell reveals the window regardless, so a renderer crash can never strand the user on the splash.
 - **Backend** — a local HTTP API (Python / FastAPI in the reference implementation) bound to
   `127.0.0.1`. Owns the filesystem data directory, the SQLite index, the scheduler, and the task runner.
   Files are the source of truth (§4); the DB is a rebuildable index (§5).

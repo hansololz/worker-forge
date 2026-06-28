@@ -9,4 +9,6 @@ contextBridge.exposeInMainWorld('backend', {
   revealPath: (p: string): Promise<boolean> => ipcRenderer.invoke('shell:revealPath', p),
   openExternal: (url: string): Promise<boolean> => ipcRenderer.invoke('shell:openExternal', url),
   appVersion: (): Promise<string> => ipcRenderer.invoke('app:version'),
+  // Signal the main process that the first data load is done so it can drop the splash.
+  appReady: (): void => ipcRenderer.send('app:ready'),
 })

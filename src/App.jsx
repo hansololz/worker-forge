@@ -53,8 +53,11 @@ export default function App() {
   const [ready, setReady] = useState(DB.loaded)
   const [loadErr, setLoadErr] = useState(null)
   useEffect(() => {
-    if (DB.loaded) { setReady(true); return }
-    loadAll().then(() => setReady(true)).catch(er => setLoadErr(String(er)))
+    // Tear down the native splash once the first data load settles — either way,
+    // the app is ready to show (success → content, failure → error page).
+    const done = () => { try { window.backend?.appReady?.() } catch (e) {} }
+    if (DB.loaded) { setReady(true); done(); return }
+    loadAll().then(() => setReady(true)).catch(er => setLoadErr(String(er))).finally(done)
   }, [])
 
   const [state, setState] = useState({ view: 'workflows', workflowId: null, runId: null, __idx: 0 })
