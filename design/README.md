@@ -61,14 +61,15 @@ All colors are authored in **OKLCH**. Hex equivalents are approximate sRGB conve
 | `--st-ok` | `oklch(0.78 0.16 152)` | **success / succeeded** — green |
 | `--st-fail` | `oklch(0.68 0.19 25)` | **failed** — red |
 | `--st-warn` | `oklch(0.81 0.14 80)` | **queued** — amber |
-| `--st-cancel` | `oklch(0.85 0.16 100)` | **cancelled** — yellow |
+| `--st-cancel` | `oklch(0.66 0.03 262)` | **cancelled** — mid neutral gray, solid (a deliberate stop happened) |
+| `--st-interrupt` | `oklch(0.70 0.15 310)` | **interrupted** — crash mid-run (magenta) |
 | `--st-cont` | `oklch(0.72 0.17 52)` | **continued** (tolerated failure) — orange |
 | `--st-queued` | `oklch(0.70 0.035 248)` | **queued** (will run) — cool slate, rendered as a **hollow ring** dot |
-| `--st-skip` | `oklch(0.62 0.012 264)` | **skipped / idle** — gray |
+| `--st-skip` | `oklch(0.50 0.012 264)` | **skipped / idle** — dim gray, most recessive |
 
-Each status has a `*-dim` variant at `/0.15`–`/0.16` alpha for badge/pill backgrounds (e.g. `--fail-dim`, `--ok-dim`, `--cont-dim`, `--queued-dim`). Badges render as `color: <status>; background: <status>-dim`. Dots render as a solid `7px` circle of the status color — **except queued**, which is a transparent circle with `inset 0 0 0 1.6px` ring.
+Each status has a `*-dim` variant at `/0.15`–`/0.2` alpha for badge/pill backgrounds (e.g. `--fail-dim`, `--ok-dim`, `--cont-dim`, `--queued-dim`, `--interrupt-dim`). Badges render as `color: <status>; background: <status>-dim`. Dots render as a solid `7px` circle of the status color — **except queued**, which is a transparent circle with `inset 0 0 0 1.6px` ring.
 
-> **Status vocabulary** (canonical, matches the app): run / stage / task statuses are `queued · running · succeeded · failed · cancelled · skipped`; step statuses `running · succeeded · failed · skipped`; attempt statuses `running · succeeded · failed · cancelled`. A **tolerated failure** (continue-on-failure where the run still succeeds) is the run `succeeded` with `degraded: true`, and the offending task carries a `continued: true` flag rendered with the orange `--st-cont` badge/dot — `continued` is a per-task flag, **not** a status value.
+> **Status vocabulary** (canonical, matches the app): run statuses are `queued · running · succeeded · failed · cancelled · interrupted`; stage / task statuses add `skipped` (and `interrupted`); step statuses `running · succeeded · failed · skipped`; attempt statuses `running · succeeded · failed · cancelled`. **`interrupted`** is the terminal state for a run (and its in-flight stage/task) that an abrupt backend shutdown left mid-flight — rendered magenta (`--st-interrupt`); the open attempt/step instead become `failed` (those nodes have no `interrupted` value), with a `system` log line "Backend stopped — process terminated". A **tolerated failure** (continue-on-failure where the run still succeeds) is the run `succeeded` with `degraded: true`, and the offending task carries a `continued: true` flag rendered with the orange `--st-cont` badge/dot — `continued` is a per-task flag, **not** a status value.
 
 ### Radii
 `--radius: 9px` · `--radius-sm: 6px` · `--radius-lg: 13px`. Badges/dropdown rows `6–7px`, buttons/inputs `8px`, cards `13px`, modal `14px`.
@@ -198,7 +199,7 @@ Recreate with the target's idiomatic store. The prototype keeps:
 - `state` — current route `{ view, workflowId, runId, taskId, editTab? }`.
 - `workflows` — list (each with `stages` (array of stage arrays of task IDs), `triggers`, `schedule` (incl. `nextAt`), `params`/`wfParams`/`exec` (per-task `{continueOnFailure, version, enabled}`), `version`, `verHistory`, `lastStatus`, …).
 - `tasks` — reusable task library (each with `steps`, `env`, `interpreter`, `timeout`, `retries`, `usedBy`, `version`, `history`).
-- `runs` — execution history (each with `id`, `wf`, `trigger`, `actor`, `started`, `dur`, `status` (`queued`/`running`/`succeeded`/`failed`/`cancelled`), `workflow_version`, a `degraded` boolean, and `params`). *(The prototype additionally fabricates per-task outcomes from a `stopAt` index + a `degraded` index-map shim, since it has no backend execution graph.)*
+- `runs` — execution history (each with `id`, `wf`, `trigger`, `actor`, `started`, `dur`, `status` (`queued`/`running`/`succeeded`/`failed`/`cancelled`/`interrupted`), `workflow_version`, a `degraded` boolean, and `params`). *(The prototype additionally fabricates per-task outcomes from a `stopAt` index + a `degraded` index-map shim, since it has no backend execution graph.)*
 - `timezone`, `toast`, `confirm` (modal descriptor).
 - Derived helpers in `data.js`: `runTasksFor(wf, run)` computes per-task status from a run's `stopAt`/`degraded`/`retries`; `stepStatuses(...)` does the same per step; seeded RNG keeps mock data stable.
 
