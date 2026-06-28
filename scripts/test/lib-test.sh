@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Shared helpers for the test runner scripts. Sourced, not executed.
 
+# Docker Compose invocation for the containerized test layers.
+COMPOSE="docker compose -f docker/docker-compose.test.yml"
+
 # Resolve a Python 3.12+ interpreter, preferring the backend venv.
 resolve_py() {
   if [ -x engine/.venv/bin/python ]; then

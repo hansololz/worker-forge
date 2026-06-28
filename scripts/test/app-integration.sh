@@ -1,14 +1,25 @@
 #!/usr/bin/env bash
-# App integration test (vitest) — api.js driven against a live engine booted here
-# as a black-box fixture (sandboxed WORKER_FORGE_HOME, torn down on exit).
+# App integration test (vitest) — api.js driven against a live engine booted as a
+# black-box fixture (sandboxed WORKER_FORGE_HOME, torn down on exit). Runs in
+# Docker by default; pass --local to run natively.
 #
-#   scripts/test/app-integration.sh
+#   scripts/test/app-integration.sh           # docker
+#   scripts/test/app-integration.sh --local   # native
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 # shellcheck source=scripts/test/lib-test.sh
 . scripts/test/lib-test.sh
 
-echo "== app · integration (api.js vs live engine) =="
+if [ "${1:-}" != "--local" ]; then
+  echo "== app · integration (docker) =="
+  # Reuse the e2e image (node + python + engine venv) and run this same script
+  # natively inside it — self-contained: boots the engine and runs vitest.
+  $COMPOSE run --rm e2e bash scripts/test/app-integration.sh --local
+  echo "✓ app integration tests passed (docker)"
+  exit 0
+fi
+
+echo "== app · integration (api.js vs live engine, local) =="
 ensure_backend_venv
 [ -d node_modules ] || npm install --no-audit --no-fund
 
