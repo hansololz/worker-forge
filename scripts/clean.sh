@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Wipe agent-dave's build/dist artifacts (out/, dist/, backend/build/, backend/dist/),
+# Wipe worker-forge's build/dist artifacts (out/, dist/, backend/build/, backend/dist/),
 # then remove dev app data by delegating to remove-data.sh (unless --dist).
 #
 # Usage:

@@ -617,15 +617,12 @@ export function RunPrepare({ ctx }) {
 
   const [vals, setVals] = useState(() => {
     const seed = {}
-    // Re-run prefill is a nested map keyed by slot index (new runs) or by task
-    // id (older runs); seed each slot from whichever shape matches.
+    // Re-run prefill is a nested map keyed by slot index; seed each slot from it.
     const tp = prefill && prefill.taskParams
     const has = (o, k) => o && Object.prototype.hasOwnProperty.call(o, k)
     allSlots.forEach(({ idx, s }) => (s.env || []).forEach(p => {
       const bySlot = tp && tp[String(idx)]
-      const byTask = tp && tp[s.id]
       if (has(bySlot, p.k)) seed[pKey(idx, p.k)] = bySlot[p.k]
-      else if (has(byTask, p.k)) seed[pKey(idx, p.k)] = byTask[p.k]
       else if (prefill && prefill.params && has(prefill.params, p.k)) seed[pKey(idx, p.k)] = prefill.params[p.k]
     }))
     return seed
@@ -638,7 +635,7 @@ export function RunPrepare({ ctx }) {
     if (tp) {
       allSlots.forEach(({ idx, s }) => {
         const envKeys = new Set((s.env || []).map(p => p.k))
-        const m = tp[String(idx)] || tp[s.id]
+        const m = tp[String(idx)]
         if (!m) return
         const list = Object.keys(m).filter(k => !envKeys.has(k)).map(k => ({ k, v: m[k] }))
         if (list.length) out[idx] = list
