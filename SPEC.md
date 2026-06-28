@@ -1005,6 +1005,15 @@ scripts/import-design.sh # import ~/Desktop/workflow.zip into design/ (flattens 
   so the files land directly in `design/`. macOS `__MACOSX`/`.DS_Store` cruft is dropped. Runs straight
   through with no confirmation prompt.
 
+- **App icon:** the desktop/dock icon is the brand mark — a macOS-squircle rounded square in the accent
+  orange with the white FontAwesome solid `hammer` glyph (matching the in-app sidebar brand and the
+  startup splash). It is generated procedurally by `scripts/make_icon.py` (Pillow only; the FA hammer is
+  rendered from its real SVG path via a small built-in path flattener, so there is no SVG-renderer/native
+  dependency) and assembled into `build-assets/icon.png` + `icon.icns` by `scripts/make_icon.sh`.
+  **Packaged builds** read `build-assets/icon.icns` via `electron-builder.cjs` (`scripts/build.sh`
+  regenerates it if missing). **Dev** runs use Electron's default dock icon, so the main process calls
+  `app.dock.setIcon(build-assets/icon.png)` on launch (macOS, unpackaged) so the dev app matches the build.
+
 A fresh data directory starts empty — no example tasks or workflows are seeded.
 
 ## 11. Deviations & reconciliations

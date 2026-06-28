@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, nativeImage } from 'electron'
 import { spawn, type ChildProcess } from 'child_process'
 import { createServer } from 'net'
 import { existsSync } from 'fs'
@@ -180,7 +180,19 @@ ipcMain.handle('app:version', (): string => app.getVersion())
 // Renderer finished its first data load (loadAll settled) — drop the splash.
 ipcMain.on('app:ready', () => revealMain())
 
+// In dev, Electron shows its default icon in the macOS dock; point it at the
+// brand icon so the dev app matches the packaged build. (Packaged builds get the
+// icon from electron-builder via build-assets/icon.icns.)
+function setDevDockIcon(): void {
+  if (app.isPackaged || process.platform !== 'darwin' || !app.dock) return
+  const iconPath = join(__dirname, '..', '..', 'build-assets', 'icon.png')
+  if (!existsSync(iconPath)) return
+  const icon = nativeImage.createFromPath(iconPath)
+  if (!icon.isEmpty()) app.dock.setIcon(icon)
+}
+
 app.whenReady().then(async () => {
+  setDevDockIcon()
   createSplash()
   try {
     await startBackend()
