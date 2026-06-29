@@ -1,7 +1,7 @@
 // E2E — group "Creating a task" (see CUJ.md). Drives the real task editor
 // through the renderer: Tasks → New task → Config/Steps → Create task.
-import { test, expect } from '../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, setStepCode, submitNewTask } from '../helpers/tasks.mjs'
+import { test, expect } from '../../electron.fixture.mjs'
+import { gotoTasks, openNewTask, setTaskName, setStepCode, submitNewTask } from '../../helpers/tasks.mjs'
 
 test('CUJ-TASK-1 — create a task with a name', async ({ page }) => {
   await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })

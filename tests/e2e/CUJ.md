@@ -15,7 +15,7 @@ the spec picks the markup.
 
 The bare-minimum journeys proving the app is alive: the shell paints and the
 Python engine answers. These run first; if either fails, every other CUJ is
-moot. Backed by `tests/e2e/specs/smoke.spec.mjs`.
+moot. Backed by `tests/e2e/specs/smoke/smoke.spec.mjs`.
 
 ### CUJ-SMOKE-1 — app boots to the main shell
 

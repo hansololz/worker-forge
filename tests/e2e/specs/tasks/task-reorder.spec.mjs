@@ -1,8 +1,8 @@
 // E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-5. Reorders a task's
 // steps with the up/down controls and confirms the order both updates live in
 // the editor and persists to the saved task. Covers several arrangements.
-import { test, expect } from '../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, addStep, moveStep, expectMoveButtons, stepNames, submitNewTask } from '../helpers/tasks.mjs'
+import { test, expect } from '../../electron.fixture.mjs'
+import { gotoTasks, openNewTask, setTaskName, addStep, moveStep, expectMoveButtons, stepNames, submitNewTask } from '../../helpers/tasks.mjs'
 
 // The three default step names of a fresh task once two python steps are added.
 const A = 'bash-script.sh'

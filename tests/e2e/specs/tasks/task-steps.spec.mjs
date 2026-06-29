@@ -1,8 +1,8 @@
 // E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-4. Exercises the Steps
 // tab of the task editor: adding steps (with sensible default names), deleting
 // them, and the invariant that a task must keep at least one step.
-import { test, expect } from '../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, addStep, deleteStep, submitNewTask } from '../helpers/tasks.mjs'
+import { test, expect } from '../../electron.fixture.mjs'
+import { gotoTasks, openNewTask, setTaskName, addStep, deleteStep, submitNewTask } from '../../helpers/tasks.mjs'
 
 const NEEDS_ONE = 'A task needs at least one step'
 

@@ -1,8 +1,8 @@
 // E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-6. Exercises the Config
 // tab: description, icon, category, and timeout — selecting every icon and every
 // category — then confirms the chosen values persist to the saved task.
-import { test, expect } from '../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, setDescription, setCategory, submitNewTask } from '../helpers/tasks.mjs'
+import { test, expect } from '../../electron.fixture.mjs'
+import { gotoTasks, openNewTask, setTaskName, setDescription, setCategory, submitNewTask } from '../../helpers/tasks.mjs'
 
 // All category labels (CAT_LABEL in src/views/tasks.jsx), in selector order.
 const CATEGORIES = ['Operations', 'Data', 'Source', 'Build', 'Quality', 'Deploy']

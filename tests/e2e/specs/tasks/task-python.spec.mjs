@@ -1,8 +1,8 @@
 // E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-3. Drives the real task
 // editor through the renderer: Tasks → New task → Steps (Python) → Create task,
 // then reopens the saved task to confirm the edited python step persisted.
-import { test, expect } from '../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, addPythonStep, setPythonStepCode, submitNewTask } from '../helpers/tasks.mjs'
+import { test, expect } from '../../electron.fixture.mjs'
+import { gotoTasks, openNewTask, setTaskName, addPythonStep, setPythonStepCode, submitNewTask } from '../../helpers/tasks.mjs'
 
 test('CUJ-TASK-3 — create a task with a python script', async ({ page }) => {
   await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
