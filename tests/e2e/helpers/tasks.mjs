@@ -65,6 +65,20 @@ export async function deleteStep(page, name) {
   await expect(page.getByText(name)).toHaveCount(0)
 }
 
+// Move the step with the given filename up or down (dir: 'up' | 'down') via its
+// row's reorder control. The first step's "up" and the last step's "down" are
+// disabled, so only call this for a move the arrangement allows.
+export async function moveStep(page, name, dir) {
+  const title = dir === 'up' ? 'Move step up' : 'Move step down'
+  await page.locator('.code-ed').filter({ hasText: name }).getByRole('button', { name: title }).click()
+}
+
+// The ordered step filenames as shown in the current view (editor or detail),
+// read from each step row's header. Use to assert reordering.
+export async function stepNames(page) {
+  return page.locator('.step-list .code-ed .fn .mono').allTextContents()
+}
+
 // Save the new task ("Create task"); returns to the Tasks library on success.
 export async function submitNewTask(page) {
   await page.getByRole('button', { name: 'Create task' }).click()

@@ -127,3 +127,25 @@ steps get sensible default names, and deleting works down to that last step.
   - Once a single step remains, its delete is disabled again — the task always
     keeps at least one step.
   - The task saves with its single default step.
+
+### CUJ-TASK-5 — reorder steps and persist the order
+
+Steps run top-to-bottom, so their order matters. This covers reordering a
+task's steps with the up/down controls and confirming the new order is saved.
+
+- **Goal:** confirm steps can be moved up and down and the resulting order
+  persists across save, for several arrangements.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Click **New task**, name it, and on the **Steps** tab add two python
+     steps so the task has three: `bash-script.sh`, `python_script_1.py`,
+     `python_script_2.py`.
+  2. Use a step's **Move step up** / **Move step down** controls to rearrange
+     the steps into a target order.
+  3. Click **Create task**, then open the saved task.
+  4. Repeat for several different target arrangements.
+- **Expected:**
+  - The first step's "up" and the last step's "down" controls are disabled.
+  - Each move reorders the steps live in the editor.
+  - After save, the task detail lists the steps in the reordered sequence — for
+    every arrangement tried.
