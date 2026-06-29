@@ -1,4 +1,4 @@
-// E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-5. Reorders a task's
+// E2E — group "Reorder" (see CUJ.md), CUJ-REORDER-1. Reorders a task's
 // steps with the up/down controls and confirms the order both updates live in
 // the editor and persists to the saved task. Covers several arrangements.
 import { test, expect } from '../../electron.fixture.mjs'
@@ -17,7 +17,7 @@ const ARRANGEMENTS = [
   { name: 'cuj-task-5-c', moves: [[C, 'up']], expected: [A, C, B] },
 ]
 
-test('CUJ-TASK-5 — reorder steps and persist the order', async ({ page }) => {
+test('CUJ-REORDER-1 — reorder steps and persist the order', async ({ page }) => {
   await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
 
   for (const { name, moves, expected } of ARRANGEMENTS) {

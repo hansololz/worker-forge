@@ -1,4 +1,4 @@
-// E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-4. Exercises the Steps
+// E2E — group "Steps" (see CUJ.md), CUJ-STEPS-1. Exercises the Steps
 // tab of the task editor: adding steps (with sensible default names), deleting
 // them, and the invariant that a task must keep at least one step.
 import { test, expect } from '../../electron.fixture.mjs'
@@ -6,7 +6,7 @@ import { gotoTasks, openNewTask, setTaskName, addStep, deleteStep, submitNewTask
 
 const NEEDS_ONE = 'A task needs at least one step'
 
-test('CUJ-TASK-4 — add and delete steps; the last step is undeletable', async ({ page }) => {
+test('CUJ-STEPS-1 — add and delete steps; the last step is undeletable', async ({ page }) => {
   await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
   await gotoTasks(page)
   await openNewTask(page)

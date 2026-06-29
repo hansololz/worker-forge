@@ -1,4 +1,4 @@
-// E2E — group "Creating a task" (see CUJ.md), CUJ-TASK-6. Exercises the Config
+// E2E — group "Config" (see CUJ.md), CUJ-CONFIG-1. Exercises the Config
 // tab: description, icon, category, and timeout — selecting every icon and every
 // category — then confirms the chosen values persist to the saved task.
 import { test, expect } from '../../electron.fixture.mjs'
@@ -9,7 +9,7 @@ const CATEGORIES = ['Operations', 'Data', 'Source', 'Build', 'Quality', 'Deploy'
 const ICON_COUNT = 18 // icons[] in SettingsTab — every one must be selectable.
 const SELECTED = /var\(--accent-dim\)/ // a node-ic's fill once chosen.
 
-test('CUJ-TASK-6 — edit every task config field', async ({ page }) => {
+test('CUJ-CONFIG-1 — edit every task config field', async ({ page }) => {
   await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
   await gotoTasks(page)
   await openNewTask(page)

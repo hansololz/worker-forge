@@ -43,14 +43,14 @@ Proves the renderer can talk to the Python engine over its injected HTTP URL.
 
 ---
 
-## Group: Creating a task
+## Group: Create
 
 A task is the reusable unit of work (`§4.2`): a name + ordered bash/python
 steps, with optional params/timeout. These journeys cover authoring one from the
 Tasks library. Editor flow: **Tasks → New task → Config/Steps tabs → Create
-task** (`src/views/tasks.jsx`).
+task** (`src/views/tasks.jsx`). Backed by `tests/e2e/specs/tasks/create.spec.mjs`.
 
-### CUJ-TASK-1 — create a task with a name
+### CUJ-CREATE-1 — create a task with a name
 
 The minimal happy path: a named task saved with all defaults.
 
@@ -68,7 +68,7 @@ The minimal happy path: a named task saved with all defaults.
     (default **Operations**) with its name.
   - It carries the defaults: one `bash-script.sh` step, no params, 300s timeout.
 
-### CUJ-TASK-2 — create a task with an edited script
+### CUJ-CREATE-2 — create a task with an edited script
 
 Same authoring path, but the user customizes the step's code before saving.
 
@@ -85,7 +85,15 @@ Same authoring path, but the user customizes the step's code before saving.
   - Opening it (task detail) shows the step carrying the edited code, not the
     default template body.
 
-### CUJ-TASK-3 — create a task with a python script
+---
+
+## Group: Python
+
+A task step can be bash or python. These journeys cover authoring a python step
+and confirming its code and generated name persist. Backed by
+`tests/e2e/specs/tasks/python.spec.mjs`.
+
+### CUJ-PYTHON-1 — create a task with a python script
 
 Author a task with a Python step, customize its code, and confirm the saved
 result carries both the step's name and the edited code.
@@ -105,7 +113,15 @@ result carries both the step's name and the edited code.
   - Opening it (task detail) shows the step named `python_script_1.py` carrying
     the edited code, not the default template body.
 
-### CUJ-TASK-4 — add and delete steps; the last step is undeletable
+---
+
+## Group: Steps
+
+Step management in the editor: adding and deleting steps, the invariant that a
+task keeps at least one step, and sensible default names. Backed by
+`tests/e2e/specs/tasks/steps.spec.mjs`.
+
+### CUJ-STEPS-1 — add and delete steps; the last step is undeletable
 
 Author-time step management: a task must always keep at least one step, added
 steps get sensible default names, and deleting works down to that last step.
@@ -128,7 +144,15 @@ steps get sensible default names, and deleting works down to that last step.
     keeps at least one step.
   - The task saves with its single default step.
 
-### CUJ-TASK-5 — reorder steps and persist the order
+---
+
+## Group: Reorder
+
+Steps run top-to-bottom, so order matters. These journeys cover moving steps up
+and down and confirming the order persists. Backed by
+`tests/e2e/specs/tasks/reorder.spec.mjs`.
+
+### CUJ-REORDER-1 — reorder steps and persist the order
 
 Steps run top-to-bottom, so their order matters. This covers reordering a
 task's steps with the up/down controls and confirming the new order is saved.
@@ -150,7 +174,15 @@ task's steps with the up/down controls and confirming the new order is saved.
   - After save, the task detail lists the steps in the reordered sequence — for
     every arrangement tried.
 
-### CUJ-TASK-6 — edit every task config field
+---
+
+## Group: Config
+
+The Config tab carries a task's metadata: description, icon, category, and
+timeout. These journeys cover editing each. Backed by
+`tests/e2e/specs/tasks/config.spec.mjs`.
+
+### CUJ-CONFIG-1 — edit every task config field
 
 The Config tab carries a task's metadata: description, icon, category, and
 timeout. This covers editing each and confirming the choices persist.

@@ -1,6 +1,7 @@
 // Reusable task-authoring actions for E2E specs. Encodes the journey
 // "Tasks → New task → Config/Steps → Create task" once, so CUJ specs read as
-// journeys instead of selector soup. See CUJ.md (group: Creating a task) and
+// journeys instead of selector soup. See CUJ.md (Create/Python/Steps/Reorder/
+// Config groups) and
 // src/views/tasks.jsx for the UI these drive.
 import { expect } from '../electron.fixture.mjs'
 
