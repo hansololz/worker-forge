@@ -2,7 +2,7 @@
 // task + workflow, launch a run, and watch it reach `succeeded`. This exercises
 // the full stack (Electron main → Python backend → runner subprocess) without
 // depending on exact DOM markup, which the UI specs cover separately.
-import { test, expect } from './electron.fixture.mjs'
+import { test, expect } from '../electron.fixture.mjs'
 
 test('a launched workflow runs to success', async ({ page }) => {
   await page.waitForFunction(() => !!window.backend?.httpUrl, null, { timeout: 30_000 })

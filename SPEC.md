@@ -1070,7 +1070,12 @@ tests/                    # frontend + e2e (Node side)
   setup/                  # vitest.setup.js, backend-server.js (local boot helper)
   unit/                   # cron-preview (nextCronRun), format helpers, api.js, ConfirmModal
   integration/            # api-contract.test.js — api.js vs a live backend (skips w/o WF_BACKEND_URL)
-  e2e/                    # electron.fixture.mjs, smoke.spec.mjs, run-execution.spec.mjs
+  e2e/                    # Electron end-to-end (Playwright)
+    CUJ.md                #   critical-user-journey catalog (ids + groups)
+    electron.fixture.mjs  #   launch built app + resolve main window (shared base test)
+    helpers/              #   reusable journey actions (tasks.mjs: new-task flow)
+    specs/                #   one *.spec.mjs per CUJ group; test() per CUJ id
+                          #     smoke, run-execution, task-create (CUJ-TASK-1/2)
 docker/
   backend.Dockerfile      # python:3.12-slim → pytest
   frontend.Dockerfile     # node:20-slim → vitest unit

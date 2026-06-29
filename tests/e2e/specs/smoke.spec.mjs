@@ -1,5 +1,5 @@
 // E2E smoke: the app boots, the backend comes up, the renderer paints the shell.
-import { test, expect } from './electron.fixture.mjs'
+import { test, expect } from '../electron.fixture.mjs'
 
 test('app launches and renders the main shell', async ({ page }) => {
   // The sidebar nav is the anchor of the shell — wait for a primary view label.
