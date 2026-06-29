@@ -149,3 +149,26 @@ task's steps with the up/down controls and confirming the new order is saved.
   - Each move reorders the steps live in the editor.
   - After save, the task detail lists the steps in the reordered sequence — for
     every arrangement tried.
+
+### CUJ-TASK-6 — edit every task config field
+
+The Config tab carries a task's metadata: description, icon, category, and
+timeout. This covers editing each and confirming the choices persist.
+
+- **Goal:** edit every Config field — exercising all icon and category options —
+  and confirm the values save.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Click **New task**, name it, and stay on the **Config** tab.
+  2. Type a description.
+  3. Click through every icon in the picker; each becomes the selected icon.
+  4. Open the category dropdown and select each category in turn.
+  5. Enter a timeout, then toggle **No timeout** off and on to confirm it
+     enables/disables the field; leave a numeric timeout.
+  6. Click **Create task**, open the saved task, then reopen the editor.
+- **Expected:**
+  - Selecting an icon marks exactly that one selected; every icon is selectable.
+  - The category dropdown offers every category and each can be chosen.
+  - **No timeout** disables the timeout field; turning it off re-enables it.
+  - The task detail shows the saved description, category, and timeout; reopening
+    the editor shows the persisted description, icon, category, and timeout.

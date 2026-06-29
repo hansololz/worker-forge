@@ -46,6 +46,20 @@ export async function setPythonStepCode(page, code) {
   await ta.fill(code)
 }
 
+// Set the task description on the Config tab.
+export async function setDescription(page, desc) {
+  await page.getByPlaceholder('What does this task do?').fill(desc)
+}
+
+// Pick a category by its label from the Config tab's category dropdown. The
+// category Select carries no aria-label (the version picker does), so it is
+// selected by excluding aria-labelled dropdowns.
+export async function setCategory(page, label) {
+  await page.locator('.dd-btn:not([aria-label])').click()
+  await page.locator('.dd-opt').filter({ hasText: label }).click()
+  await expect(page.locator('.dd-btn:not([aria-label]) .dd-val')).toHaveText(label)
+}
+
 // Add a step of the given language ('bash' | 'python') on the Steps tab. The new
 // step is appended and auto-expanded; its default name is derived in the editor.
 export async function addStep(page, lang) {
