@@ -11,13 +11,13 @@ the spec picks the markup.
 
 ---
 
-## Group: Smoke
+## Group: Boot
 
-The bare-minimum journeys proving the app is alive: the shell paints and the
-Python engine answers. These run first; if either fails, every other CUJ is
-moot. Backed by `tests/e2e/specs/smoke/smoke.spec.mjs`.
+The first thing any user sees: the app launches and the renderer paints the
+shell. This runs first; if it fails, every other CUJ is moot. Backed by
+`tests/e2e/specs/smoke/boot.spec.mjs`.
 
-### CUJ-SMOKE-1 — app boots to the main shell
+### CUJ-BOOT-1 — app boots to the main shell
 
 The first thing any user sees: launch the app and land on the rendered shell.
 
@@ -29,12 +29,20 @@ The first thing any user sees: launch the app and land on the rendered shell.
   - The sidebar nav is visible, showing the primary views **Workflows**,
     **Tasks**, and **Settings**.
 
-### CUJ-SMOKE-2 — backend is reachable from the renderer
+---
+
+## Group: Backend
+
+Proves the renderer can talk to the Python engine over its injected HTTP URL —
+the other half of the liveness check. Backed by
+`tests/e2e/specs/smoke/backend.spec.mjs`.
+
+### CUJ-BACKEND-1 — backend is reachable from the renderer
 
 Proves the renderer can talk to the Python engine over its injected HTTP URL.
 
 - **Goal:** confirm the engine is up and the renderer can reach it end-to-end.
-- **Preconditions:** app booted (CUJ-SMOKE-1 passing).
+- **Preconditions:** app booted (CUJ-BOOT-1 passing).
 - **Steps:**
   1. From the renderer, hit the engine's `/api/health` endpoint via the
      preload-injected `window.backend.httpUrl`.
