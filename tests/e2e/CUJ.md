@@ -257,3 +257,32 @@ empty is rejected, zero/negatives are not acceptable, and large values save.
   - A very large number is accepted unchanged, with no error.
   - A saved large timeout round-trips: the detail shows it (e.g. `100000m`) and
     the reopened editor shows the same seconds value.
+
+---
+
+## Group: Edit
+
+Editing an existing task end-to-end: changing both its Config metadata and its
+Steps in one editor session and confirming the whole task round-trips. Backed by
+`tests/e2e/specs/tasks/edit.spec.mjs`.
+
+### CUJ-EDIT-1 — edit a task config and steps; everything persists
+
+Where the other groups isolate one field or one step action, this edits across
+both tabs at once and verifies nothing is lost on save.
+
+- **Goal:** edit a saved task's config and steps together and confirm every
+  change persists.
+- **Preconditions:** app booted to the Tasks library; an existing saved task.
+- **Steps:**
+  1. Open a saved task and click **Edit**.
+  2. On **Config**: rename it, set a description, pick a new icon and category,
+     and change the timeout.
+  3. On **Steps**: edit the existing step's code and add a python step with its
+     own code.
+  4. Click **Save changes**, view the task detail, then reopen the editor.
+- **Expected:**
+  - The task detail shows the new name, description, category, and timeout, and
+    both steps carrying their edited code.
+  - Reopening the editor shows the persisted name, description, icon, category,
+    timeout, and step code — every edit survived the single save.
