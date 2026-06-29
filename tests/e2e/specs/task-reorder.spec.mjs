@@ -2,7 +2,7 @@
 // steps with the up/down controls and confirms the order both updates live in
 // the editor and persists to the saved task. Covers several arrangements.
 import { test, expect } from '../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, addStep, moveStep, stepNames, submitNewTask } from '../helpers/tasks.mjs'
+import { gotoTasks, openNewTask, setTaskName, addStep, moveStep, expectMoveButtons, stepNames, submitNewTask } from '../helpers/tasks.mjs'
 
 // The three default step names of a fresh task once two python steps are added.
 const A = 'bash-script.sh'
@@ -31,9 +31,19 @@ test('CUJ-TASK-5 — reorder steps and persist the order', async ({ page }) => {
     await addStep(page, 'python')
     expect(await stepNames(page)).toEqual([A, B, C])
 
+    // Boundary controls: the first step can't move up, the last can't move down,
+    // the middle step can move both ways.
+    await expectMoveButtons(page, A, { up: false, down: true })
+    await expectMoveButtons(page, B, { up: true, down: true })
+    await expectMoveButtons(page, C, { up: true, down: false })
+
     // Apply the moves; the editor order updates live.
     for (const [step, dir] of moves) await moveStep(page, step, dir)
     expect(await stepNames(page)).toEqual(expected)
+
+    // The disabled boundaries track the new order: new first/last are pinned.
+    await expectMoveButtons(page, expected[0], { up: false, down: true })
+    await expectMoveButtons(page, expected[2], { up: true, down: false })
 
     // Save, reopen the task, and confirm the saved order matches.
     await submitNewTask(page)

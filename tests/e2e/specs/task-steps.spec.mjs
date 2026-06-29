@@ -27,9 +27,12 @@ test('CUJ-TASK-4 — add and delete steps; the last step is undeletable', async 
   await addStep(page, 'python')
   await expect(page.getByText('python_script_2.py').first()).toBeVisible()
 
-  // With more than one step, every step becomes deletable (no guard remains).
+  // With more than one step, every step becomes deletable (no guard remains)
+  // and each delete control is enabled.
   await expect(page.getByRole('button', { name: NEEDS_ONE })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Delete step' })).toHaveCount(3)
+  const deletes = page.getByRole('button', { name: 'Delete step' })
+  await expect(deletes).toHaveCount(3)
+  for (const btn of await deletes.all()) await expect(btn).toBeEnabled()
 
   // Delete the added steps back down to the single default step.
   await deleteStep(page, 'python_script_2.py')

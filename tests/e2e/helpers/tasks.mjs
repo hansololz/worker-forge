@@ -73,6 +73,16 @@ export async function moveStep(page, name, dir) {
   await page.locator('.code-ed').filter({ hasText: name }).getByRole('button', { name: title }).click()
 }
 
+// Assert a step row's reorder controls: the first step's "up" and the last
+// step's "down" are disabled, the rest enabled.
+export async function expectMoveButtons(page, name, { up, down }) {
+  const row = page.locator('.code-ed').filter({ hasText: name })
+  const upBtn = row.getByRole('button', { name: 'Move step up' })
+  const downBtn = row.getByRole('button', { name: 'Move step down' })
+  await (up ? expect(upBtn).toBeEnabled() : expect(upBtn).toBeDisabled())
+  await (down ? expect(downBtn).toBeEnabled() : expect(downBtn).toBeDisabled())
+}
+
 // The ordered step filenames as shown in the current view (editor or detail),
 // read from each step row's header. Use to assert reordering.
 export async function stepNames(page) {
