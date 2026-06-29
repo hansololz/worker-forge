@@ -11,6 +11,38 @@ the spec picks the markup.
 
 ---
 
+## Group: Smoke
+
+The bare-minimum journeys proving the app is alive: the shell paints and the
+Python engine answers. These run first; if either fails, every other CUJ is
+moot. Backed by `tests/e2e/specs/smoke.spec.mjs`.
+
+### CUJ-SMOKE-1 — app boots to the main shell
+
+The first thing any user sees: launch the app and land on the rendered shell.
+
+- **Goal:** confirm the renderer mounts and paints the primary navigation.
+- **Preconditions:** app launched (Electron renderer + main + Python engine).
+- **Steps:**
+  1. Launch the app and wait for it to finish loading.
+- **Expected:**
+  - The sidebar nav is visible, showing the primary views **Workflows**,
+    **Tasks**, and **Settings**.
+
+### CUJ-SMOKE-2 — backend is reachable from the renderer
+
+Proves the renderer can talk to the Python engine over its injected HTTP URL.
+
+- **Goal:** confirm the engine is up and the renderer can reach it end-to-end.
+- **Preconditions:** app booted (CUJ-SMOKE-1 passing).
+- **Steps:**
+  1. From the renderer, hit the engine's `/api/health` endpoint via the
+     preload-injected `window.backend.httpUrl`.
+- **Expected:**
+  - The endpoint responds with status `ok`.
+
+---
+
 ## Group: Creating a task
 
 A task is the reusable unit of work (`§4.2`): a name + ordered bash/python
