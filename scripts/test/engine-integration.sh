@@ -11,7 +11,7 @@ cd "$(dirname "$0")/../.."
 
 if [ "${1:-}" != "--local" ]; then
   echo "== engine · integration (docker) =="
-  $COMPOSE run --rm backend-tests pytest tests/integration
+  $COMPOSE run --build --rm backend-tests pytest tests/integration
   echo "✓ engine integration tests passed (docker)"
   exit 0
 fi

@@ -21,7 +21,7 @@ done
 
 if [ "$MODE" = docker ]; then
   echo "== app · e2e (docker, xvfb) =="
-  $COMPOSE run --rm e2e
+  $COMPOSE run --build --rm e2e
   echo "✓ app e2e tests passed (docker)"
   exit 0
 fi

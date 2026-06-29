@@ -84,3 +84,46 @@ Same authoring path, but the user customizes the step's code before saving.
   - The task is saved and listed in the Tasks library.
   - Opening it (task detail) shows the step carrying the edited code, not the
     default template body.
+
+### CUJ-TASK-3 — create a task with a python script
+
+Author a task with a Python step, customize its code, and confirm the saved
+result carries both the step's name and the edited code.
+
+- **Goal:** author a task whose Python step persists with an edited body.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Click **New task** — the editor opens on the **Config** tab.
+  2. Type a unique name into the **Name** field.
+  3. Switch to the **Steps** tab and click **Python** — a new
+     `python_script_1.py` step is appended and expanded.
+  4. Replace the python step's code in the editor (e.g. a `print` of a unique
+     marker).
+  5. Click **Create task**.
+- **Expected:**
+  - The task is saved and listed in the Tasks library under its name.
+  - Opening it (task detail) shows the step named `python_script_1.py` carrying
+    the edited code, not the default template body.
+
+### CUJ-TASK-4 — add and delete steps; the last step is undeletable
+
+Author-time step management: a task must always keep at least one step, added
+steps get sensible default names, and deleting works down to that last step.
+
+- **Goal:** confirm steps can be added and deleted, default step names are
+  sensible, and the final step cannot be deleted.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Click **New task**, name it, and switch to the **Steps** tab.
+  2. Observe the single default step `bash-script.sh`; its delete control is
+     disabled (titled "A task needs at least one step").
+  3. Click **Python** twice — the new steps default to `python_script_1.py`
+     and `python_script_2.py` (clean stems, incrementing numbers).
+  4. With several steps present, delete the two python steps.
+- **Expected:**
+  - A new task's default step is `bash-script.sh`; added steps get sensible,
+    non-colliding default names (`python_script_1.py`, `python_script_2.py`).
+  - While more than one step exists, every step's delete is enabled.
+  - Once a single step remains, its delete is disabled again — the task always
+    keeps at least one step.
+  - The task saves with its single default step.

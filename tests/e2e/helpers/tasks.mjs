@@ -30,6 +30,41 @@ export async function setStepCode(page, code) {
   await ta.fill(code)
 }
 
+// Add a Python step on the Steps tab. It appends python_script_1.py and
+// auto-expands it, so the only mounted code editor is the new step's.
+export async function addPythonStep(page) {
+  await page.getByRole('button', { name: /^Steps/ }).click()
+  await page.getByRole('button', { name: 'Python' }).click()
+  await expect(page.getByText('python_script_1.py').first()).toBeVisible()
+}
+
+// Replace the open Python step's code. addPythonStep collapses the bash step,
+// so the python step is the last (and only) mounted textarea.
+export async function setPythonStepCode(page, code) {
+  const ta = page.locator('textarea.code-input').last()
+  await expect(ta).toBeVisible()
+  await ta.fill(code)
+}
+
+// Add a step of the given language ('bash' | 'python') on the Steps tab. The new
+// step is appended and auto-expanded; its default name is derived in the editor.
+export async function addStep(page, lang) {
+  await page.getByRole('button', { name: /^Steps/ }).click()
+  // exact: a step's lowercase "python"/"bash" language toggle would otherwise
+  // also match this capitalized add button.
+  await page.getByRole('button', { name: lang === 'python' ? 'Python' : 'Bash', exact: true }).click()
+}
+
+// Delete the step with the given filename via its confirm dialog. Only the
+// step's own trash button (scoped to its row) and the modal's confirm share the
+// "Delete step" label, so each is selected within its container. The last
+// remaining step's delete is disabled, so this only works with 2+ steps.
+export async function deleteStep(page, name) {
+  await page.locator('.code-ed').filter({ hasText: name }).getByRole('button', { name: 'Delete step' }).click()
+  await page.locator('.modal-card').getByRole('button', { name: 'Delete step' }).click()
+  await expect(page.getByText(name)).toHaveCount(0)
+}
+
 // Save the new task ("Create task"); returns to the Tasks library on success.
 export async function submitNewTask(page) {
   await page.getByRole('button', { name: 'Create task' }).click()

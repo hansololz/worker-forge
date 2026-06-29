@@ -14,7 +14,7 @@ if [ "${1:-}" != "--local" ]; then
   echo "== app · integration (docker) =="
   # Reuse the e2e image (node + python + engine venv) and run this same script
   # natively inside it — self-contained: boots the engine and runs vitest.
-  $COMPOSE run --rm e2e bash scripts/test/app-integration.sh --local
+  $COMPOSE run --build --rm e2e bash scripts/test/app-integration.sh --local
   echo "✓ app integration tests passed (docker)"
   exit 0
 fi
