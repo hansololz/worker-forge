@@ -108,3 +108,14 @@ export async function stepNames(page) {
 export async function submitNewTask(page) {
   await page.getByRole('button', { name: 'Create task' }).click()
 }
+
+// Save edits to an existing task ("Save changes"); returns to the task detail
+// (saveTask navigates back to wherever the editor was opened from).
+export async function saveChanges(page) {
+  await page.getByRole('button', { name: 'Save changes' }).click()
+}
+
+// Reopen the editor from the task detail ("Edit"); lands on the Config tab.
+export async function reopenEditor(page) {
+  await page.getByRole('button', { name: 'Edit' }).click()
+}

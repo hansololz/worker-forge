@@ -212,3 +212,24 @@ timeout. This covers editing each and confirming the choices persist.
   - **No timeout** disables the timeout field; turning it off re-enables it.
   - The task detail shows the saved description, category, and timeout; reopening
     the editor shows the persisted description, icon, category, and timeout.
+
+### CUJ-CONFIG-2 — each config value persists across save and re-edit
+
+Deeper than CUJ-CONFIG-1: rather than save once, this saves after *each* value
+and re-opens the editor to prove every individual choice round-trips to disk.
+
+- **Goal:** confirm every icon, every category, and several timeout values save
+  and survive a re-edit.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Create a named task and open its editor.
+  2. For each icon: select it, click **Save changes**, then reopen the editor.
+  3. For each category: select it, save, check the task detail, then reopen.
+  4. For several timeouts (e.g. 45s, 10m, 60m, and **No timeout**): set it, save,
+     check the detail, then reopen.
+- **Expected:**
+  - After re-editing, exactly the saved icon is selected — for every icon.
+  - The detail and the reopened editor show the saved category — for every
+    category.
+  - The detail shows the saved timeout (seconds/minutes, or "no timeout") and the
+    reopened editor shows the same value — for every timeout tried.

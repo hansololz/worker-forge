@@ -2,7 +2,7 @@
 // tab: description, icon, category, and timeout — selecting every icon and every
 // category — then confirms the chosen values persist to the saved task.
 import { test, expect } from '../../electron.fixture.mjs'
-import { gotoTasks, openNewTask, setTaskName, setDescription, setCategory, submitNewTask } from '../../helpers/tasks.mjs'
+import { gotoTasks, openNewTask, setTaskName, setDescription, setCategory, submitNewTask, saveChanges, reopenEditor } from '../../helpers/tasks.mjs'
 
 // All category labels (CAT_LABEL in src/views/tasks.jsx), in selector order.
 const CATEGORIES = ['Operations', 'Data', 'Source', 'Build', 'Quality', 'Deploy']
@@ -65,4 +65,64 @@ test('CUJ-CONFIG-1 — edit every task config field', async ({ page }) => {
   await expect(page.locator('.dd-btn:not([aria-label]) .dd-val')).toHaveText('Deploy')
   await expect(page.getByPlaceholder('What does this task do?')).toHaveValue(desc)
   await expect(page.locator('input[type="number"]')).toHaveValue('600')
+})
+
+// Timeout values to round-trip and the string the detail shows for each
+// (fmtTimeout in src/views/tasks.jsx: >=60s → minutes, else seconds).
+const TIMEOUTS = [
+  { secs: '45', shown: 'timeout 45s' },
+  { secs: '600', shown: 'timeout 10m' },
+  { secs: '3600', shown: 'timeout 60m' },
+]
+
+test('CUJ-CONFIG-2 — each config value persists across save and re-edit', async ({ page }) => {
+  test.slow() // many save → verify → re-edit round-trips
+  await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
+  await gotoTasks(page)
+  await openNewTask(page)
+
+  const name = 'cuj-config-2'
+  await setTaskName(page, name)
+  await submitNewTask(page)
+
+  // Open the saved task and enter the editor (lands on Config).
+  await page.getByText(name).first().click()
+  await reopenEditor(page)
+
+  // Each icon: select it, save, re-edit, and confirm exactly it persisted.
+  const icons = page.locator('.node-ic')
+  for (let i = 0; i < ICON_COUNT; i++) {
+    await icons.nth(i).click()
+    await saveChanges(page)
+    await reopenEditor(page)
+    await expect(icons.nth(i)).toHaveAttribute('style', SELECTED)
+    await expect(page.locator('.node-ic[style*="accent-dim"]')).toHaveCount(1)
+  }
+
+  // Each category: select, save, verify on detail, re-edit, confirm.
+  for (const label of CATEGORIES) {
+    await setCategory(page, label)
+    await saveChanges(page)
+    await expect(page.getByText(label).first()).toBeVisible()
+    await reopenEditor(page)
+    await expect(page.locator('.dd-btn:not([aria-label]) .dd-val')).toHaveText(label)
+  }
+
+  // Several timeout values: save, verify on detail, re-edit, confirm.
+  const timeout = page.locator('input[type="number"]')
+  for (const { secs, shown } of TIMEOUTS) {
+    await timeout.fill(secs)
+    await saveChanges(page)
+    await expect(page.getByText(shown).first()).toBeVisible()
+    await reopenEditor(page)
+    await expect(timeout).toHaveValue(secs)
+  }
+
+  // And "no timeout": the toggle disables the field; the detail says so.
+  await page.locator('label').filter({ hasText: 'No timeout' }).locator('button.toggle').click()
+  await expect(timeout).toBeDisabled()
+  await saveChanges(page)
+  await expect(page.getByText('no timeout').first()).toBeVisible()
+  await reopenEditor(page)
+  await expect(timeout).toBeDisabled()
 })
