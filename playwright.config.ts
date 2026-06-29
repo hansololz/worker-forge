@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
 // Electron E2E. The app is launched inside each spec via the `_electron` driver
-// (see tests/e2e/electron.fixture.js), so no webServer is configured here.
+// (see tests/e2e/electron.fixture.mjs), so no webServer is configured here.
 // Requires a prior `npm run build` (renderer + main bundled into out/) and a
 // runnable Python backend (engine/.venv or python3 on PATH). In Docker the
 // run is wrapped in xvfb-run for a virtual display.

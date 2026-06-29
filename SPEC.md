@@ -1070,7 +1070,7 @@ tests/                    # frontend + e2e (Node side)
   setup/                  # vitest.setup.js, backend-server.js (local boot helper)
   unit/                   # cron-preview (nextCronRun), format helpers, api.js, ConfirmModal
   integration/            # api-contract.test.js — api.js vs a live backend (skips w/o WF_BACKEND_URL)
-  e2e/                    # electron.fixture.js, smoke.spec.js, run-execution.spec.js
+  e2e/                    # electron.fixture.mjs, smoke.spec.mjs, run-execution.spec.mjs
 docker/
   backend.Dockerfile      # python:3.12-slim → pytest
   frontend.Dockerfile     # node:20-slim → vitest unit

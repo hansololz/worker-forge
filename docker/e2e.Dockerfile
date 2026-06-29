@@ -9,7 +9,7 @@ FROM node:20-bookworm
 # libs + xvfb for a headless display.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv python3-pip \
-      xvfb \
+      xvfb xauth \
       libgtk-3-0 libnss3 libnspr4 libasound2 libgbm1 libxss1 \
       libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
       libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libpango-1.0-0 \
