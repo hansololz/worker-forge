@@ -126,3 +126,63 @@ test('CUJ-CONFIG-2 — each config value persists across save and re-edit', asyn
   await reopenEditor(page)
   await expect(timeout).toBeDisabled()
 })
+
+test('CUJ-CONFIG-3 — timeout input rejects <= 0 and accepts large values', async ({ page }) => {
+  await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
+  await gotoTasks(page)
+  await openNewTask(page)
+
+  const name = 'cuj-config-3'
+  await setTaskName(page, name)
+  await page.getByRole('button', { name: 'Config' }).click()
+
+  const timeout = page.locator('input[type="number"]')
+  const create = page.getByRole('button', { name: 'Create task' })
+  const timeoutErr = page.getByText('Enter a whole number of seconds (1 or more).')
+
+  // The field is a stepped, min-1 number input; the default (300s) is valid.
+  await expect(timeout).toHaveAttribute('min', '1')
+  await expect(timeout).toHaveValue('300')
+  await expect(create).toBeEnabled()
+
+  // Empty is invalid: the error shows and saving is blocked.
+  await timeout.fill('')
+  await expect(timeoutErr).toBeVisible()
+  await expect(create).toBeDisabled()
+
+  // Zero and negatives are not acceptable — the field clamps to the 1s minimum.
+  await timeout.fill('0')
+  await expect(timeout).toHaveValue('1')
+  await expect(timeoutErr).toBeHidden()
+  await expect(create).toBeEnabled()
+  await timeout.fill('-5')
+  await expect(timeout).toHaveValue('1')
+  await expect(create).toBeEnabled()
+
+  // 1 second — the minimum — is accepted unchanged, not clamped or flagged.
+  await timeout.fill('1')
+  await expect(timeout).toHaveValue('1')
+  await expect(timeoutErr).toBeHidden()
+  await expect(create).toBeEnabled()
+
+  // A very large value is accepted as-is, with no error and saving allowed.
+  await timeout.fill('2000000000')
+  await expect(timeout).toHaveValue('2000000000')
+  await expect(timeoutErr).toBeHidden()
+  await expect(create).toBeEnabled()
+
+  // Save a large value and confirm it round-trips (6,000,000s → 100000m).
+  await timeout.fill('6000000')
+  await submitNewTask(page)
+  await page.getByText(name).first().click()
+  await expect(page.getByText('timeout 100000m').first()).toBeVisible()
+  await reopenEditor(page)
+  await expect(page.locator('input[type="number"]')).toHaveValue('6000000')
+
+  // The 1-second minimum also round-trips.
+  await page.locator('input[type="number"]').fill('1')
+  await saveChanges(page)
+  await expect(page.getByText('timeout 1s').first()).toBeVisible()
+  await reopenEditor(page)
+  await expect(page.locator('input[type="number"]')).toHaveValue('1')
+})

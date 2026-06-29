@@ -233,3 +233,27 @@ and re-opens the editor to prove every individual choice round-trips to disk.
     category.
   - The detail shows the saved timeout (seconds/minutes, or "no timeout") and the
     reopened editor shows the same value — for every timeout tried.
+
+### CUJ-CONFIG-3 — timeout input rejects <= 0 and accepts large values
+
+The timeout is a min-1 whole-number field. This covers its input validation:
+empty is rejected, zero/negatives are not acceptable, and large values save.
+
+- **Goal:** confirm the timeout field enforces a 1-second minimum and accepts
+  arbitrarily large whole numbers.
+- **Preconditions:** app booted to the Tasks library; a named new task.
+- **Steps:**
+  1. On the **Config** tab, clear the timeout field.
+  2. Enter `0`, then a negative number.
+  3. Enter a very large number.
+  4. Save a large timeout and reopen the task.
+- **Expected:**
+  - Clearing the field shows "Enter a whole number of seconds (1 or more)." and
+    disables **Create task**.
+  - Entering `0` or a negative clamps to the `1`-second minimum (≤ 0 never
+    persists) and re-enables saving.
+  - `1` second — the minimum — is accepted unchanged, and a saved 1s timeout
+    round-trips (detail shows `timeout 1s`).
+  - A very large number is accepted unchanged, with no error.
+  - A saved large timeout round-trips: the detail shows it (e.g. `100000m`) and
+    the reopened editor shows the same seconds value.
