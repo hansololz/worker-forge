@@ -398,3 +398,126 @@ run-prepare page must surface them and block the launch until they are filled.
     and keeps the run blocked.
   - Filling the last required parameter removes the banner entirely and enables
     **Run flow** — the optional parameter never blocked the run.
+
+### CUJ-PREPARE-2 — run-page parameter inputs show the correct initial values
+
+Beyond required/missing: each parameter input must open **pre-filled with its
+effective default** — the workflow per-task override if set, else the task's
+declared default — and show the right placeholder when there is none.
+
+- **Goal:** confirm the run-prepare inputs seed the correct initial value for
+  each parameter source (override, task default, none), and that an ad-hoc
+  parameter can be added.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Create a task with an optional param that has a default, a required param
+     with no default, and an optional param with no default.
+  2. Create a workflow referencing it and set a workflow-level **override** for
+     the param that has a default.
+  3. Open the run-prepare page.
+  4. Click **Add parameter** to append an ad-hoc row.
+- **Expected:**
+  - The overridden param's input is pre-filled with the **override** value (not
+    the task default) and is not flagged missing.
+  - The required no-default param is empty with a "value required" placeholder
+    and marked missing; the optional no-default param is empty with a
+    "value (optional)" placeholder and not missing.
+  - The task card chip counts all params and the one missing.
+  - **Add parameter** appends an ad-hoc row (key input + "added" badge + value);
+    filling the missing required value enables **Run flow** while the pre-filled
+    values are retained.
+
+---
+
+## Group: WF-Create
+
+A workflow is an ordered list of stages, each running one or more task
+references in parallel (`§1`, `§4.1`). This group covers authoring one from
+scratch in the editor — **Workflows → New workflow → Config/Stages → Create
+workflow** (`src/views/workflows.jsx`). Backed by
+`tests/e2e/specs/workflows/create.spec.mjs`.
+
+### CUJ-WF-CREATE-1 — create a workflow, modifying every field
+
+Author a workflow that exercises every editable, persisted field: name,
+description, multiple stages with tasks, and per-task settings.
+
+- **Goal:** create a workflow setting name, description, two stages each with a
+  task, and per-task version pin, continue-on-failure, and a parameter override —
+  and confirm all of it round-trips.
+- **Preconditions:** app booted to the Tasks library; two saved tasks (one with a
+  parameter).
+- **Steps:**
+  1. Click **New workflow**; on **Config** set the name and description.
+  2. On **Stages**, add the first task to stage 1, add a second stage, and add a
+     second task to it.
+  3. Expand the first task: pin its version, enable continue-on-failure, and set
+     a workflow-level override for its parameter. Expand the second task and
+     enable continue-on-failure.
+  4. Click **Create workflow**, open the saved workflow, then reopen the editor.
+- **Expected:**
+  - The workflow detail shows the name, description, and "2 stages · 2 tasks".
+  - The reopened editor shows the persisted name, description, two stages, the
+    pinned version, both continue-on-failure toggles on, and the parameter
+    override value.
+
+---
+
+## Group: WF-Edit
+
+Editing a saved workflow: changing its metadata and its stage/task shape in one
+editor session and confirming it round-trips and mints a new version. Backed by
+`tests/e2e/specs/workflows/edit.spec.mjs`.
+
+### CUJ-WF-EDIT-1 — edit a saved workflow; name, description, and stages persist
+
+Where WF-Create authors a fresh workflow, this edits an existing one across its
+metadata and structure at once.
+
+- **Goal:** rename a workflow, change its description, and grow it from one stage
+  to two, confirming every edit persists and a new version is minted.
+- **Preconditions:** app booted to the Tasks library; a saved single-stage
+  workflow.
+- **Steps:**
+  1. Open a saved workflow and click **Edit**.
+  2. On **Config**, rename it and change the description.
+  3. On **Stages**, add a second stage and add a second task to it.
+  4. Click **Save changes**, view the detail, then reopen the editor.
+- **Expected:**
+  - The detail shows the new name, description, and "2 stages · 2 tasks", and the
+    version picker reads **v2**.
+  - The reopened editor shows the persisted name, description, and two stages.
+
+---
+
+## Group: WF-Triggers
+
+A trigger attaches a recurring **cron** schedule to a workflow (`§4.4`). These
+journeys cover the workflow editor's Triggers tab: adding a cron trigger,
+choosing a schedule, persistence, per-field validation, and enable/remove.
+Backed by `tests/e2e/specs/workflows/triggers.spec.mjs`.
+
+### CUJ-WF-TRIGGER-1 — add a cron trigger, set a schedule, and persist it
+
+Add a cron schedule to a workflow and exercise its editor: the default schedule,
+a quick preset, save/round-trip, the per-field cron validation message, the
+enable/disable toggle, and removal.
+
+- **Goal:** confirm a cron trigger can be added, scheduled via a preset, saved
+  and reloaded, validated per field, toggled, and removed.
+- **Preconditions:** app booted to the Tasks library; a saved task.
+- **Steps:**
+  1. Create a workflow referencing the task; open its **Triggers** tab.
+  2. Click **Add cron schedule** — a trigger appears defaulting to `0 9 * * *`.
+  3. Apply the **Daily 03:00** preset, then click **Create workflow**.
+  4. Reopen the editor's Triggers tab.
+  5. Enter an out-of-range value in the minute field, then fix it.
+  6. Toggle the trigger off and on; then remove it.
+- **Expected:**
+  - The new trigger defaults to `0 9 * * *`; the preset sets `0 3 * * *` and shows
+    "Runs every day at 03:00 UTC."
+  - After save and reopen, the trigger and its `0 3 * * *` schedule persist.
+  - An out-of-range cron field shows "Invalid value in min…" and marks the field
+    invalid; fixing it clears the error.
+  - Disabling the trigger hides its schedule editor; enabling restores it;
+    removing it drops the card.

@@ -7,7 +7,11 @@
 // that filling the values clears it.
 import { test, expect } from '../../electron.fixture.mjs'
 import { gotoTasks, openNewTask, setTaskName, addParam, submitNewTask } from '../../helpers/tasks.mjs'
-import { createWorkflowWithTask, openRunPrepare } from '../../helpers/workflows.mjs'
+import {
+  createWorkflowWithTask, openRunPrepare,
+  gotoWorkflows, openNewWorkflow, setWorkflowName,
+  addTaskToStageN, openTaskPanel, setParamOverride,
+} from '../../helpers/workflows.mjs'
 
 test('CUJ-PREPARE-1 — missing required parameters are flagged before a run', async ({ page }) => {
   test.slow() // task + workflow authoring then the run-prepare round-trip
@@ -64,5 +68,65 @@ test('CUJ-PREPARE-1 — missing required parameters are flagged before a run', a
   await dbRow.locator('input.mono').fill('postgres://db')
   await expect(page.locator('.prep-warn')).toHaveCount(0)
   await expect(page.locator('.prep-row.missing')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Run flow' })).toBeEnabled()
+})
+
+test('CUJ-PREPARE-2 — run-page parameter inputs show the correct initial values', async ({ page }) => {
+  test.slow() // task + workflow (with an override) authoring, then run-prepare checks
+  await expect(page.getByText('Tasks').first()).toBeVisible({ timeout: 30_000 })
+
+  // A task with: an optional param that has a default, a required param with no
+  // default, and an optional param with no default.
+  await gotoTasks(page)
+  await openNewTask(page)
+  await setTaskName(page, 'prep-vals')
+  await addParam(page, { k: 'HOST', v: 'localhost', required: false }) // has a default
+  await addParam(page, { k: 'PORT', required: true })                  // required, no default
+  await addParam(page, { k: 'DEBUG', required: false })                // optional, no default
+  await submitNewTask(page)
+
+  // A workflow referencing it, with a workflow-level override for HOST so the
+  // override (not the task default) is the value seen at run time.
+  await gotoWorkflows(page)
+  await openNewWorkflow(page)
+  await setWorkflowName(page, 'wf-prep-vals')
+  await addTaskToStageN(page, 0, 'prep-vals')
+  await openTaskPanel(page, 0, 'prep-vals')
+  await setParamOverride(page, 0, 'HOST', 'remote-host')
+  await page.getByRole('button', { name: 'Create workflow' }).click()
+
+  await openRunPrepare(page, 'wf-prep-vals')
+
+  // HOST: the workflow override pre-fills the input as its value (beating the
+  // task's own 'localhost' default); not flagged missing.
+  const hostRow = page.locator('.prep-row').filter({ hasText: 'HOST' })
+  await expect(hostRow.locator('input.mono')).toHaveValue('remote-host')
+  await expect(hostRow).not.toHaveClass(/missing/)
+
+  // PORT: required with no value — empty input, "value required" placeholder, missing.
+  const portRow = page.locator('.prep-row').filter({ hasText: 'PORT' })
+  await expect(portRow.locator('input.mono')).toHaveValue('')
+  await expect(portRow.locator('input.mono')).toHaveAttribute('placeholder', 'value required')
+  await expect(portRow).toHaveClass(/missing/)
+
+  // DEBUG: optional with no value — empty input, "value (optional)" placeholder, not missing.
+  const debugRow = page.locator('.prep-row').filter({ hasText: 'DEBUG' })
+  await expect(debugRow.locator('input.mono')).toHaveValue('')
+  await expect(debugRow.locator('input.mono')).toHaveAttribute('placeholder', 'value (optional)')
+  await expect(debugRow).not.toHaveClass(/missing/)
+
+  // The task card chip counts all three params and the one missing required.
+  await expect(page.locator('.card-h.prep-card .sub')).toContainText('3 parameters')
+  await expect(page.locator('.card-h.prep-card .sub')).toContainText('1 missing')
+
+  // An ad-hoc parameter can be added for this run (key + "added" badge + value).
+  await page.getByRole('button', { name: 'Add parameter' }).click()
+  const extraRow = page.locator('.prep-row').filter({ has: page.locator('input[placeholder="PARAM_NAME"]') })
+  await expect(extraRow).toBeVisible()
+  await expect(extraRow.locator('.param-req')).toHaveText('added')
+
+  // Filling the missing required value enables the launch; initial values hold.
+  await portRow.locator('input.mono').fill('5432')
+  await expect(hostRow.locator('input.mono')).toHaveValue('remote-host')
   await expect(page.getByRole('button', { name: 'Run flow' })).toBeEnabled()
 })
