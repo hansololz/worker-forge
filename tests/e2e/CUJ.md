@@ -696,3 +696,30 @@ viewed and restored from the detail picker. Backed by
   - A fresh workflow reads **v1**; after the edit the picker reads **v2**.
   - Selecting v1 shows the restore banner with **Restore as v3**.
   - Restoring mints **v3** (the reopened detail shows v3).
+
+---
+
+## Group: WF-Preview
+
+The workflow detail shows a **pipeline preview**: one chip per task, laid out by
+stage in order (`§8` workflow detail). The preview must match the workflow's
+actual stages/tasks and update when the workflow is edited. Backed by
+`tests/e2e/specs/workflows/preview.spec.mjs`.
+
+### CUJ-WF-PREVIEW-1 — the pipeline preview matches its tasks and stays accurate
+
+- **Goal:** confirm the detail preview lists exactly the workflow's tasks in
+  stage order, each chip links to the real task, and the preview tracks edits.
+- **Preconditions:** app booted to the Tasks library; three saved tasks.
+- **Steps:**
+  1. Create a workflow with two stages (two tasks in stage 1, one in stage 2).
+  2. Open the detail and read the preview.
+  3. Edit the workflow: remove a task from stage 1 and move stage 2 ahead of
+     stage 1; save.
+  4. Click a preview chip.
+- **Expected:**
+  - The preview shows "2 stages · 3 tasks" and the chips read, in order, the
+    three tasks across both stages.
+  - After the edit the preview updates to "2 stages · 2 tasks", the removed task
+    is gone, and the chips reflect the new stage order.
+  - Clicking a chip opens the task it names.
