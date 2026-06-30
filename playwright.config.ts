@@ -11,6 +11,10 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   fullyParallel: false,
   workers: 1,
+  forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  // Capture a trace on the retry of a failing test for debugging. No overhead on
+  // the green path (locally retries=0, so traces are only ever cut on CI).
+  use: { trace: 'on-first-retry' },
 })

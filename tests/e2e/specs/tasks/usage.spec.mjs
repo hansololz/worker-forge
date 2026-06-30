@@ -104,7 +104,9 @@ test('CUJ-USAGE-2 — the task "Used by" list accurately tracks referencing work
   await openTaskDetail(page, 'shared-task')
   await expect(usedByCard(page)).toContainText('2 workflows')
   await expect(usedByCard(page).locator('.step-item')).toHaveCount(2)
-  await expect(usedByCard(page).locator('.step-item .n')).toHaveText(['wf-A', 'wf-B'])
+  // Order-independent: the list's order isn't guaranteed, so assert membership.
+  await expect(usedByCard(page).getByText('wf-A', { exact: true })).toBeVisible()
+  await expect(usedByCard(page).getByText('wf-B', { exact: true })).toBeVisible()
 
   // Remove the shared task from workflow A; the list drops to just B.
   await gotoWorkflows(page)

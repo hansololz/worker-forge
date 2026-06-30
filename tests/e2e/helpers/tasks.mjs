@@ -98,10 +98,22 @@ export async function expectMoveButtons(page, name, { up, down }) {
   await (down ? expect(downBtn).toBeEnabled() : expect(downBtn).toBeDisabled())
 }
 
+// The step-filename locator (editor or detail), in order — one element per step.
+export function stepNameLocator(page) {
+  return page.locator('.step-list .code-ed .fn .mono')
+}
+
 // The ordered step filenames as shown in the current view (editor or detail),
 // read from each step row's header. Use to assert reordering.
 export async function stepNames(page) {
-  return page.locator('.step-list .code-ed .fn .mono').allTextContents()
+  return stepNameLocator(page).allTextContents()
+}
+
+// Web-first assertion of the exact ordered step filenames — retries until the
+// view settles, so it won't race a live reorder/re-render (unlike reading
+// allTextContents() once).
+export async function expectStepOrder(page, names) {
+  await expect(stepNameLocator(page)).toHaveText(names)
 }
 
 // Save the new task ("Create task"); returns to the Tasks library on success.
