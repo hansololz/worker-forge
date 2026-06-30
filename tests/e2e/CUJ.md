@@ -286,3 +286,115 @@ both tabs at once and verifies nothing is lost on save.
     both steps carrying their edited code.
   - Reopening the editor shows the persisted name, description, icon, category,
     timeout, and step code — every edit survived the single save.
+
+---
+
+## Group: Params
+
+A task can declare **parameters** — environment variables injected into every
+step (`§4.2`). Each parameter has a **name** (key), an optional default
+**value**, and a **required** flag. The editor for them (`EnvTab`) lives below
+the step list on the **Steps** tab; the saved task's detail lists them on a
+**Parameters** card. These journeys cover authoring parameters, editing each
+field, removing them, and the per-row validation. Backed by
+`tests/e2e/specs/tasks/params.spec.mjs`.
+
+### CUJ-PARAMS-1 — add multiple parameters; name, value, required all persist
+
+Author several parameters at once, spanning the field combinations, and confirm
+each one's name, value, and required flag round-trips.
+
+- **Goal:** add multiple parameters with distinct name/value/required and
+  confirm all of them save and survive a re-edit.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Click **New task**, name it, and on the **Steps** tab open the Parameters
+     editor.
+  2. Add three parameters: one required with a default, one optional with a
+     default, and one required with no default.
+  3. Click **Create task**, open the saved task, then reopen the editor.
+- **Expected:**
+  - The task detail's Parameters card shows all three, each with its key, value
+     (or "no default"), and required/optional state.
+  - Reopening the editor shows every parameter's key, value, and required flag.
+
+### CUJ-PARAMS-2 — edit parameters: rename, revalue, flip required, add, remove
+
+The full editing surface in one session: change a parameter's name, change a
+value, flip the required flag both ways, add a parameter, and remove one.
+
+- **Goal:** confirm renaming a key, changing a value, toggling required, adding,
+  and removing a parameter all persist together on a single save.
+- **Preconditions:** app booted to the Tasks library; a saved task with two
+  parameters.
+- **Steps:**
+  1. Open the saved task, click **Edit**, and open the Parameters editor.
+  2. Rename the first parameter, change its value, and make it required.
+  3. Change the second parameter's value and make it optional.
+  4. Add a third parameter.
+  5. Delete the renamed first parameter.
+  6. Click **Save changes**, view the detail, then reopen the editor.
+- **Expected:**
+  - The removed parameter (under both its old and new name) is absent from the
+    detail and the editor.
+  - The surviving parameters show their new values and required/optional state on
+    the detail and persist into the reopened editor.
+
+### CUJ-PARAMS-3 — invalid, duplicate, and blank-key parameters block or drop on save
+
+Per-row parameter validation: a malformed key, a duplicate key, and a blank key
+that carries a value each block saving; a fully blank row is valid and dropped.
+
+- **Goal:** confirm parameter validation blocks saving on bad rows and that an
+  empty row is silently dropped rather than saved.
+- **Preconditions:** app booted to the Tasks library; a named new task.
+- **Steps:**
+  1. On the **Steps** tab, add a parameter whose key starts with a digit.
+  2. Fix the key, then add a second parameter duplicating it.
+  3. Clear the duplicate row's key (leaving its value), then clear its value too.
+  4. Click **Create task** and open the saved task.
+- **Expected:**
+  - A key starting with a digit shows the key-format error and disables
+    **Create task**; fixing it re-enables saving.
+  - A duplicate key shows "Duplicate key" and disables saving.
+  - A blank key with a value shows "Key required" and disables saving; clearing
+    the value clears the error and re-enables saving.
+  - After save, only the one named parameter persists — the empty row is dropped.
+
+---
+
+## Group: Prepare
+
+A task's **required** parameters only bite at run time: before a workflow runs,
+the **run-prepare** page reviews every task's parameters and refuses to launch
+while any required field is empty (the run-prepare page, `src/views/workflows.jsx`).
+This journey crosses three
+features — a task with required params, a workflow referencing it, and the
+run-prepare review — to confirm the missing-required warning is **visible** and
+blocks the run until satisfied. Backed by `tests/e2e/specs/runs/prepare.spec.mjs`.
+
+### CUJ-PREPARE-1 — missing required parameters are flagged before a run
+
+When a referenced task declares required parameters with no value, the
+run-prepare page must surface them and block the launch until they are filled.
+
+- **Goal:** confirm the run-prepare page shows a clear missing-required warning
+  (banner, per-row alert, disabled launch) and clears it once every required
+  parameter has a value.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Create a task with two **required** parameters (no defaults) and one
+     optional parameter.
+  2. Create a workflow whose single stage references that task.
+  3. Open the workflow and click **Run** to reach the run-prepare page.
+  4. Fill the required parameters one at a time.
+- **Expected:**
+  - A `.prep-warn` banner is visible reading "2 required parameters still need a
+    value" and naming the missing keys; **Run flow** is disabled.
+  - Exactly the two required rows are marked missing (the optional one is not),
+    each missing input showing the "value required" placeholder, and the task
+    card's summary chip counts "2 missing".
+  - Filling one required parameter updates the banner to the one still missing
+    and keeps the run blocked.
+  - Filling the last required parameter removes the banner entirely and enables
+    **Run flow** — the optional parameter never blocked the run.

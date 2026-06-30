@@ -119,3 +119,53 @@ export async function saveChanges(page) {
 export async function reopenEditor(page) {
   await page.getByRole('button', { name: 'Edit' }).click()
 }
+
+// --- Parameters (env vars) — the EnvTab below the step list on the Steps tab. ---
+// Rows are keyed by index with no per-row test id, so each row is scoped from
+// its KEY input (every row has one, placeholder "KEY", regardless of content).
+
+// The grid row for parameter i (0-based): its key input, value input, required
+// toggle, and delete button are all reachable from here.
+export function paramRow(page, i) {
+  return page.locator('input[placeholder="KEY"]').nth(i).locator('xpath=..')
+}
+
+// How many parameter rows the editor currently shows.
+export function paramCount(page) {
+  return page.locator('input[placeholder="KEY"]').count()
+}
+
+// Append a parameter row (revealing the Steps tab first) and optionally fill it.
+// The new row is appended last; returns its index. Pass {k, v, required} to set
+// the key, value, and required flag in one call.
+export async function addParam(page, { k = '', v = '', required = false } = {}) {
+  await page.getByRole('button', { name: /^Steps/ }).click()
+  const before = await paramCount(page)
+  await page.getByRole('button', { name: 'Add variable' }).click()
+  await expect(page.locator('input[placeholder="KEY"]')).toHaveCount(before + 1)
+  const i = before
+  if (k) await setParamKey(page, i, k)
+  if (v) await setParamValue(page, i, v)
+  if (required) await toggleParamRequired(page, i)
+  return i
+}
+
+// Set parameter i's key (name).
+export async function setParamKey(page, i, k) {
+  await paramRow(page, i).locator('input.mono').nth(0).fill(k)
+}
+
+// Set parameter i's value (default).
+export async function setParamValue(page, i, v) {
+  await paramRow(page, i).locator('input.mono').nth(1).fill(v)
+}
+
+// Flip parameter i between required and optional.
+export async function toggleParamRequired(page, i) {
+  await paramRow(page, i).locator('button.req-toggle').click()
+}
+
+// Delete parameter i via its row's x button.
+export async function deleteParam(page, i) {
+  await paramRow(page, i).locator('button.btn-ghost').click()
+}
