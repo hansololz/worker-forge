@@ -88,6 +88,12 @@ export async function addTaskToStageN(page, i, taskName) {
   await card.locator('.add-task-item', { hasText: taskName }).click()
 }
 
+// Remove a task (by name) from stage i via its row's "Remove from stage" button.
+export async function removeTaskFromStageN(page, i, taskName) {
+  await gotoStagesTab(page)
+  await stageCard(page, i).locator('.task-block', { hasText: taskName }).getByRole('button', { name: 'Remove from stage' }).click()
+}
+
 // Move stage i up or down (dir: 'up' | 'down').
 export async function moveStage(page, i, dir) {
   await stageCard(page, i).getByRole('button', { name: dir === 'up' ? 'Move stage up' : 'Move stage down' }).click()

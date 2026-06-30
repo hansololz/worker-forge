@@ -363,6 +363,54 @@ that carries a value each block saving; a fully blank row is valid and dropped.
 
 ---
 
+## Group: Usage
+
+Tasks are reusable and shared across workflows (`§4.2`). The app guards that
+sharing: a task referenced by any workflow **cannot be deleted**, and the task
+detail's **Used by** card must accurately list the workflows that reference it.
+Backed by `tests/e2e/specs/tasks/usage.spec.mjs`.
+
+### CUJ-USAGE-1 — a task cannot be deleted while a workflow uses it
+
+Deleting a task that a workflow still references would orphan that workflow, so
+the editor blocks it until the task is no longer referenced.
+
+- **Goal:** confirm the Delete task control is disabled (with an explanatory
+  hint) while a workflow uses the task, and becomes enabled — and the task
+  deletable — once the reference is removed.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Create two tasks; create a workflow whose stage references both.
+  2. Open the used task's editor → Config → Delete task section.
+  3. Remove that task from the workflow (the other task keeps the stage valid).
+  4. Reopen the task editor's Delete task section and delete the task.
+- **Expected:**
+  - While in use, **Delete task** is disabled with the title "Can't delete —
+    still in use" and a hint "In use by 1 workflow…"; the confirm modal can't open.
+  - After the reference is removed, the hint reads "isn't used by any workflow",
+    **Delete task** is enabled, and confirming the delete removes the task from
+    the Tasks library.
+
+### CUJ-USAGE-2 — the task "Used by" list accurately tracks referencing workflows
+
+The task detail's **Used by** card must reflect exactly which workflows
+reference the task, updating as references are added and removed.
+
+- **Goal:** confirm the Used by list and count match the set of referencing
+  workflows across adds and a removal.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Create a shared task (plus a filler task); view its detail.
+  2. Create workflow A referencing it, then workflow B referencing it.
+  3. Remove the shared task from workflow A.
+- **Expected:**
+  - Initially the card shows "0 workflows" / "Not used in any workflow yet."
+  - After A it lists exactly **A** (1 workflow); after B it lists **A, B**
+    (2 workflows).
+  - After removing it from A, the card lists exactly **B** (1 workflow).
+
+---
+
 ## Group: Prepare
 
 A task's **required** parameters only bite at run time: before a workflow runs,
