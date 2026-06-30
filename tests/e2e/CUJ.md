@@ -411,6 +411,48 @@ reference the task, updating as references are added and removed.
 
 ---
 
+## Group: Task-Validate
+
+A task needs a non-empty name before it can be saved. Backed by
+`tests/e2e/specs/tasks/validate.spec.mjs`.
+
+### CUJ-TASK-VALIDATE-1 — a name is required to create a task
+
+- **Goal:** confirm the name-required banner shows and **Create task** is disabled
+  until a name is present, re-blocking if the name is cleared.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Click **New task** (the name field starts empty).
+  2. Type a name, then clear it again.
+- **Expected:**
+  - With a blank name, "Task name is required." shows and **Create task** is
+    disabled.
+  - Entering a name clears the error and enables **Create task**; clearing it
+    re-disables saving.
+
+---
+
+## Group: Task-Version
+
+Tasks are versioned: each save mints a new version, and older versions can be
+viewed and restored. Backed by `tests/e2e/specs/tasks/version.spec.mjs`.
+
+### CUJ-TASK-VERSION-1 — edits mint versions; an old version can be restored
+
+- **Goal:** confirm a saved edit mints v2, an older version is viewable from the
+  detail picker, and restoring it mints a new version.
+- **Preconditions:** app booted to the Tasks library.
+- **Steps:**
+  1. Create a task (v1); open its detail.
+  2. Edit it (change the description) and save.
+  3. Select **v1** in the version picker, then click **Restore as v3**.
+- **Expected:**
+  - A fresh task reads **v1**; after the edit the picker reads **v2**.
+  - Selecting v1 shows the restore banner with **Restore as v3**.
+  - Restoring mints **v3** (the reopened detail shows v3).
+
+---
+
 ## Group: Prepare
 
 A task's **required** parameters only bite at run time: before a workflow runs,
@@ -569,3 +611,88 @@ enable/disable toggle, and removal.
     invalid; fixing it clears the error.
   - Disabling the trigger hides its schedule editor; enabling restores it;
     removing it drops the card.
+
+---
+
+## Group: WF-Reorder
+
+Stages run sequentially, so their order matters (`§1`). This covers reordering a
+workflow's stages and persisting the order. Backed by
+`tests/e2e/specs/workflows/reorder.spec.mjs`.
+
+### CUJ-WF-REORDER-1 — reorder stages and persist the new order
+
+- **Goal:** confirm stages can be moved up/down and the resulting order persists
+  across save.
+- **Preconditions:** app booted to the Tasks library; two saved tasks.
+- **Steps:**
+  1. Create a workflow with two stages, one task in each.
+  2. Move the second stage up, then click **Create workflow**.
+  3. Reopen the editor.
+- **Expected:**
+  - The first stage's "up" and the last stage's "down" controls are disabled.
+  - Moving a stage reorders it live; after save and reopen the stages keep the
+    reordered sequence.
+
+---
+
+## Group: WF-Validate
+
+Saving a workflow needs a non-empty name and every stage must contain at least
+one task. Backed by `tests/e2e/specs/workflows/validate.spec.mjs`.
+
+### CUJ-WF-VALIDATE-1 — a name and a non-empty stage are required to save
+
+- **Goal:** confirm the name-required and empty-stage errors block **Create
+  workflow**, and the only stage cannot be deleted.
+- **Preconditions:** app booted to the Tasks library; a saved task.
+- **Steps:**
+  1. Click **New workflow** (nameless, one empty stage).
+  2. Enter a name; observe the remaining error.
+  3. Add a task to the stage.
+- **Expected:**
+  - A blank name shows "Workflow name is required." and disables saving.
+  - With a name but an empty stage, "Every stage needs at least one task." shows
+    and saving stays disabled; the only stage's delete control is disabled.
+  - Adding a task clears the error and enables **Create workflow**.
+
+---
+
+## Group: WF-Delete
+
+A workflow can be deleted from its editor's Config tab via the shared confirm
+modal. Backed by `tests/e2e/specs/workflows/delete.spec.mjs`.
+
+### CUJ-WF-DELETE-1 — delete a workflow from the editor
+
+- **Goal:** confirm deleting a workflow through the confirm modal removes it from
+  the Workflows list.
+- **Preconditions:** app booted to the Tasks library; a saved workflow.
+- **Steps:**
+  1. Open the workflow's editor → Config → **Delete workflow**.
+  2. Confirm in the modal.
+- **Expected:**
+  - The confirm modal appears; confirming deletes the workflow and returns to the
+    list, where it no longer appears.
+
+---
+
+## Group: WF-Version
+
+Workflows are versioned: each save mints a new version, and older versions can be
+viewed and restored from the detail picker. Backed by
+`tests/e2e/specs/workflows/version.spec.mjs`.
+
+### CUJ-WF-VERSION-1 — edits mint versions; an old version can be restored
+
+- **Goal:** confirm a saved edit mints v2, an older version is viewable from the
+  detail picker, and restoring it mints a new version.
+- **Preconditions:** app booted to the Tasks library; a saved workflow.
+- **Steps:**
+  1. Create a workflow (v1); open its detail.
+  2. Edit it (rename) and save.
+  3. Select **v1** in the version picker, then click **Restore as v3**.
+- **Expected:**
+  - A fresh workflow reads **v1**; after the edit the picker reads **v2**.
+  - Selecting v1 shows the restore banner with **Restore as v3**.
+  - Restoring mints **v3** (the reopened detail shows v3).
