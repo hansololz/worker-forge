@@ -4,7 +4,7 @@
   "description": "Desktop workflow orchestrator — define, schedule, run and monitor multi-stage automation workflows",
   "main": "out/main/index.js",
   "author": "worker-forge",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
