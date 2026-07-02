@@ -1,0 +1,37 @@
+{
+  "pkg": "worker-forge",
+  "globalName": "WorkerForge",
+  "projectId": "8f65bd57-3b68-4fe2-b1ba-3db5c094173e",
+  "shape": "package",
+  "srcDir": "src",
+  "readmeHeader": ".design-sync/conventions.md",
+  "cssEntry": "src/index.css",
+  "componentSrcMap": {
+    "Btn": "src/ui.jsx",
+    "Badge": "src/ui.jsx",
+    "Dot": "src/ui.jsx",
+    "Select": "src/ui.jsx",
+    "ConfirmModal": "src/ui.jsx",
+    "Icon": "src/ui.jsx"
+  },
+  "dtsPropsFor": {
+    "Icon": "name: string; size?: number; className?: string; style?: React.CSSProperties;",
+    "Badge": "status?: string; children?: React.ReactNode; pulse?: boolean; noDot?: boolean;",
+    "Dot": "status?: string; pulse?: boolean;",
+    "Btn": "variant?: 'primary' | 'ghost' | 'danger'; size?: 'sm'; icon?: string; iconR?: string; className?: string; children?: React.ReactNode; onClick?: (e: React.MouseEvent) => void; disabled?: boolean; title?: string; type?: 'button' | 'submit';",
+    "ConfirmModal": "icon?: string; tone?: 'danger' | 'warn'; title?: React.ReactNode; message?: React.ReactNode; confirmLabel?: string; cancelLabel?: string; onConfirm?: () => void; onClose?: () => void;",
+    "Select": "value?: string | number; onChange?: (value: any) => void; options?: Array<{ value: any; label: string; mono?: boolean } | string>; disabled?: boolean; mono?: boolean; block?: boolean; align?: 'right'; minWidth?: number; ariaLabel?: string; search?: boolean; searchPlaceholder?: string; style?: React.CSSProperties; btnStyle?: React.CSSProperties;"
+  },
+  "overrides": {
+    "ConfirmModal": { "cardMode": "single", "primaryStory": "Danger", "viewport": "820x560" }
+  },
+  "extraFonts": [
+    "node_modules/@fontsource/ibm-plex-sans/400.css",
+    "node_modules/@fontsource/ibm-plex-sans/500.css",
+    "node_modules/@fontsource/ibm-plex-sans/600.css",
+    "node_modules/@fontsource/ibm-plex-sans/700.css",
+    "node_modules/@fontsource/ibm-plex-mono/400.css",
+    "node_modules/@fontsource/ibm-plex-mono/500.css",
+    "node_modules/@fontsource/ibm-plex-mono/600.css"
+  ]
+}
