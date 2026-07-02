@@ -61,13 +61,13 @@ All colors are authored in **OKLCH**. Hex equivalents are approximate sRGB conve
 | `--st-ok` | `oklch(0.78 0.16 152)` | **success / succeeded** — green |
 | `--st-fail` | `oklch(0.68 0.19 25)` | **failed** — red |
 | `--st-warn` | `oklch(0.81 0.14 80)` | **queued** — amber |
-| `--st-cancel` | `oklch(0.85 0.16 100)` | **cancelled** — yellow |
+| `--st-cancel` | `oklch(0.45 0.015 264)` | **cancelled** — cool graphite (dark neutral; a deliberate, user-initiated stop) |
 | `--st-interrupt` | `oklch(0.70 0.15 310)` | **interrupted** — crash mid-run (magenta) |
 | `--st-cont` | `oklch(0.72 0.17 52)` | **continued** (tolerated failure) — orange |
-| `--st-queued` | `oklch(0.70 0.035 248)` | **queued** (will run) — cool slate, rendered as a **hollow ring** dot |
+| `--st-queued` | `oklch(0.62 0.012 264)` | **queued** (will run) — gray, rendered as a **solid** dot |
 | `--st-skip` | `oklch(0.62 0.012 264)` | **skipped / idle** — gray |
 
-Each status has a `*-dim` variant at `/0.15`–`/0.16` alpha for badge/pill backgrounds (e.g. `--fail-dim`, `--ok-dim`, `--cont-dim`, `--queued-dim`, `--interrupt-dim`). Badges render as `color: <status>; background: <status>-dim`. Dots render as a solid `7px` circle of the status color — **except queued**, which is a transparent circle with `inset 0 0 0 1.6px` ring.
+Each status has a `*-dim` variant at `/0.14`–`/0.16` alpha for badge/pill backgrounds (e.g. `--fail-dim`, `--ok-dim`, `--cont-dim`, `--queued-dim`, `--interrupt-dim`). Badges render as `color: <status>; background: <status>-dim`. Dots render as a solid `7px` circle of the status color. **Note:** because `cancelled` is a dark graphite, its badge is the exception — the pill uses `color: var(--tx-mid)` for a legible label while the dot stays graphite; queued & skipped share the same gray (queued reads by position/context, not hue).
 
 > **Status vocabulary** (canonical, matches the app): run statuses are `queued · running · succeeded · failed · cancelled · interrupted`; stage / task statuses add `skipped` (and `interrupted`); step statuses `running · succeeded · failed · skipped`; attempt statuses `running · succeeded · failed · cancelled`. **`interrupted`** is the terminal state for a run (and its in-flight stage/task) that an abrupt backend shutdown left mid-flight — rendered magenta (`--st-interrupt`); the open attempt/step instead become `failed` (those nodes have no `interrupted` value), with a `system` log line "Backend stopped — process terminated". A **tolerated failure** (continue-on-failure where the run still succeeds) is the run `succeeded` with `degraded: true`, and the offending task carries a `continued: true` flag rendered with the orange `--st-cont` badge/dot — `continued` is a per-task flag, **not** a status value.
 
@@ -189,7 +189,7 @@ Each status has a `*-dim` variant at `/0.15`–`/0.16` alpha for badge/pill back
 - **Launching a run:** builds a `running` execution and opens the Execution page.
 - **Skip/Retry:** recovery on the Execution page at two scopes — surgical per-task and aggregate run-level (see screen 10).
 - **Animations:** card hover lift (`transform .08s` + shadow); active pipeline connector "flow" sweep (`@keyframes flow`, 1.1s linear); running-status `pulse` (1.4s opacity), optional `ring` ping; menu/modal entrances (`ddIn`/`fade`, ~.12–.15s); toast slide-up; terminal `blink` cursor. Keep durations and easings.
-- **Status semantics:** map every run/task/step status to the token + badge + dot rules above. Queued = hollow ring dot. **Tolerated failure (continue-on-failure where the run still succeeds) = run `succeeded` + `degraded:true`, task flagged `continued` / orange**, distinct from hard `failed` / red.
+- **Status semantics:** map every run/task/step status to the token + badge + dot rules above. Queued = solid gray dot (same gray as skipped); cancelled = graphite dot with a muted-text badge. **Tolerated failure (continue-on-failure where the run still succeeds) = run `succeeded` + `degraded:true`, task flagged `continued` / orange**, distinct from hard `failed` / red.
 - **Validation:** required-field gating with red borders, focus rings, inline error rows, and blocking banners (run prepare).
 - **Persistence:** only timezone is persisted (`localStorage["ad_timezone"]`); everything else is in-memory mock state.
 - **Responsive:** `.run-grid` collapses to one column < 880px; several meta-grids drop column counts at 720/880/1180px. (This is desktop-first.)

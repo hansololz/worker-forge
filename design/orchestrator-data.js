@@ -415,7 +415,10 @@ export function runTasksFor(w, run) {
     if (stop >= 0) {
       if (i < stop) status = "succeeded";
       else if (i === stop) status = rs === "failed" ? "failed" : rs === "cancelled" ? "cancelled" : rs === "interrupted" ? "interrupted" : rs === "running" ? "running" : "succeeded";
-      else status = rs === "running" || rs === "failed" || rs === "interrupted" ? "queued" : "skipped";
+      // after the stop: a running / interrupted execution still has work queued
+      // that can resume; a stopped execution (failed / cancelled) is terminal,
+      // so every queued task is cancelled along with the run.
+      else status = (rs === "running" || rs === "interrupted") ? "queued" : "cancelled";
     } else if (rs === "queued") {
       status = "queued";
     } else {
@@ -427,7 +430,10 @@ export function runTasksFor(w, run) {
         else if (dg.skipped && dg.skipped.indexOf(i) !== -1) status = "skipped";
       }
     }
-    return { id, name: s.name, icon: s.icon, status, dur: durFor(i, status) };
+    // a task cancelled while still queued behind the stop point never ran, so
+    // it carries no duration (unlike the stop task, cancelled mid-run).
+    const cancelledInQueue = stop >= 0 && i > stop && status === "cancelled";
+    return { id, name: s.name, icon: s.icon, status, dur: cancelledInQueue ? "\u2014" : durFor(i, status) };
   });
 }
 

@@ -558,7 +558,9 @@
   // Given a workflow and (optionally) a specific run, produce the per-task
   // outcome. A run may carry `stopAt` — the flattened-task index where the
   // run failed / was cancelled / is currently running. Everything before it
-  // succeeded; everything after it never executed (skipped).
+  // succeeded. A stopped execution (failed / cancelled) is terminal: every
+  // task still queued behind the stop point is cancelled with it. Only a
+  // still-running execution keeps its downstream work queued.
   function strHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function runTasksFor(wf, run) {
     const ids = (wf.stages || []).flat();
@@ -579,11 +581,10 @@
         // run with an explicit stop point (fail / cancelled / running)
         if (i < stop) status = "succeeded";
         else if (i === stop) status = rs === "failed" ? "failed" : rs === "cancelled" ? "cancelled" : rs === "running" ? "running" : "succeeded";
-        // after the stop: a running execution still has work queued; a failed
-        // run is blocked awaiting a decision (skip / retry) — neither case
-        // cascades a "skipped" onto downstream tasks. Only a cancelled run
-        // truly halted, so the rest never ran (skipped).
-        else status = (rs === "running" || rs === "failed") ? "queued" : "skipped";
+        // after the stop: a still-running execution has work queued; a stopped
+        // execution (failed / cancelled) is terminal, so every queued task is
+        // cancelled along with the run and never gets to execute.
+        else status = rs === "running" ? "queued" : "cancelled";
       } else if (rs === "queued") {
         // run is queued — no task has started yet, all waiting to run
         status = "queued";
@@ -601,7 +602,10 @@
           else if (dg.skipped && dg.skipped.indexOf(i) !== -1) status = "skipped";
         }
       }
-      return { id, name: s.name, icon: s.icon, status, dur: durFor(i, status) };
+      // a task cancelled while still queued behind the stop point never ran,
+      // so it has no duration (unlike the stop task itself, cancelled mid-run).
+      const cancelledInQueue = stop >= 0 && i > stop && status === "cancelled";
+      return { id, name: s.name, icon: s.icon, status, dur: cancelledInQueue ? "\u2014" : durFor(i, status) };
     });
   }
 

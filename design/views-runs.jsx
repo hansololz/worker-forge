@@ -182,23 +182,10 @@
     const stageOfIdx = {};
     stageRows.forEach((group, si) => group.forEach(({ idx }) => { stageOfIdx[idx] = si; }));
 
-    // ---- skip-current-failures: marks the failed tasks as skipped, which
-    // unblocks the run for exactly ONE more stage — the stage right after the
-    // one that failed runs to completion; everything further out stays
-    // pending (you advance stage by stage, not all at once). ----------------
-    const [skippedFailed, setSkippedFailed] = useState(false);
-    useEffect(() => { setSkippedFailed(false); }, [run.id]);
-    const failedCount = tasks.filter(s => s.status === "failed").length;
-    const failStage = tasks.reduce((mx, s, i) => s.status === "failed" ? Math.max(mx, stageOfIdx[i]) : mx, -1);
-    const genDur = (i) => { const v = (seedOf(run.id) + i * 2654435761) >>> 0; return `${(v % 4) + 1}m ${String(v % 60).padStart(2, "0")}s`; };
-    const effTasks = skippedFailed
-      ? tasks.map((s, i) =>
-          s.status === "failed"  ? { ...s, status: "skipped",  dur: "\u2014" }
-          // resume only the failing stage's remaining siblings and the very
-          // next stage; later stages remain queued until the next advance.
-          : s.status === "queued" && stageOfIdx[i] <= failStage + 1 ? { ...s, status: "succeeded", dur: genDur(i) }
-          : s)
-      : tasks;
+    // A stopped execution (failed / cancelled) is terminal: the tasks that were
+    // still queued when it stopped are cancelled with it, so there is nothing to
+    // resume in place — recovery is a fresh Re-run of the whole workflow.
+    const effTasks = tasks;
 
     const cur = effTasks[selTask];
     const curTaskDef = DB.taskById[cur.id];
@@ -249,7 +236,7 @@
     const TASK_GAP = 4;
     let __acc = baseTs;
     const taskTimes = effTasks.map(s => {
-      if (s.status === "queued" || s.status === "skipped") return { start: null, end: null };
+      if (s.status === "queued" || s.status === "skipped" || (s.status === "cancelled" && parseDur(s.dur) == null)) return { start: null, end: null };
       const start = __acc;
       if (s.status === "running") return { start, end: null };
       const d = parseDur(s.dur) || 0;
@@ -289,7 +276,10 @@
 
     // per-step state derives from the SELECTED attempt's outcome + its own
     // seed, so each attempt shows a distinct step breakdown and log output.
-    const scStatuses = stepStatuses(steps, att.status, seedOf(run.id + cur.id + "a" + selAtt));
+    // A task cancelled while still queued behind the stop point never ran, so
+    // none of its steps executed — mark them all cancelled with no output.
+    const neverRan = att.start == null && cur.status === "cancelled";
+    const scStatuses = neverRan ? steps.map(() => "cancelled") : stepStatuses(steps, att.status, seedOf(run.id + cur.id + "a" + selAtt));
     useEffect(() => {
       const fail = scStatuses.findIndex(s => s === "failed" || s === "cancelled" || s === "running");
       setSelStep(fail >= 0 ? fail : 0);
@@ -399,21 +389,14 @@
               e("span", { className: "spacer" }),
               // task-scoped controls — recovery happens per-task, never on a
               // succeeded run (nothing left to act on).
-              run.status !== "succeeded" && e("div", { style: { display: "flex", gap: 8 } },
-                cur.status === "running" && e(Btn, { size: "sm", variant: "danger", icon: "x", onClick: () => ctx.confirm && ctx.confirm({
+              // task-scoped controls — only a still-running execution can be
+              // acted on per-task (cancel a live task). A stopped run is
+              // terminal, so there is no in-place skip / retry — you Re-run.
+              run.status === "running" && cur.status === "running" && e("div", { style: { display: "flex", gap: 8 } },
+                e(Btn, { size: "sm", variant: "danger", icon: "x", onClick: () => ctx.confirm && ctx.confirm({
                   icon: "x", tone: "warn", title: "Cancel task",
                   message: e(React.Fragment, null, "Stop ", e("b", null, cur.name), "? The task is interrupted \u2014 you can retry it afterward."),
-                  confirmLabel: "Cancel task", cancelLabel: "Keep running", onConfirm: () => ctx.toast && ctx.toast("Cancelling " + cur.name) }) }, "Cancel"),
-                (run.status === "failed" || run.status === "cancelled") && (cur.status === "failed" || cur.status === "cancelled") && e(React.Fragment, null,
-                  e(Btn, { size: "sm", variant: "ghost", icon: "skip", onClick: () => ctx.confirm && ctx.confirm({
-                    icon: "skip", tone: "warn", title: "Skip task",
-                    message: e(React.Fragment, null, "Skip ", e("b", null, cur.name), " and unblock the next stage? This task is marked skipped and the run advances."),
-                    confirmLabel: "Skip task", cancelLabel: "Cancel", onConfirm: () => { setSkippedFailed(true); ctx.toast && ctx.toast("Skipped " + cur.name); } }) }, "Skip"),
-                  e(Btn, { size: "sm", variant: "primary", icon: "sync", onClick: () => ctx.toast && ctx.toast("Retrying " + cur.name) }, "Retry")),
-                (run.status === "failed" || run.status === "cancelled") && cur.status === "queued" && e(Btn, { size: "sm", variant: "ghost", icon: "skip", onClick: () => ctx.confirm && ctx.confirm({
-                  icon: "skip", tone: "warn", title: "Skip task",
-                  message: e(React.Fragment, null, "Skip ", e("b", null, cur.name), "? This task is marked skipped."),
-                  confirmLabel: "Skip task", cancelLabel: "Cancel", onConfirm: () => { setSkippedFailed(true); ctx.toast && ctx.toast("Skipped " + cur.name); } }) }, "Skip"))),
+                  confirmLabel: "Cancel task", cancelLabel: "Keep running", onConfirm: () => ctx.toast && ctx.toast("Cancelling " + cur.name) }) }, "Cancel"))),
             // attempt switcher — always shown (single attempt renders one tab)
             e("div", { className: "attempt-tabs", role: "tablist" },
               attemptList.map((a, i) => e("button", { key: i, role: "tab", "aria-selected": i === selAtt, className: "attempt-tab" + (i === selAtt ? " on" : ""), onClick: () => setSelAttempt(i), title: "Attempt " + (i + 1) + " — " + a.status },
@@ -458,7 +441,7 @@
                   : steps.map((sc, i) => {
                       const open = i === selStep;
                       const st = scStatuses[i];
-                      const slog = stepOutput(sc, st);
+                      const slog = neverRan ? [] : stepOutput(sc, st);
                       return e("div", { key: i, className: "step-log" + (open ? " open" : "") },
                         e("button", { className: "sl-head", onClick: () => setSelStep(open ? -1 : i), title: sc.desc || sc.name },
                           e(Icon, { name: "chevD", size: 14, style: { transition: "transform .15s", transform: open ? "rotate(180deg)" : "none", color: "var(--tx-lo)", flex: "none" } }),
@@ -467,7 +450,7 @@
                           e("span", { className: "sl-status" }, st)),
                         open && e("div", { className: "term-body" },
                           slog.length === 0
-                            ? e("div", { className: "log-ln dim" }, e("span", { className: "msg" }, "// " + sc.name + " — " + ((st === "skipped" || st === "queued") ? "did not run" : "no output")))
+                            ? e("div", { className: "log-ln dim" }, e("span", { className: "msg" }, "// " + sc.name + " — " + ((st === "skipped" || st === "queued" || neverRan) ? "did not run" : "no output")))
                             : slog.map((l, i2) => {
                                 const tt = fmtClockOnly(logBase + i2, tz);
                                 return e("div", { key: i2, className: "log-ln " + (l.t || "") },
