@@ -938,9 +938,9 @@ title, message, confirmLabel, cancelLabel, onConfirm })` helper on the app conte
 
 **Design tokens** (full values in `src/index.css` `:root`): cool near-black surfaces
 (`--bg-0..4`), warm-orange accent (`--accent` `oklch(0.74 0.155 52)`), status colors (running cyan,
-success green, failed red, queued/warn amber, cancelled yellow (solid — a deliberate stop
-happened), interrupted magenta, continued orange, queued slate, skipped gray, each with a
-`*-dim` ~15–16% background). Radii 6/9/13px. Type: IBM Plex Sans (body) +
+success green, failed red, queued/warn amber, cancelled cool graphite (a deliberate stop
+happened — muted, not alarming), interrupted magenta, continued orange, queued gray (solid dot),
+skipped gray, each with a `*-dim` ~14–16% background). Radii 6/9/13px. Type: IBM Plex Sans (body) +
 IBM Plex Mono (IDs, status meta, code). Icons: Font Awesome 6 Free as inline SVG — keep glyph
 meanings (`workflows`, `tasks`, `history`, `play`, `skip`, `check`, `x`, `chevR`, `chevD`,
 `terminal`, `settings`, `calendar`, plus task glyphs `git/package/flask/shield/rocket/db/box/...`).
