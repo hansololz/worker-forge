@@ -17,3 +17,7 @@ engine/.venv-test/
 coverage/
 playwright-report/
 test-results/
+
+# Design-sync tooling scratch (generated)
+.ds-sync/
+ds-bundle/
