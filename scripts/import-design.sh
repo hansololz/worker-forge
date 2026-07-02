@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Import a design bundle from ~/Desktop/workflow.zip into the project design/ dir.
-#   * Unzips ~/Desktop/workflow.zip into a temp dir.
+# Import a design bundle from ../workflow.zip (repo parent dir) into the project design/ dir.
+#   * Unzips ../workflow.zip into a temp dir.
 #   * Locates the bundle files inside the archive — they may sit at the archive
 #     root or nested inside a wrapper / a "design" folder; either way the files
 #     are flattened out so the bundle (styles.css, *.jsx, *.js, README.md, …)
@@ -25,7 +25,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DESIGN_DIR="$ROOT/design"
-ZIP="$HOME/Desktop/workflow.zip"
+ZIP="$ROOT/../workflow.zip"
 
 command -v unzip >/dev/null 2>&1 || { echo "import-design: 'unzip' not found on PATH" >&2; exit 1; }
 [ -f "$ZIP" ] || { echo "import-design: no archive found at $ZIP" >&2; exit 1; }
